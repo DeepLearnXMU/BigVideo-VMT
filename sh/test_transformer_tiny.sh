@@ -2,7 +2,7 @@
 set -e
 
 _mask=mask0
-_image_feat=vit_base_patch16_384
+
 
 # set device
 gpu=6
@@ -11,8 +11,7 @@ gpu=6
 
 # set task
 task=multi30k-en2de
-mask_data=$_mask
-image_feat=$_image_feat
+
 
 who=test	#test1, test2
 random_image_translation=0 #1
@@ -56,19 +55,6 @@ elif [ $task == 'multi30k-en2fr' ]; then
 	fi
 fi
 
-if [ $image_feat == "vit_tiny_patch16_384" ]; then
-	image_feat_path=data/$image_feat
-	image_feat_dim=192
-elif [ $image_feat == "vit_small_patch16_384" ]; then
-	image_feat_path=data/$image_feat
-	image_feat_dim=384
-elif [ $image_feat == "vit_base_patch16_384" ]; then
-	image_feat_path=data/$image_feat
-	image_feat_dim=768
-elif [ $image_feat == "vit_large_patch16_384" ]; then
-	image_feat_path=data/$image_feat
-	image_feat_dim=1024
-fi
 
 # data set
 ensemble=10
