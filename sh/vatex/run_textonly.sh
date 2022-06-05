@@ -46,7 +46,7 @@ cmd="fairseq-train $data
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches
   --find-unused-parameters
   --eval-bleu
-  --eval-bleu-args '{\'beam\': 5}'
+  --eval-bleu-args '{'beam': 5}'
   --eval-bleu-detok moses
   --eval-bleu-remove-bpe
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric

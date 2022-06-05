@@ -337,8 +337,9 @@ class TranslationTask(LegacyFairseqTask):
                     tokenizer=getattr(args, "eval_bleu_detok", None), **detok_args
                 )
             )
-
+            print(getattr(args, "eval_bleu_args", "{}"))
             gen_args = json.loads(getattr(args, "eval_bleu_args", "{}") or "{}")
+
             self.sequence_generator = self.build_generator(
                 [model], Namespace(**gen_args)
             )
