@@ -516,12 +516,12 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         if self.is_fusion_top:
-            print(x.shape)
-            print(len(imgs_list))
-            print(imgs_list.shape)
-            print(asda)
+
             for img, img_mask in zip(imgs_list, img_masks_list):
                 img = img.transpose(0, 1)
+                print(x.shape)
+                print(img.shape)
+                print(sda)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
 
