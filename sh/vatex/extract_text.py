@@ -1,5 +1,5 @@
 import json
-import demjson
+
 from tqdm import tqdm
 
 train_file="/home/sata/kly/videoNMT/data/vatex_training_v1.0.json"
