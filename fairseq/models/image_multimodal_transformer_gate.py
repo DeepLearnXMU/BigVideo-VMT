@@ -1023,7 +1023,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('gated', 'gated')
+@register_model_architecture('image_multimodal_transformer_gated', 'image_multimodal_transformer_gated')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1060,7 +1060,7 @@ def base_architecture(args):
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-@register_model_architecture('gated', 'gated_iwslt_de_en')
+@register_model_architecture('image_multimodal_transformer_gated', 'image_multimodal_transformer_gated_iwslt_de_en')
 def transformer_iwslt_de_en(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
@@ -1073,7 +1073,7 @@ def transformer_iwslt_de_en(args):
     base_architecture(args)
 
 
-@register_model_architecture('gated', 'gated_tiny')
+@register_model_architecture('image_multimodal_transformer_gated', 'image_multimodal_transformer_gated_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1086,7 +1086,7 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('gated', 'gated_vatex')
+@register_model_architecture('image_multimodal_transformer_gated', 'image_multimodal_transformer_gated_vatex')
 def uvr_video_vatex(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
