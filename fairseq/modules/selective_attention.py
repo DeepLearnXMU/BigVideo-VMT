@@ -37,8 +37,7 @@ class SelectiveAttention(nn.Module):
         self.proj = Linear(intermediate_dim, output_dim)
 
     def forward(self, query, key, value, key_padding_mask=None):
-        print(query.shape,key.shape,value.shape)
-        print(saddsa)
+
         Tq, Bq, Cq = query.shape
         Tk, Bk, Ck = key.shape
         Tv, Bv, Cv = value.shape
