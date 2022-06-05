@@ -504,11 +504,10 @@ class TransformerEncoder(FairseqEncoder):
         idx = 0
         if not self.is_fusion_top:
             for img, img_mask in zip(imgs_list, img_masks_list):
-                print(img.shape)
+
 
                 img = img.transpose(0, 1)
-                print(img.shape)
-                print(sad)
+
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
             
@@ -525,6 +524,7 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
 
             for img, img_mask in zip(imgs_list, img_masks_list):
+                print(img.shape)
                 img = img.transpose(0, 1)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
