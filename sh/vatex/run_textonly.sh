@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 set -e
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=4,5
 
 
 src_lang=en
