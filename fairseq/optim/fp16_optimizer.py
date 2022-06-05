@@ -242,6 +242,7 @@ class FP16Optimizer(_FP16OptimizerMixin, optim.FairseqOptimizer):
             data_parallel_size = int(
                 args.distributed_world_size / args.model_parallel_size
             )
+            print(data_parallel_size,args.update_freq[0],args.update_freq)
             scale_window = int(2 ** 14 / data_parallel_size / args.update_freq[0])
         else:
             scale_window = args.fp16_scale_window
