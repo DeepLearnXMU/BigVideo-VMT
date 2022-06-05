@@ -59,6 +59,6 @@ with open(dev_output+".zh", "w", encoding="utf-8") as w:
         w.write(line+ "\n")
 
 test_output="/home/sata/kly/videoNMT/data/raw_texts/test"
-with open(dev_output+".en", "w", encoding="utf-8") as w:
+with open(test_output+".en", "w", encoding="utf-8") as w:
     for line in tqdm(test_srccaps):
         w.write(line+ "\n")
