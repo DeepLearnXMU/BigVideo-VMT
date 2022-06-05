@@ -9,9 +9,9 @@ test_file="/home/sata/kly/videoNMT/data/vatex_public_test_english_v1.1.json"
     #data = json.load(file)
 with open(train_file, 'r', encoding='utf-8') as file:
     train_data = json.load(file)
-with open(train_file, 'r', encoding='utf-8') as file:
+with open(dev_file, 'r', encoding='utf-8') as file:
     dev_data = json.load(file)
-with open(train_file, 'r', encoding='utf-8') as file:
+with open(test_file, 'r', encoding='utf-8') as file:
     test_data = json.load(file)
 
 #read
