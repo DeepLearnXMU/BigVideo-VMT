@@ -36,7 +36,7 @@ for d in dev_data:
     dev_tgtcaps.extend(tgtcap)
 
 test_srccaps=[]
-for d in train_data:
+for d in test_data:
     srccap = d[maps[src]]
     test_srccaps.extend(srccap)
 
