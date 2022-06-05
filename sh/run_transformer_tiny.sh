@@ -65,12 +65,11 @@ name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_see
 output_dir=/home/sata/kly/fairseq_mmt/output/textonly_baseline/${name}
 
 
-
-
-
+mkdir -p $output_dir
 
 
 cp ${BASH_SOURCE[0]} $output_dir/train.sh
+
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
