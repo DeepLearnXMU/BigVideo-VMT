@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 set -e
 
-device=4
+export CUDA_VISIBLE_DEVICES=4
 
 
 src_lang=en
@@ -34,31 +34,24 @@ cp ${BASH_SOURCE[0]} $output_dir/train.sh
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-cmd="fairseq-train $data
-  --save-dir $output_dir
-  --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang
-  --arch $arch
-  --dropout $dropout
-  --criterion $criterion --label-smoothing 0.1
-  --task translation
-  --optimizer adam --adam-betas '(0.9, 0.98)'
-  --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup
-  --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches
-  --find-unused-parameters
-  --eval-bleu
-  --eval-bleu-args '{'beam': 5}'
-  --eval-bleu-detok moses
-  --eval-bleu-remove-bpe
-  --best-checkpoint-metric bleu --maximize-best-checkpoint-metric
-  --patience $patience
-  --keep-last-epochs $keep_last_epochs"
-
-if [ $fp16 -eq 1 ]; then
-cmd=${cmd}" --fp16 "
-fi
+fairseq-train $data \
+  --save-dir $output_dir \
+  --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang \
+  --arch $arch \
+  --dropout $dropout \
+  --criterion $criterion --label-smoothing 0.1 \
+  --task translation \
+  --optimizer adam --adam-betas '(0.9, 0.98)' \
+  --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
+  --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
+  --find-unused-parameters \
+  --eval-bleu \
+  --eval-bleu-args '{"beam": 5}' \
+  --eval-bleu-detok moses \
+  --eval-bleu-remove-bpe \
+  --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
+  --patience $patience \
+  --keep-last-epochs $keep_last_epochs  \
+  --fp16  2>&1 | tee -a $output_dir/train.log
 
 
-export CUDA_VISIBLE_DEVICES=$device
-cmd="nohup "${cmd}" > $output_dir/train.log 2>&1 &"
-eval $cmd
-tail -f $output_dir/train.log
