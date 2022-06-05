@@ -517,7 +517,8 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             print(src_tokens.shape)
-            print(len(imgs_list), imgs_list.shape)
+            print(len(imgs_list))
+            print(imgs_list.shape)
             print(asda)
             for img, img_mask in zip(imgs_list, img_masks_list):
                 img = img.transpose(0, 1)
