@@ -10,7 +10,7 @@ gpu=6
 
 
 # set task
-task=multi30k-en2de
+task=multi30k-en2fr
 mask_data=$_mask
 
 
