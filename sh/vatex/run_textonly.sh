@@ -4,7 +4,8 @@ set -e
 device=4
 
 
-
+src_lang=en
+tgt_lang=zh
 
 data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 criterion=label_smoothed_cross_entropy
