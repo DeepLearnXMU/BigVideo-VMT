@@ -14,10 +14,19 @@ tokenizer=$script_root/tokenizer.perl
   ##learn BPE
 BPE_ROOT=/home/kly/subword-nmt
 python $BPE_ROOT/learn_joint_bpe_and_vocab.py    \
-       --input $DATA/train.tok.en  -s 10000 -o $DATA/bpe.10000 \
+       --input $DATA/train.tok.en  -s 10000 -o $DATA/bpe.10000.en \
        --write-vocabulary $DATA/vocab.10000.en
 #apply bpe
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000 < $DATA/train.tok.en > $DATA/train.tok.bpe.en
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000 < $DATA/dev.tok.en > $DATA/dev.tok.bpe.en
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000 < $DATA/test.tok.en > $DATA/test.tok.bpe.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/train.tok.en > $DATA/train.tok.bpe.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/dev.tok.en > $DATA/dev.tok.bpe.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/test.tok.en > $DATA/test.tok.bpe.en
+
+python $BPE_ROOT/learn_joint_bpe_and_vocab.py    \
+       --input $DATA/train.tok.zh  -s 10000 -o $DATA/bpe.10000.zh \
+       --write-vocabulary $DATA/vocab.10000.zh
+#apply bpe
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.zh < $DATA/train.tok.zh > $DATA/train.tok.bpe.zh
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.zh < $DATA/dev.tok.zh > $DATA/dev.tok.bpe.zh
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.zh < $DATA/test.tok.zh > $DATA/test.tok.bpe.zh
+
 
