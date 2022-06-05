@@ -22,22 +22,22 @@ maps = {'en':'enCap', 'zh':'chCap'}
 train_srccaps=[]
 train_tgtcaps=[]
 for d in train_data:
-    srccap = d[maps[src]]
+    srccap = d[maps[src]][5:]
     train_srccaps.extend(srccap)
-    tgtcap = d[maps[tgt]]
+    tgtcap = d[maps[tgt]][5:]
     train_tgtcaps.extend(tgtcap)
 
 dev_srccaps=[]
 dev_tgtcaps=[]
 for d in dev_data:
-    srccap = d[maps[src]]
+    srccap = d[maps[src]][5:]
     dev_srccaps.extend(srccap)
-    tgtcap = d[maps[tgt]]
+    tgtcap = d[maps[tgt]][5:]
     dev_tgtcaps.extend(tgtcap)
 
 test_srccaps=[]
 for d in test_data:
-    srccap = d[maps[src]]
+    srccap = d[maps[src]][5:]
     test_srccaps.extend(srccap)
 
 print(len(train_srccaps),len(dev_srccaps),len(test_srccaps))
