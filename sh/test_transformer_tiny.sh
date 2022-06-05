@@ -2,7 +2,7 @@
 set -e
 
 _mask=mask0
-
+_image_feat=vit_base_patch16_384
 
 # set device
 gpu=6
@@ -11,6 +11,7 @@ gpu=6
 
 # set task
 task=multi30k-en2de
+mask_data=$_mask
 
 
 who=test	#test1, test2
@@ -54,6 +55,7 @@ elif [ $task == 'multi30k-en2fr' ]; then
 	        data_dir=multi30k.en-fr.maskp
 	fi
 fi
+
 
 
 # data set
