@@ -516,7 +516,7 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         if self.is_fusion_top:
-            print(src_tokens.shape)
+            print(x.shape)
             print(len(imgs_list))
             print(imgs_list.shape)
             print(asda)
