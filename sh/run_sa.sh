@@ -89,7 +89,7 @@ fi
 #image_feat_path=data/vit_large_patch16_384 data/vit_tiny_patch16_384
 #image_feat_dim=1024 192
 
-cp ${BASH_SOURCE[0]} $save_dir/train.sh
+cp ${BASH_SOURCE[0]} $output_dir/train.sh
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
