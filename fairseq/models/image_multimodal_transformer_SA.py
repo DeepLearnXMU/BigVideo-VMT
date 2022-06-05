@@ -421,7 +421,7 @@ class TransformerEncoder(FairseqEncoder):
         image = self.image_pre_norm_module(image)
         image = self.image_dropout_module(image)
         text = self.text_dropout_module(text)
-        print([int(i) for i in 768])
+        print(len(self.selective_attns))
         print(dsadas)
         output, _map = self.selective_attns[idx](query=text, key=image, value=image, key_padding_mask=image_mask)   # t, b, c
         
