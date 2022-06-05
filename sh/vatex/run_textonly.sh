@@ -1,8 +1,9 @@
 #! /usr/bin/bash
 set -e
 
-export CUDA_VISIBLE_DEVICES=4,5
 
+device=4
+export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
 tgt_lang=zh
