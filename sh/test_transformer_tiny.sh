@@ -64,7 +64,7 @@ batch_size=128
 beam=5
 src_lang=en
 
-model_dir=/home/sata/kly/fairseq_mmt/output/textonly_baseline/baseline_archtransformer_tiny_tgtde_lr0.005_wu2000_mu8000_seed1_mt4096_patience10/
+model_dir=/home/sata/kly/fairseq_mmt/output/textonly_baseline/baseline_archtransformer_tiny_tgtfr_lr0.005_wu2000_mu8000_seed1_mt4096_patience10/
 
 checkpoint=checkpoint_best.pt
 
