@@ -22,7 +22,7 @@ arch=transformer_vatex
 
 name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_mt${max_tokens}_patience${patience}
 
-output_dir=/home/sata/kly/fairseq_mmt/output/textonly_baseline/${name}
+output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
 
 
 mkdir -p $output_dir
