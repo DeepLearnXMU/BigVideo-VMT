@@ -37,7 +37,6 @@ class SelectiveAttention(nn.Module):
         self.proj = Linear(intermediate_dim, output_dim)
 
     def forward(self, query, key, value, key_padding_mask=None):
-        print(query.shape)
         Tq, Bq, Cq = query.shape
         # Tk, Bk, Ck = key.shape
         # Tv, Bv, Cv = value.shape
@@ -47,16 +46,16 @@ class SelectiveAttention(nn.Module):
         # assert Ck == self.kdim
         # assert Cv == self.vdim
         bsz = Bq
-        
         q = self.q_proj(query)
-        print(q.shape)
-        print(adsadsa)
-        k = self.k_proj(key)
-        v = self.v_proj(value)
+
+        # k = self.k_proj(key)
+        # v = self.v_proj(value)
        
         q *= self.scale
-        
+        print(q.shape)
         q = q.contiguous().view(Tq, bsz * self.num_heads, self.qkhead_dim).transpose(0, 1)
+        print(q.shape)
+        print(dsad)
         k = k.contiguous().view(-1, bsz * self.num_heads, self.qkhead_dim).transpose(0, 1)
         v = v.contiguous().view(-1, bsz * self.num_heads, self.vhead_dim).transpose(0, 1)
         # B*H, T, C//H
