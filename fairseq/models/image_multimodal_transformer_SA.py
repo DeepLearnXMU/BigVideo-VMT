@@ -487,8 +487,8 @@ class TransformerEncoder(FairseqEncoder):
         # import os
         # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
 
-        print(src_tokens.shape0)
-        print(imgs_list.shape)
+        print(src_tokens.shape)
+        print(len(imgs_list),img_list.shape)
         print(asda)
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
