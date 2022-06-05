@@ -489,7 +489,7 @@ class TransformerEncoder(FairseqEncoder):
 
         print(src_tokens.shape0)
         print(imgs_list.shape)
-
+        print(asda)
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
