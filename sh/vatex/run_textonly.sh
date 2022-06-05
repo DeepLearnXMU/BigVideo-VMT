@@ -2,7 +2,7 @@
 set -e
 
 
-device=4
+device=5,7
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -21,8 +21,9 @@ max_epoches=50
 dropout=0.3
 seed=1
 arch=transformer_vatex
+gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_mt${max_tokens}_patience${patience}
+name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
 
@@ -33,7 +34,7 @@ mkdir -p $output_dir
 cp ${BASH_SOURCE[0]} $output_dir/train.sh
 
 
-gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
+
 
 fairseq-train $data \
   --save-dir $output_dir \
