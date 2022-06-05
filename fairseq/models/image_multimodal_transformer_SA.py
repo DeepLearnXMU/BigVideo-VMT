@@ -421,9 +421,7 @@ class TransformerEncoder(FairseqEncoder):
         image = self.image_pre_norm_module(image)
         image = self.image_dropout_module(image)
         text = self.text_dropout_module(text)
-        print(image.shape)
-        print(text.shape)
-        print(dsadsa)
+
         output, _map = self.selective_attns[idx](query=text, key=image, value=image, key_padding_mask=image_mask)   # t, b, c
         
         merge = torch.cat([output, text], dim=-1)
@@ -524,7 +522,6 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
 
             for img, img_mask in zip(imgs_list, img_masks_list):
-                print(img.shape)
                 img = img.transpose(0, 1)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
