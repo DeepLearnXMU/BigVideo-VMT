@@ -1,8 +1,8 @@
 #! /usr/bin/bash
 set -e
 
-device=0,1
-task=multi30k-en2de
+device=2,3
+task=multi30k-en2fr
 mask_data=mask0
 
 if [ ! -d $save_dir ]; then
