@@ -1,0 +1,1 @@
+python3 scripts/get_img_feat.py --dataset train --model vit_base_patch16_384 --path  /home/kly/fairseq_mmt-main/data/flickr30k
