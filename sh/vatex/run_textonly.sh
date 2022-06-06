@@ -20,10 +20,11 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=1
+weight_decay=0.1
 arch=transformer_vatex
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_patience${patience}
+name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_wd${weight_decay}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
 
@@ -41,6 +42,7 @@ fairseq-train $data \
   --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang \
   --arch $arch \
   --dropout $dropout \
+  --weight-decay $weight_decay  \
   --criterion $criterion --label-smoothing 0.1 \
   --task translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
