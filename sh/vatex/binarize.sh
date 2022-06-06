@@ -5,5 +5,5 @@ fairseq-preprocess --source-lang $src --target-lang $tgt \
   --trainpref $TEXT/train.char \
   --validpref $TEXT/dev.char \
   --testpref $TEXT/test.char \
-  --destdir $TEXT/data-bin/src_tgt.char \
+  --destdir $TEXT/data-bin/$src_$tgt.char \
   --workers 8
