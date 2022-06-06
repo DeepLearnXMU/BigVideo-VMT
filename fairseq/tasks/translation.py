@@ -443,6 +443,8 @@ class TranslationTask(LegacyFairseqTask):
                 hyps.append(gen_out[i][0]["tokens"].tolist())
                 refs.append(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist()
                 )
+            print(len(hyps))
+            print(len(refs))
             print(corpus_bleu([refs], hyps))
             print(sda)
             return corpus_bleu([refs], hyps)
