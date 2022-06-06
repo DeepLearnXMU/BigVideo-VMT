@@ -3,7 +3,7 @@ import sacrebleu
 from nltk.translate.bleu_score import corpus_bleu
 import inspect
 
-fn_sig = inspect.getfullargspec(sacrebleu.BLEU)
+fn_sig = inspect.getfullargspec(sacrebleu)
 print(fn_sig)
 bleu = sacrebleu.BLEU(trg_lang='zh', tokenize='zh')
 
