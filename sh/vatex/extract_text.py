@@ -19,46 +19,79 @@ src='en'
 tgt='zh'
 maps = {'en':'enCap', 'zh':'chCap'}
 
-train_srccaps=[]
-train_tgtcaps=[]
+train_sent_ids=[]
 for d in train_data:
     srccap = d[maps[src]][5:]
-    train_srccaps.extend(srccap)
-    tgtcap = d[maps[tgt]][5:]
-    train_tgtcaps.extend(tgtcap)
+    sent_id = [''.join((d['videoID'],'&',str(i))) for i in range(len(srccap))]
+    train_sent_ids.extend(sent_id)
 
-dev_srccaps=[]
-dev_tgtcaps=[]
+dev_sent_ids=[]
 for d in dev_data:
     srccap = d[maps[src]][5:]
-    dev_srccaps.extend(srccap)
-    tgtcap = d[maps[tgt]][5:]
-    dev_tgtcaps.extend(tgtcap)
+    sent_id = [''.join((d['videoID'],'&',str(i))) for i in range(len(srccap))]
+    dev_sent_ids.extend(sent_id)
 
-test_srccaps=[]
+test_sent_ids=[]
 for d in test_data:
     srccap = d[maps[src]][5:]
-    test_srccaps.extend(srccap)
+    sent_id = [''.join((d['videoID'],'&',str(i))) for i in range(len(srccap))]
+    test_sent_ids.extend(sent_id)
 
-print(len(train_srccaps),len(dev_srccaps),len(test_srccaps))
-#write
 train_output="/home/sata/kly/videoNMT/data/raw_texts/train"
-with open(train_output+".en", "w", encoding="utf-8") as w:
-    for line in tqdm(train_srccaps):
-        w.write(line+ "\n")
-with open(train_output+".zh", "w", encoding="utf-8") as w:
-    for line in tqdm(train_tgtcaps):
+with open(train_output+".ids", "w", encoding="utf-8") as w:
+    for line in tqdm(train_sent_ids):
         w.write(line+ "\n")
 
 dev_output="/home/sata/kly/videoNMT/data/raw_texts/dev"
-with open(dev_output+".en", "w", encoding="utf-8") as w:
-    for line in tqdm(dev_srccaps):
-        w.write(line+ "\n")
-with open(dev_output+".zh", "w", encoding="utf-8") as w:
-    for line in tqdm(dev_tgtcaps):
+with open(dev_output+".ids", "w", encoding="utf-8") as w:
+    for line in tqdm(dev_sent_ids):
         w.write(line+ "\n")
 
 test_output="/home/sata/kly/videoNMT/data/raw_texts/test"
-with open(test_output+".en", "w", encoding="utf-8") as w:
-    for line in tqdm(test_srccaps):
+with open(test_output+".ids", "w", encoding="utf-8") as w:
+    for line in tqdm(test_sent_ids):
         w.write(line+ "\n")
+
+# train_srccaps=[]
+# train_tgtcaps=[]
+# for d in train_data:
+#     srccap = d[maps[src]][5:]
+#     train_srccaps.extend(srccap)
+#     tgtcap = d[maps[tgt]][5:]
+#     train_tgtcaps.extend(tgtcap)
+#
+# dev_srccaps=[]
+# dev_tgtcaps=[]
+# for d in dev_data:
+#     srccap = d[maps[src]][5:]
+#     dev_srccaps.extend(srccap)
+#     tgtcap = d[maps[tgt]][5:]
+#     dev_tgtcaps.extend(tgtcap)
+#
+# test_srccaps=[]
+# for d in test_data:
+#     srccap = d[maps[src]][5:]
+#     test_srccaps.extend(srccap)
+#
+# print(len(train_srccaps),len(dev_srccaps),len(test_srccaps))
+# #write
+# train_output="/home/sata/kly/videoNMT/data/raw_texts/train"
+# with open(train_output+".en", "w", encoding="utf-8") as w:
+#     for line in tqdm(train_srccaps):
+#         w.write(line+ "\n")
+# with open(train_output+".zh", "w", encoding="utf-8") as w:
+#     for line in tqdm(train_tgtcaps):
+#         w.write(line+ "\n")
+#
+# dev_output="/home/sata/kly/videoNMT/data/raw_texts/dev"
+# with open(dev_output+".en", "w", encoding="utf-8") as w:
+#     for line in tqdm(dev_srccaps):
+#         w.write(line+ "\n")
+# with open(dev_output+".zh", "w", encoding="utf-8") as w:
+#     for line in tqdm(dev_tgtcaps):
+#         w.write(line+ "\n")
+#
+# test_output="/home/sata/kly/videoNMT/data/raw_texts/test"
+# with open(test_output+".en", "w", encoding="utf-8") as w:
+#     for line in tqdm(test_srccaps):
+#         w.write(line+ "\n")
