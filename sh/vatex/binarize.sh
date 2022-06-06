@@ -1,9 +1,9 @@
 src='en'
 tgt='zh'
-TEXT='/home/sata/kly/videoNMT/data/raw_texts'
+TEXT='/home/sata/kly/videoNMT/data/preprocess_follow$'
 fairseq-preprocess --source-lang $src --target-lang $tgt \
-  --trainpref $TEXT/train.tok.bpe \
-  --validpref $TEXT/dev.tok.bpe \
-  --testpref $TEXT/test.tok.bpe \
-  --destdir $TEXT/data-bin/src_tgt \
+  --trainpref $TEXT/train.char \
+  --validpref $TEXT/dev.char \
+  --testpref $TEXT/test.char \
+  --destdir $TEXT/data-bin/src_tgt.char \
   --workers 8
