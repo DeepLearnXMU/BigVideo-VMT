@@ -31,13 +31,13 @@ fairseq-generate  $test_DATA  \
 --beam 5  \
 --batch-size 128  \
 --lenpen 0.8   \
---output $checkpoint_dir/gen-$who.txt
+--output $checkpoint_dir/checkpoint.gen-$who.txt
 
-python3 rerank.py $checkpoint_dir/gen-$who.txt $checkpoint_dir/gen-$who.txt.sorted
+python3 rerank.py $checkpoint_dir/checkpoint.gen-$who.txt $checkpoint_dir/checkpoint.gen-$who.txt.sorted
 
 echo "-----formating json-----"
 ids_dir="/home/sata/kly/videoNMT/data/raw_texts/test.ids"
-hypos_dir=$checkpoint_dir
+hypos_dir=$checkpoint_dir/checkpoint.gen-$who.txt.sorted
 result_path=$checkpoint_dir
 
 python3 /home/kly/fairseq_mmt/sh/vatex/construct_json.py $ids_dir $hypos_dir $result_path
