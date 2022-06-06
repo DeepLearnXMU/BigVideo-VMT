@@ -2,20 +2,25 @@
 
 export CUDA_VISIBLE_DEVICES=5
 
-last=5
-upper_bound=100000
-checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/baseline_archtransformer_vatex_tgtzh_lr0.005_wu2000_me100_seed1_gpu1_mt4096_wd0.0_patience10
 
-
-#checkpoint_dir=/home/sata/kly/fairseq/fairseq_output/wmt2016ende/big_teacher
-
-checkpoint=checkpoint_best.pt
-#checkpoint=upper300000_last5.pt
-who=valid
-test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
+checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/baseline_archtransformer_vatex_tgtzh_lr0.005_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10
 
 script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
+who=test
+test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
+ensemble=10
+
+checkpoint=checkpoint_best.pt
+
+
+if [ -n "$ensemble" ]; then
+        if [ ! -e "$model_dir/last$ensemble.ensemble.pt" ]; then
+                PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $model_dir --output $model_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
+        fi
+        checkpoint=last$ensemble.ensemble.pt
+fi
+
 
 
 echo "-----$who-------"
