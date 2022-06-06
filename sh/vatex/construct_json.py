@@ -1,9 +1,11 @@
 import os
 import json
-
-ids_dir="/home/sata/kly/videoNMT/data/raw_texts/test.ids"
-hypos_dir="/home/sata/kly/fairseq_mmt/output/vatex_baseline/baseline_archtransformer_vatex_tgtzh_lr0.005_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10/gen-test.txt.sorted"
-result_path="/home/sata/kly/fairseq_mmt/output/vatex_baseline/baseline_archtransformer_vatex_tgtzh_lr0.005_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10/"
+import sys
+fr= open(sys.argv[1],'r',encoding="utf-8")
+fw = open(sys.argv[2],'w',encoding="utf-8")
+ids_dir=sys.argv[1]
+hypos_dir=sys.argv[2]
+result_path=sys.argv[3]
 ids=[]
 hypos=[]
 

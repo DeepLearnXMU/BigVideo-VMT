@@ -35,3 +35,10 @@ fairseq-generate  $test_DATA  \
 
 python3 rerank.py $checkpoint_dir/gen-$who.txt $checkpoint_dir/gen-$who.txt.sorted
 
+echo "-----formating json-----"
+ids_dir="/home/sata/kly/videoNMT/data/raw_texts/test.ids"
+hypos_dir=$checkpoint_dir
+result_path=$checkpoint_dir
+
+python3 /home/kly/fairseq_mmt/sh/vatex/construct_json.py $ids_dir $hypos_dir $result_path
+echo "-----done-----"
