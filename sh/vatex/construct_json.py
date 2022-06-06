@@ -5,6 +5,7 @@ import sys
 ids_dir=sys.argv[1]
 hypos_dir=sys.argv[2]
 result_path=sys.argv[3]
+name=sys.argv[4]
 ids=[]
 hypos=[]
 
@@ -19,5 +20,5 @@ dc = dict(zip(ids,  hypos))
 
 if not os.path.exists(result_path):
     os.makedirs(result_path)
-with open(result_path + 'submission.json', 'w',encoding="utf-8") as fp:
+with open(result_path + name+'.submission.json', 'w',encoding="utf-8") as fp:
     json.dump(dc, fp)
