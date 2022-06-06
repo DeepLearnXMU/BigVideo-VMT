@@ -440,6 +440,9 @@ class TranslationTask(LegacyFairseqTask):
                     escape_unk=True,  # don't count <unk> as matches to the hypo
                 )
             )
+        print(hyps[0])
+        print(refs[0])
+        print(dsada)
         if self.args.eval_bleu_print_samples:
             logger.info("example hypothesis: " + hyps[0])
             logger.info("example reference: " + refs[0])
