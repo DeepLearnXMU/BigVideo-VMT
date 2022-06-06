@@ -51,6 +51,7 @@ fairseq-train $data \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
   --find-unused-parameters \
+  --eval_like_vatex  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \
