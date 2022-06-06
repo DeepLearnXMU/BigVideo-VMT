@@ -14,7 +14,7 @@ task=multi30k-en2fr
 mask_data=$_mask
 
 
-who=test	#test1, test2
+who=test2	#test1, test2
 random_image_translation=0 #1
 length_penalty=0.8
 
