@@ -441,7 +441,8 @@ class TranslationTask(LegacyFairseqTask):
                 )
             )
         print(hyps[0])
-        print(refs[0])
+        print(hyps[0])
+        print(sacrebleu.corpus_bleu(hyps[0],hyps[0])
         print(dsada)
         if self.args.eval_bleu_print_samples:
             logger.info("example hypothesis: " + hyps[0])
