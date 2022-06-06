@@ -2,7 +2,7 @@
 set -e
 
 
-device=5
+device=7
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
