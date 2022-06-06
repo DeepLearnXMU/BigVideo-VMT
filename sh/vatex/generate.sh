@@ -19,7 +19,7 @@ multi_bleu=$script_root/multi-bleu.perl
 
 
 echo "-----$who-------"
-fairseq-generate  generate.py $test_DATA  \
+fairseq-generate  $test_DATA  \
 --path $checkpoint_dir/$checkpoint \
 --remove-bpe \
 --gen-subset $who \
