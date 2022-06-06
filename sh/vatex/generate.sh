@@ -8,7 +8,7 @@ checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/textonly_char_ar
 script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
 who=test
-test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
+test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 ensemble=10
 
 checkpoint=checkpoint_best.pt
