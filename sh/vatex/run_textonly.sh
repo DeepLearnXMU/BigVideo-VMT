@@ -53,7 +53,7 @@ fairseq-train $data \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5}' \
   --eval-bleu-detok moses \
-  --eval_bleu_print_samples \
+  --eval-bleu-print-samples \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
