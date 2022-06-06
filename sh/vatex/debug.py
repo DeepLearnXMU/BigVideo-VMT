@@ -11,7 +11,7 @@ refs=['三个潜水员在水下共同使用一台机器。', '两个人从外面
 
 
 
-print(sacrebleu.corpus_bleu(hypos, [refs]),tokenize='zh')
+print(sacrebleu.corpus_bleu(hypos, [refs],tokenize='zh'))
 refs=[['三个潜水员在水下共同使用一台机器。'], ['两个人从外面不同的树上摘新鲜水果。'], ['一个小女孩在路上不停的蹬着滑板车。']]
 
 
