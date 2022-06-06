@@ -437,13 +437,16 @@ class TranslationTask(LegacyFairseqTask):
         hyps, refs = [], []
 
         if self.args.eval_like_vatex:
+            import nltk
+
             for i in range(len(gen_out)):
                 hyps.append(gen_out[i][0]["tokens"].tolist())
                 refs.append(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist()
                 )
-                print(hyps)
-                print(refs)
-                print(fds)
+            print(nltk.corpus_bleu([refs], hyps))
+            print(sda)
+            return nltk.corpus_bleu([refs], hyps)
+
 
         else:
 
