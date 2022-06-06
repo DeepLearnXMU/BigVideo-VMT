@@ -21,7 +21,7 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=42
-weight_decay=0.01
+weight_decay=0.0
 arch=transformer_tiny
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
