@@ -26,7 +26,7 @@ fairseq-generate  $test_DATA  \
 --beam 5  \
 --batch-size 128  \
 --lenpen 0.8   \
---result_path $checkpoint_dir
+--results_path $checkpoint_dir
 
 #bash $scripts/compound_split_bleu.sh $checkpoint_dir/$checkpoint.nist14ende.de.out
 
