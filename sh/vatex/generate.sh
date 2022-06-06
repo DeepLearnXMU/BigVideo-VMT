@@ -15,10 +15,10 @@ checkpoint=checkpoint_best.pt
 
 
 if [ -n "$ensemble" ]; then
-        if [ ! -e "$model_dir/last$ensemble.ensemble.pt" ]; then
-                PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $model_dir --output $model_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
-        fi
-        checkpoint=last$ensemble.ensemble.pt
+      if [ ! -e "$checkpoint_dir/last$ensemble.ensemble.pt" ]; then
+              PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $checkpoint_dir --output $checkpoint_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
+      fi
+      checkpoint=last$ensemble.ensemble.pt
 fi
 
 
