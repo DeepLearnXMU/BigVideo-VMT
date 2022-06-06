@@ -446,9 +446,7 @@ class TranslationTask(LegacyFairseqTask):
 
             return corpus_bleu(refs, hyps)
 
-
         else:
-
             for i in range(len(gen_out)):
                 hyps.append(decode(gen_out[i][0]["tokens"]))
                 refs.append(
