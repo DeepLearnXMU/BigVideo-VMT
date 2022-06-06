@@ -17,9 +17,9 @@ python $BPE_ROOT/learn_joint_bpe_and_vocab.py    \
        --input $DATA/train.tok.en  -s 20000 -o $DATA/bpe.20000.en \
        --write-vocabulary $DATA/vocab.20000.en
 #apply bpe
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/train.tok.en > $DATA/train.char.en
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/dev.tok.en > $DATA/dev.char.en
-python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.10000.en  < $DATA/test.tok.en > $DATA/test.char.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.20000.en  < $DATA/train.tok.en > $DATA/train.char.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.20000.en  < $DATA/dev.tok.en > $DATA/dev.char.en
+python $BPE_ROOT/apply_bpe.py -c $DATA/bpe.20000.en  < $DATA/test.tok.en > $DATA/test.char.en
 
 #python $BPE_ROOT/learn_joint_bpe_and_vocab.py    \
 #       --input $DATA/train.tok.zh  -s 10000 -o $DATA/bpe.10000.zh \
