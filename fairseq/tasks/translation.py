@@ -433,6 +433,9 @@ class TranslationTask(LegacyFairseqTask):
         gen_out = self.inference_step(generator, [model], sample, prefix_tokens=None)
         hyps, refs = [], []
         for i in range(len(gen_out)):
+            print(gen_out[i][0]["tokens"])
+            print(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()))
+            print(sda)
             hyps.append(decode(gen_out[i][0]["tokens"]))
             refs.append(
                 decode(
