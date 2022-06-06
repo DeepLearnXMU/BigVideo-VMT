@@ -9,4 +9,5 @@ refs=['三个潜水员在水下共同使用一台机器。', '两个人从外面
 hypos=['A man is here.', 'A girl is here.', 'A woman is here.']
 refs=['A man is there.', 'A girl is there.', 'A woman is there.']
 print(sacrebleu.corpus_bleu(hypos, [refs]))
+refs=[['A man is there.'], ['A girl is there.'], ['A woman is there.']]
 print(corpus_bleu(refs, hypos))
