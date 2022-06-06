@@ -10,7 +10,8 @@ hypos=[]
 with open(ids_dir,encoding='utf-8') as file:
     ids=[x.rstrip() for x in file.readlines()]
 with open(hypos_dir,encoding='utf-8') as file:
-    hypos=[x.rstrip() for x in file.readlines()]
+    hypos=[" ".join(x.rstrip().replace(" ","")) for x in file.readlines()]
+
 
 assert len(ids)==len(hypos)
 dc = dict(zip(ids,  hypos))
