@@ -227,6 +227,7 @@ class TranslationTask(LegacyFairseqTask):
                             help='args for building the tokenizer, if needed')
         parser.add_argument('--eval-tokenized-bleu', action='store_true', default=False,
                             help='compute tokenized BLEU instead of sacrebleu')
+        parser.add_argument('--eval-zh-bleu', action='store_true',)
         parser.add_argument('--eval-bleu-remove-bpe', nargs='?', const='@@ ', default=None,
                             help='remove BPE before computing BLEU')
         parser.add_argument('--eval-bleu-args', type=str, metavar='JSON',
@@ -234,7 +235,7 @@ class TranslationTask(LegacyFairseqTask):
                                  'e.g., \'{"beam": 4, "lenpen": 0.6}\'')
         parser.add_argument('--eval-bleu-print-samples', action='store_true',
                             help='print sample generations during validation')
-        parser.add_argument('--eval-like-vatex', action='store_true')
+
 
         # fmt: on
 
@@ -436,34 +437,22 @@ class TranslationTask(LegacyFairseqTask):
         gen_out = self.inference_step(generator, [model], sample, prefix_tokens=None)
         hyps, refs = [], []
 
-        if self.args.eval_like_vatex:
-            from nltk.translate.bleu_score import corpus_bleu
 
-            for i in range(len(gen_out)):
-                hyps.append(gen_out[i][0]["tokens"].tolist())
-                refs.append(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist())
-
-            print(sacrebleu.corpus_bleu(hyps, [refs]))
-            print(dsddsa)
-            return sacrebleu.corpus_bleu(hyps, [refs])
-
-        else:
-            for i in range(len(gen_out)):
-                hyps.append(decode(gen_out[i][0]["tokens"]))
-                refs.append(
-                    decode(
-                        utils.strip_pad(sample["target"][i], self.tgt_dict.pad()),
-                        escape_unk=True,  # don't count <unk> as matches to the hypo
-                    )
+        for i in range(len(gen_out)):
+            hyps.append(decode(gen_out[i][0]["tokens"]))
+            refs.append(
+                decode(
+                    utils.strip_pad(sample["target"][i], self.tgt_dict.pad()),
+                    escape_unk=True,  # don't count <unk> as matches to the hypo
                 )
-            print(hyps[:3],refs[:3])
-            print(sacrebleu.corpus_bleu(hyps, [refs]))
-            print(dad)
+            )
 
-            if self.args.eval_bleu_print_samples:
-                logger.info("example hypothesis: " + hyps[0])
-                logger.info("example reference: " + refs[0])
-            if self.args.eval_tokenized_bleu:
-                return sacrebleu.corpus_bleu(hyps, [refs], tokenize="none")
-            else:
-                return sacrebleu.corpus_bleu(hyps, [refs])
+        if self.args.eval_bleu_print_samples:
+            logger.info("example hypothesis: " + hyps[0])
+            logger.info("example reference: " + refs[0])
+        if self.args.eval_tokenized_bleu:
+            return sacrebleu.corpus_bleu(hyps, [refs], tokenize="none")
+        elif self.args.eval_zh_bleu:
+            return sacrebleu.corpus_bleu(hyps, [refs], tokenize="zh")
+        else:
+            return sacrebleu.corpus_bleu(hyps, [refs])
