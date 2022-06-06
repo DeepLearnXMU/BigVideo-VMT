@@ -25,6 +25,7 @@ from fairseq.data import (
 from fairseq.tasks import LegacyFairseqTask, register_task
 
 
+
 EVAL_BLEU_ORDER = 4
 
 
@@ -433,9 +434,10 @@ class TranslationTask(LegacyFairseqTask):
         gen_out = self.inference_step(generator, [model], sample, prefix_tokens=None)
         hyps, refs = [], []
         for i in range(len(gen_out)):
-            print(gen_out[i][0]["tokens"])
-            print(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()))
-            print(sda)
+            # print(gen_out[i][0]["tokens"])
+            # print(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()))
+            # print(sacrebleu.corpus_bleu(
+            # print(sda)
             hyps.append(decode(gen_out[i][0]["tokens"]))
             refs.append(
                 decode(
@@ -444,8 +446,8 @@ class TranslationTask(LegacyFairseqTask):
                 )
             )
         print(hyps[0])
-        print(hyps[0])
-        print(sacrebleu.corpus_bleu(hyps[0],hyps[0]))
+        print(refs[0])
+        print(sacrebleu.corpus_bleu(hyps[0],refs[0]))
         print(dsada)
         if self.args.eval_bleu_print_samples:
             logger.info("example hypothesis: " + hyps[0])
