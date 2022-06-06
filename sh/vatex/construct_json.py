@@ -1,8 +1,7 @@
 import os
 import json
 import sys
-fr= open(sys.argv[1],'r',encoding="utf-8")
-fw = open(sys.argv[2],'w',encoding="utf-8")
+
 ids_dir=sys.argv[1]
 hypos_dir=sys.argv[2]
 result_path=sys.argv[3]
