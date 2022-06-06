@@ -11,7 +11,7 @@ checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/baseline_archtra
 
 checkpoint=checkpoint_best.pt
 #checkpoint=upper300000_last5.pt
-who=valid
+who=test
 test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 
 script_root=/home/kly/fairseq/perl
@@ -28,15 +28,5 @@ fairseq-generate  $test_DATA  \
 --lenpen 0.8   \
 --output $checkpoint_dir/gen-$who.txt
 
-#bash $scripts/compound_split_bleu.sh $checkpoint_dir/$checkpoint.nist14ende.de.out
+python3 rerank.py $checkpoint_dir/gen-$who.txt $checkpoint_dir/gen-$who.txt.sorted
 
-#grep ^T $checkpoint_dir/$checkpoint.nist14ende.de.out | cut -f2- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $checkpoint_dir/$checkpoint.nist14ende.de.ref
-#grep ^H $checkpoint_dir/$checkpoint.nist14ende.de.out | cut -f3- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $checkpoint_dir/$checkpoint.nist14ende.de.sys
-#
-#perl $perl/multi-bleu.perl $checkpoint_dir/$checkpoint.nist14ende.de.ref <  $checkpoint_dir/$checkpoint.nist14ende.de.sys
-#sacrebleu $checkpoint_dir/$checkpoint.nist13ende.de.ref <  $checkpoint_dir/$checkpoint.nist13ende.de.sys
-
-grep ^H $checkpoint_dir/$checkpoint.$who.zh.out | cut -d - -f 2- | sort -n -k 1 | cut -f 3- > $checkpoint_dir/$checkpoint.$who.zh.out.sys
-grep ^T $checkpoint_dir/$checkpoint.$who.zh.out | cut -d - -f 2- | sort -n -k 1 | cut -f 2- > $checkpoint_dir/$checkpoint.$who.zh.out.ref
-SYS=$checkpoint_dir/$checkpoint.nist14ende.de.sys
-REF=$checkpoint_dir/$checkpoint.nist14ende.de.ref
