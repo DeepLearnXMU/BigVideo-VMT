@@ -25,7 +25,8 @@ fairseq-generate  $test_DATA  \
 --gen-subset $who \
 --beam 5  \
 --batch-size 128  \
---lenpen 0.8  > $checkpoint_dir/$checkpoint.$who.zh.out
+--lenpen 0.8   \
+--output $checkpoint_dir
 
 #bash $scripts/compound_split_bleu.sh $checkpoint_dir/$checkpoint.nist14ende.de.out
 
