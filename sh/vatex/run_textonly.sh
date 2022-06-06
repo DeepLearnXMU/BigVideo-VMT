@@ -2,7 +2,7 @@
 set -e
 
 
-device=7
+device=4
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -20,8 +20,8 @@ keep_last_epochs=10
 patience=10
 max_epoches=100
 dropout=0.3
-seed=1
-weight_decay=0.01
+seed=42
+weight_decay=0.1
 arch=transformer_vatex
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
