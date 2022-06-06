@@ -2,7 +2,7 @@
 set -e
 
 
-device=4
+device=5
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -21,7 +21,7 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=42
-weight_decay=0.1
+weight_decay=0.01
 arch=transformer_tiny
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
