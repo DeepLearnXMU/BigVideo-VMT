@@ -444,9 +444,6 @@ class TranslationTask(LegacyFairseqTask):
                 refs.append([utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist()]
                 )
 
-
-            print(corpus_bleu(refs, hyps))
-            print(sda)
             return corpus_bleu(refs, hyps)
 
 
