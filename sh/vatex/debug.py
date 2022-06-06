@@ -1,8 +1,10 @@
 
 import sacrebleu
 from nltk.translate.bleu_score import corpus_bleu
+import inspect
 
-
+fn_sig = inspect.getfullargspec(sacrebleu.compute_bleu)
+print(fn_sig)
 bleu = sacrebleu.BLEU(trg_lang='zh', tokenize='zh')
 
 hypos=['三名潜水员正在水下使用一台机器。', '两个人在外面从不同的树上采摘新鲜的水果。', '一个年轻的女孩在附近的附近骑着滑板车。']
