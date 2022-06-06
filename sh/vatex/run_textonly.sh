@@ -9,7 +9,7 @@ src_lang=en
 tgt_lang=zh
 
 #data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
-
+data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 lr=0.005
@@ -21,12 +21,12 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=1
-weight_decay=0.0
+weight_decay=0.1
 arch=transformer_tiny
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_wd${weight_decay}_patience${patience}
+name=textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_wd${weight_decay}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
 
