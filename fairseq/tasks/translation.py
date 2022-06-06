@@ -441,10 +441,10 @@ class TranslationTask(LegacyFairseqTask):
 
             for i in range(len(gen_out)):
                 hyps.append(gen_out[i][0]["tokens"].tolist())
-                refs.append([utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist()]
-                )
+                refs.append(utils.strip_pad(sample["target"][i], self.tgt_dict.pad()).tolist())
 
-            return corpus_bleu(refs, hyps)
+            print(sacrebleu.corpus_bleu(hyps, [refs]))
+            return sacrebleu.corpus_bleu(hyps, [refs])
 
         else:
             for i in range(len(gen_out)):
