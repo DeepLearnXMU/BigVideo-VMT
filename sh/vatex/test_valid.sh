@@ -9,7 +9,7 @@ script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
 who=valid
 #test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
-test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh
+test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 ensemble=10
 
 checkpoint=checkpoint_best.pt
