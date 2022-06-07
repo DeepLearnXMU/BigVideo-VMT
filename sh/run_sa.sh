@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 set -e
 
-device=4,5
+device=4
 task=multi30k-en2de
 image_feat=vit_base_patch16_384
 mask_data=mask0
@@ -55,7 +55,7 @@ fp16=1 #0
 lr=0.005
 warmup=2000
 max_tokens=4096
-update_freq=1
+update_freq=2
 keep_last_epochs=10
 patience=10
 max_update=8000
