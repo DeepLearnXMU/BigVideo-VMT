@@ -16,37 +16,37 @@ if [ $task == 'multi30k-en2de' ]; then
 	src_lang=en
 	tgt_lang=de
 	if [ $mask_data == "mask0" ]; then
-        	data_dir=$DATA/multi30k.en-de
+        	data_dir=$DATA/multi30k-en-de
 	elif [ $mask_data == "mask1" ]; then
-	        data_dir=$DATA/multi30k.en-de.mask1
+	        data_dir=$DATA/multi30k-en-de.mask1
 	elif [ $mask_data == "mask2" ]; then
-      		data_dir=$DATA/multi30k.en-de.mask2
+      		data_dir=$DATA/multi30k-en-de.mask2
 	elif [ $mask_data == "mask3" ]; then
-	        data_dir=$DATA/multi30k.en-de.mask3
+	        data_dir=$DATA/multi30k-en-de.mask3
 	elif [ $mask_data == "mask4" ]; then
-	        data_dir=$DATA/multi30k.en-de.mask4
+	        data_dir=$DATA/multi30k-en-de.mask4
         elif [ $mask_data == "maskc" ]; then
-	        data_dir=$DATA/multi30k.en-de.maskc
+	        data_dir=$DATA/multi30k-en-de.maskc
         elif [ $mask_data == "maskp" ]; then
-	        data_dir=$DATA/multi30k.en-de.maskp
+	        data_dir=$DATA/multi30k-en-de.maskp
 	fi
 elif [ $task == 'multi30k-en2fr' ]; then
 	src_lang=en
 	tgt_lang=fr
 	if [ $mask_data == "mask0" ]; then
-        	data_dir=$DATA/multi30k.en-fr
+        	data_dir=$DATA/multi30k-en-fr
 	elif [ $mask_data == "mask1" ]; then
-	        data_dir=$DATA/multi30k.en-fr.mask1
+	        data_dir=$DATA/multi30k-en-fr.mask1
 	elif [ $mask_data == "mask2" ]; then
-      		data_dir=$DATA/multi30k.en-fr.mask2
+      		data_dir=$DATA/multi30k-en-fr.mask2
 	elif [ $mask_data == "mask3" ]; then
-	        data_dir=$DATA/multi30k.en-fr.mask3
+	        data_dir=$DATA/multi30k-en-fr.mask3
 	elif [ $mask_data == "mask4" ]; then
-	        data_dir=$DATA/multi30k.en-fr.mask4
+	        data_dir=$DATA/multi30k-en-fr.mask4
         elif [ $mask_data == "maskc" ]; then
-	        data_dir=$DATA/multi30k.en-fr.maskc
+	        data_dir=$DATA/multi30k-en-fr.maskc
         elif [ $mask_data == "maskp" ]; then
-	        data_dir=$DATA/multi30k.en-fr.maskp
+	        data_dir=$DATA/multi30k-en-fr.maskp
 	fi
 fi
 
