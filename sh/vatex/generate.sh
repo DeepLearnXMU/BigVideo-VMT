@@ -34,12 +34,12 @@ python3 sh/vatex/construct_json.py $ids_dir $hypos_dir $result_path $checkpoint
 echo "-----done-----"
 
 
-#if [ -n "$ensemble" ]; then
-#      if [ ! -e "$checkpoint_dir/last$ensemble.ensemble.pt" ]; then
-#              PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $checkpoint_dir --output $checkpoint_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
-#      fi
-#      checkpoint=last$ensemble.ensemble.pt
-#fi
+if [ -n "$ensemble" ]; then
+      if [ ! -e "$checkpoint_dir/last$ensemble.ensemble.pt" ]; then
+              PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $checkpoint_dir --output $checkpoint_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
+      fi
+      checkpoint=last$ensemble.ensemble.pt
+fi
 #
 #
 #
