@@ -5,7 +5,7 @@ device=2,3
 task=multi30k-en2de
 image_feat=vit_base_patch16_384
 mask_data=mask0
-DATA=/home/sata/kly/fairseq_mmt/data
+DATA=/home/sata/kly/fairseq_mmt/data-bin
 IMAGE=/home/sata/kly/fairseq_mmt/img_feature
 
 if [ ! -d $save_dir ]; then
