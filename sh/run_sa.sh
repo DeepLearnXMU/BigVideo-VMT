@@ -96,7 +96,7 @@ cp ${BASH_SOURCE[0]} $output_dir/train.sh
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-cmd="fairseq-train data-bin/$data_dir
+cmd="fairseq-train $data_dir
   --save-dir $output_dir
   --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang
   --arch $arch
