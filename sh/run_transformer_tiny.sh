@@ -61,7 +61,7 @@ dropout=0.3
 seed=1
 arch=transformer_tiny
 
-name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_seed${seed}_mt${max_tokens}_patience${patience}
+name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/textonly_baseline/${name}
 

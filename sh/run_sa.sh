@@ -1,8 +1,8 @@
 #! /usr/bin/bash
 set -e
 
-device=5
-task=multi30k-en2fr
+device=4
+task=multi30k-en2de
 image_feat=vit_base_patch16_384
 mask_data=mask0
 DATA=/home/sata/kly/fairseq_mmt/data-bin
@@ -65,7 +65,7 @@ arch=image_multimodal_transformer_SA_top
 SA_attention_dropout=0.1
 SA_image_dropout=0.1
 
-name=mmt_arch${arch}_imgFeature${image_feat}_mask${mask_data}_SAAdp${SA_attention_dropout}_SAIdp${SA_image_dropout}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_seed${seed}_mt${max_tokens}_patience${patience}
+name=mmt_arch${arch}_imgFeature${image_feat}_mask${mask_data}_SAAdp${SA_attention_dropout}_SAIdp${SA_image_dropout}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/image_mmt/${name}
 
