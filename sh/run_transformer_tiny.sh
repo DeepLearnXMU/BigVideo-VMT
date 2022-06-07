@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 set -e
 
-device=2,3
+device=4,5
 task=multi30k-en2fr
 mask_data=mask0
 DATA=/home/sata/kly/fairseq_mmt/data-bin
