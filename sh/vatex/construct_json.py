@@ -8,7 +8,11 @@ result_path=sys.argv[3]
 name=sys.argv[4]
 ids=[]
 hypos=[]
-
+print("in formating")
+print(ids_dir)
+print(hypos_dir)
+print(result_path)
+print(name)
 with open(ids_dir,encoding='utf-8') as file:
     ids=[x.rstrip() for x in file.readlines()]
 with open(hypos_dir,encoding='utf-8') as file:
