@@ -114,18 +114,18 @@ eval $cmd
 python3 rerank.py $model_dir/hypo.txt $model_dir/hypo.sorted
 
 if [ $task == "multi30k-en2de" ] && [ $who == "test" ]; then
-	ref=data/multi30k/test.2016.de
+	ref=$DATA/multi30k/test.2016.de
 elif [ $task == "multi30k-en2de" ] && [ $who == "test1" ]; then
-	ref=data/multi30k/test.2017.de
+	ref=$DATA/multi30k/test.2017.de
 elif [ $task == "multi30k-en2de" ] && [ $who == "test2" ]; then
-	ref=data/multi30k/test.coco.de
+	ref=$DATA/multi30k/test.coco.de
 
 elif [ $task == "multi30k-en2fr" ] && [ $who == 'test' ]; then
-	ref=data/multi30k/test.2016.fr
+	ref=$DATA/multi30k/test.2016.fr
 elif [ $task == "multi30k-en2fr" ] && [ $who == 'test1' ]; then
-	ref=data/multi30k/test.2017.fr
+	ref=$DATA/multi30k/test.2017.fr
 elif [ $task == "multi30k-en2fr" ] && [ $who == 'test2' ]; then
-	ref=data/multi30k/test.coco.fr
+	ref=$DATA/multi30k/test.coco.fr
 fi
 
 hypo=$model_dir/hypo.sorted
