@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 set -e
 
-device=2,3
+device=4,5
 task=multi30k-en2de
 image_feat=vit_base_patch16_384
 mask_data=mask0
