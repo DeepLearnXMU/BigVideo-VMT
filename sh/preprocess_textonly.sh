@@ -1,7 +1,7 @@
 src='en'
 tgt='fr'
 
-TEXT=data/multi30k-en-$tgt
+TEXT=/home/sata/kly/fairseq_mmt/fairseq_bin/multi30k-en-$tgt
 
 fairseq-preprocess --source-lang $src --target-lang $tgt \
   --trainpref $TEXT/train \
@@ -14,7 +14,7 @@ fairseq-preprocess --source-lang $src --target-lang $tgt \
 src='en'
 tgt='de'
 
-TEXT=data/multi30k-en-$tgt
+TEXT=/home/sata/kly/fairseq_mmt/fairseq_bin/multi30k-en-$tgt
 
 fairseq-preprocess --source-lang $src --target-lang $tgt \
   --trainpref $TEXT/train \
