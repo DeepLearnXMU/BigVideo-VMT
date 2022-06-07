@@ -5,7 +5,7 @@ _mask=mask0
 _image_feat=vit_base_patch16_384
 
 # set device
-gpu=7
+gpu=4
 
 model_root_dir=checkpoints
 
@@ -14,7 +14,7 @@ task=multi30k-en2de
 mask_data=$_mask
 image_feat=$_image_feat
 
-who=test	#test1, test2
+who=test2	#test1, test2
 random_image_translation=0 #1
 length_penalty=0.8
 
