@@ -94,7 +94,7 @@ output=$model_dir/translation_$who.log
 
 export CUDA_VISIBLE_DEVICES=$gpu
 
-cmd="fairseq-generate data-bin/$data_dir
+cmd="fairseq-generate $data_dir
   -s $src_lang -t $tgt_lang
   --path $model_dir/$checkpoint
   --gen-subset $who
