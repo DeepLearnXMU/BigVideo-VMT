@@ -52,13 +52,15 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, choices=['train', 'val', 'test2016', 'test2017', 'testcoco'], help='which dataset')
     parser.add_argument('--path', type=str)
     parser.add_argument('--model', type=str)
+    parser.add_argument('--save', type=str)
     args = parser.parse_args()
 
     # /path/flickr30k
     flickr30k_path = args.path
     dataset = args.dataset
     model_name = args.model
-    save_dir = os.path.join('data', model_name)
+    save=args.save
+    save_dir = os.path.join(save+"/", model_name)
     
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
