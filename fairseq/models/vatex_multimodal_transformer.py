@@ -451,8 +451,7 @@ class TransformerEncoder(FairseqEncoder):
             self,
             src_tokens,
             src_lengths,
-            imgs_list,
-            img_masks_list,
+            videos,
             return_all_hiddens: bool = False,
             token_embeddings: Optional[torch.Tensor] = None,
     ):
@@ -481,7 +480,8 @@ class TransformerEncoder(FairseqEncoder):
         """
         # import os
         # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
-
+        print(videos.shape)
+        print(dsdsa)
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
