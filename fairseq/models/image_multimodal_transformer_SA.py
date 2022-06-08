@@ -31,7 +31,6 @@ from fairseq.modules import (
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
-
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
@@ -41,14 +40,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
     <https://arxiv.org/abs/1706.03762>`_.
-
     Args:
         encoder (TransformerEncoder): the encoder
         decoder (TransformerDecoder): the decoder
-
     The Transformer model provides the following named architectures and
     command-line arguments:
-
     .. argparse::
         :ref: fairseq.models.transformer_parser
         :prog:
@@ -73,17 +69,27 @@ class TransformerModel(FairseqEncoderDecoderModel):
             }
 
         return {
-            'transformer.wmt14.en-fr': moses_subword('https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-fr.joined-dict.transformer.tar.bz2'),
+            'transformer.wmt14.en-fr': moses_subword(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-fr.joined-dict.transformer.tar.bz2'),
             'transformer.wmt16.en-de': 'https://dl.fbaipublicfiles.com/fairseq/models/wmt16.en-de.joined-dict.transformer.tar.bz2',
-            'transformer.wmt18.en-de': moses_subword('https://dl.fbaipublicfiles.com/fairseq/models/wmt18.en-de.ensemble.tar.gz'),
-            'transformer.wmt19.en-de': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.ensemble.tar.gz'),
-            'transformer.wmt19.en-ru': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.ensemble.tar.gz'),
-            'transformer.wmt19.de-en': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.ensemble.tar.gz'),
-            'transformer.wmt19.ru-en': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.ensemble.tar.gz'),
-            'transformer.wmt19.en-de.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.single_model.tar.gz'),
-            'transformer.wmt19.en-ru.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.single_model.tar.gz'),
-            'transformer.wmt19.de-en.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.single_model.tar.gz'),
-            'transformer.wmt19.ru-en.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.single_model.tar.gz'),
+            'transformer.wmt18.en-de': moses_subword(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt18.en-de.ensemble.tar.gz'),
+            'transformer.wmt19.en-de': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.ensemble.tar.gz'),
+            'transformer.wmt19.en-ru': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.ensemble.tar.gz'),
+            'transformer.wmt19.de-en': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.ensemble.tar.gz'),
+            'transformer.wmt19.ru-en': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.ensemble.tar.gz'),
+            'transformer.wmt19.en-de.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.single_model.tar.gz'),
+            'transformer.wmt19.en-ru.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.single_model.tar.gz'),
+            'transformer.wmt19.de-en.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.single_model.tar.gz'),
+            'transformer.wmt19.ru-en.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.single_model.tar.gz'),
         }
         # fmt: on
 
@@ -182,7 +188,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--SA-attention-dropout', type=float, default=0.1,
                             help='selective attn\'s dropout')
         parser.add_argument('--image-pre-norm', action='store_true', default=False,
-                            help='normlization on image feature before fusing') 
+                            help='normlization on image feature before fusing')
 
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
@@ -214,7 +220,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                     "--share-all-embeddings requires --encoder-embed-dim to match --decoder-embed-dim"
                 )
             if args.decoder_embed_path and (
-                args.decoder_embed_path != args.encoder_embed_path
+                    args.decoder_embed_path != args.encoder_embed_path
             ):
                 raise ValueError(
                     "--share-all-embeddings not compatible with --decoder-embed-path"
@@ -264,20 +270,19 @@ class TransformerModel(FairseqEncoderDecoderModel):
     # TorchScript doesn't support optional arguments with variable length (**kwargs).
     # Current workaround is to add union of all arguments in child classes.
     def forward(
-        self,
-        src_tokens,
-        src_lengths,
-        prev_output_tokens,
-        imgs_list,
-        img_masks_list,
-        return_all_hiddens: bool = True,
-        features_only: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            src_tokens,
+            src_lengths,
+            prev_output_tokens,
+            imgs_list,
+            img_masks_list,
+            return_all_hiddens: bool = True,
+            features_only: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         """
         Run the forward pass for an encoder-decoder model.
-
         Copied from the base class, but without ``**kwargs``,
         which are not supported by TorchScript.
         """
@@ -301,10 +306,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
     # helper function in the Base Class.
     @torch.jit.export
     def get_normalized_probs(
-        self,
-        net_output: Tuple[Tensor, Optional[Dict[str, List[Optional[Tensor]]]]],
-        log_probs: bool,
-        sample: Optional[Dict[str, Tensor]] = None,
+            self,
+            net_output: Tuple[Tensor, Optional[Dict[str, List[Optional[Tensor]]]]],
+            log_probs: bool,
+            sample: Optional[Dict[str, Tensor]] = None,
     ):
         """Get normalized probabilities (or log probs) from a net's output."""
         return self.get_normalized_probs_scriptable(net_output, log_probs, sample)
@@ -314,7 +319,6 @@ class TransformerEncoder(FairseqEncoder):
     """
     Transformer encoder consisting of *args.encoder_layers* layers. Each layer
     is a :class:`TransformerEncoderLayer`.
-
     Args:
         args (argparse.Namespace): parsed command-line arguments
         dictionary (~fairseq.data.Dictionary): encoding dictionary
@@ -376,15 +380,21 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = LayerNorm(embed_dim)
         else:
             self.layer_norm = None
-        
+
         self.args = args
         # code for image MMT
-
+        self.selective_attns = nn.ModuleList([])
+        self.selective_attns.extend([SelectiveAttention(qdim=embed_dim, kdim=i,
+                                                        vdim=i, attn_dim=embed_dim,
+                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
+                                                        num_heads=1, attn_drop=args.SA_attention_dropout) for i in
+                                     args.image_feat_dim])
 
         self.gate_denses = nn.ModuleList([])
-        self.gate_denses.extend([nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
+        self.gate_denses.extend(
+            [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
 
-        self.video_dropout_module = FairseqDropout(
+        self.image_dropout_module = FairseqDropout(
             args.SA_image_dropout, module_name=self.__class__.__name__
         )
         self.text_dropout_module = FairseqDropout(
@@ -417,16 +427,16 @@ class TransformerEncoder(FairseqEncoder):
         image = self.image_pre_norm_module(image)
         image = self.image_dropout_module(image)
         text = self.text_dropout_module(text)
+        output, _map = self.selective_attns[idx](query=text, key=image, value=image,
+                                                 key_padding_mask=image_mask)  # t, b, c
 
-        output, _map = self.selective_attns[idx](query=text, key=image, value=image, key_padding_mask=image_mask)   # t, b, c
-        
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_denses[idx](merge))
 
         # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
         # _map = _map[:,:,1:].softmax(dim=-1)
         # self.recoder.record_map(_map.cpu())
-        
+
         res = (1 - gate) * text + gate * output
         return res
 
@@ -434,7 +444,7 @@ class TransformerEncoder(FairseqEncoder):
         return TransformerEncoderLayer(args)
 
     def forward_embedding(
-        self, src_tokens, token_embedding: Optional[torch.Tensor] = None
+            self, src_tokens, token_embedding: Optional[torch.Tensor] = None
     ):
         # embed tokens and positions
         if token_embedding is None:
@@ -450,13 +460,13 @@ class TransformerEncoder(FairseqEncoder):
         return x, embed
 
     def forward(
-        self,
-        src_tokens,
-        src_lengths,
-        imgs_list,
-        img_masks_list,
-        return_all_hiddens: bool = False,
-        token_embeddings: Optional[torch.Tensor] = None,
+            self,
+            src_tokens,
+            src_lengths,
+            imgs_list,
+            img_masks_list,
+            return_all_hiddens: bool = False,
+            token_embeddings: Optional[torch.Tensor] = None,
     ):
         """
         Args:
@@ -468,7 +478,6 @@ class TransformerEncoder(FairseqEncoder):
                 intermediate hidden states (default: False).
             token_embeddings (torch.Tensor, optional): precomputed embeddings
                 default `None` will recompute embeddings
-
         Returns:
             namedtuple:
                 - **encoder_out** (Tensor): the last encoder layer's output of
@@ -483,7 +492,6 @@ class TransformerEncoder(FairseqEncoder):
         """
         # import os
         # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
-
 
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
@@ -501,7 +509,7 @@ class TransformerEncoder(FairseqEncoder):
                 img = img.transpose(0, 1)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
-            
+
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask)
@@ -533,11 +541,9 @@ class TransformerEncoder(FairseqEncoder):
     def reorder_encoder_out(self, encoder_out: EncoderOut, new_order):
         """
         Reorder encoder output according to *new_order*.
-
         Args:
             encoder_out: output from the ``forward()`` method
             new_order (LongTensor): desired order
-
         Returns:
             *encoder_out* rearranged according to *new_order*
         """
@@ -621,7 +627,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     """
     Transformer decoder consisting of *args.decoder_layers* layers. Each layer
     is a :class:`TransformerDecoderLayer`.
-
     Args:
         args (argparse.Namespace): parsed command-line arguments
         dictionary (~fairseq.data.Dictionary): decoding dictionary
@@ -700,7 +705,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self.num_layers = len(self.layers)
 
         if args.decoder_normalize_before and not getattr(
-            args, "no_decoder_final_norm", False
+                args, "no_decoder_final_norm", False
         ):
             self.layer_norm = LayerNorm(embed_dim)
         else:
@@ -743,16 +748,16 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return TransformerDecoderLayer(args, no_encoder_attn)
 
     def forward(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        features_only: bool = False,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
-        src_lengths: Optional[Any] = None,
-        return_all_hiddens: bool = False,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            features_only: bool = False,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
+            src_lengths: Optional[Any] = None,
+            return_all_hiddens: bool = False,
     ):
         """
         Args:
@@ -766,7 +771,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 applying output layer (default: False).
             full_context_alignment (bool, optional): don't apply
                 auto-regressive mask to self-attention (default: False).
-
         Returns:
             tuple:
                 - the decoder's output of shape `(batch, tgt_len, vocab)`
@@ -785,13 +789,13 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return x, extra
 
     def extract_features(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         return self.extract_features_scriptable(
             prev_output_tokens,
@@ -809,20 +813,18 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     """
 
     def extract_features_scriptable(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         """
         Similar to *forward* but only return features.
-
         Includes several features from "Jointly Learning to Align and
         Translate with Transformer Models" (Garg et al., EMNLP 2019).
-
         Args:
             full_context_alignment (bool, optional): don't apply
                 auto-regressive mask to self-attention (default: False).
@@ -830,7 +832,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 heads at this layer (default: last layer).
             alignment_heads (int, optional): only average alignment over
                 this many heads (default: all heads).
-
         Returns:
             tuple:
                 - the decoder's features of shape `(batch, tgt_len, embed_dim)`
@@ -936,9 +937,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         dim = tensor.size(0)
         # self._future_mask.device != tensor.device is not working in TorchScript. This is a workaround.
         if (
-            self._future_mask.size(0) == 0
-            or (not self._future_mask.device == tensor.device)
-            or self._future_mask.size(0) < dim
+                self._future_mask.size(0) == 0
+                or (not self._future_mask.device == tensor.device)
+                or self._future_mask.size(0) < dim
         ):
             self._future_mask = torch.triu(
                 utils.fill_with_neg_inf(torch.zeros([dim, dim])), 1
