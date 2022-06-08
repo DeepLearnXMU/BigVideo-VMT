@@ -383,6 +383,9 @@ class TransformerEncoder(FairseqEncoder):
         self.args = args
         # code for image MMT
 
+        self.denses = nn.ModuleList([])
+        self.denses.extend([nn.Linear(args.image_feat_dim, embed_dim) for i in args.image_feat_dim ])
+
         self.gate_denses = nn.ModuleList([])
         self.gate_denses.extend(
             [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
@@ -513,6 +516,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             for img, img_mask in zip(imgs_list, img_masks_list):
+                print(img.shape)
                 img = img.transpose(0, 1)   # B L C
                 if len(img.shape)==3:
                     img = torch.mean(img,dim=-2)
