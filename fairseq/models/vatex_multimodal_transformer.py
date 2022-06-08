@@ -385,7 +385,7 @@ class TransformerEncoder(FairseqEncoder):
 
         self.gate_denses = nn.ModuleList([])
         self.gate_denses.extend(
-            [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
+            [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.video_feat_dim])
 
 
         self.image_pre_norm_module = nn.Identity()
