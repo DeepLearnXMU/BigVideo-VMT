@@ -40,7 +40,7 @@ class VideoDataset(torch.utils.data.Dataset):
             video, padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
                                                self.max_vid_len)
             self.video_list.append(video)
-        print(len(self.video_list),len(self.sent_id_list))
+
         assert ( len(self.video_list)==len(self.sent_id_list))
         self.size = len(self.sent_id_list)
 
