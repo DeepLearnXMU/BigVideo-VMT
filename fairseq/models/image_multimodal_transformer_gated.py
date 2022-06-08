@@ -387,12 +387,7 @@ class TransformerEncoder(FairseqEncoder):
         self.gate_denses.extend(
             [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
 
-        self.image_dropout_module = FairseqDropout(
-            args.SA_image_dropout, module_name=self.__class__.__name__
-        )
-        self.text_dropout_module = FairseqDropout(
-            args.SA_text_dropout, module_name=self.__class__.__name__
-        )
+
 
         self.image_pre_norm_module = nn.Identity()
         if args.image_pre_norm:
