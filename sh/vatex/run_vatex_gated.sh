@@ -67,7 +67,7 @@ fairseq-train $data \
   --keep-last-epochs $keep_last_epochs  \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
-  --video-feat-dim $ video_feat_dim \
+  --video-feat-dim $video_feat_dim \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
