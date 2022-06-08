@@ -187,7 +187,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--image-pre-norm', action='store_true', default=False,
                             help='normlization on image feature before fusing')
 
-        parser.add_argument('--is-fusion-top', type=bool,
+        parser.add_argument('--is-fusion-top', type=bool, default=True,
                             help='fuse img feat after text encoding')
 
     @classmethod
@@ -412,6 +412,7 @@ class TransformerEncoder(FairseqEncoder):
             return res
 
     def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
+
         print(text.shape)
         print(image.shape)
         print(sdads)
