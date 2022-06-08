@@ -2,7 +2,7 @@
 set -e
 
 
-device=5,6
+device=4,6
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
