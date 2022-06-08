@@ -28,6 +28,7 @@ class VideoDataset(torch.utils.data.Dataset):
 
         self.sent_id_list=[]
         print(split)
+        print(video_ids_path)
         with open(video_ids_path+"/"+split+".ids", encoding='utf-8') as file:
             self.sent_id_list = [x.rstrip() for x in file.readlines()]
 

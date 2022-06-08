@@ -242,10 +242,10 @@ class VatexTranslationTask(LegacyFairseqTask):
                             help='print sample generations during validation')
         # fmt: on
         # video multimodal translation
-        parser.add_argument('--video-feat-path', nargs='+',
+        parser.add_argument('--video-feat-path', type=str,
                             help='image features path')
-        parser.add_argument('--video-ids-path', nargs='+')
-        parser.add_argument('--video-feat-dim', nargs='+', type=int,
+        parser.add_argument('--video-ids-path', type=str)
+        parser.add_argument('--video-feat-dim', type=int,
                             help='video features dimension')
 
 
