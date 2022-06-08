@@ -187,7 +187,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
 
         parser.add_argument('--video-pre-norm', action='store_true', default=False,
                             help='normlization on image feature before fusing')
-        parser.add_argument('--is-fusion-top', type=bool,
+        parser.add_argument('--is-fusion-top', type=bool,default=True,
                             help='fuse img feat after text encoding')
 
     @classmethod
