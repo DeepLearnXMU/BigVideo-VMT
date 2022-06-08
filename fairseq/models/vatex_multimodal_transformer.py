@@ -31,12 +31,11 @@ from fairseq.modules import (
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
-
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
 
-@register_model("image_multimodal_transformer_SA")
+@register_model("vatex_multimodal_transformer")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -73,17 +72,27 @@ class TransformerModel(FairseqEncoderDecoderModel):
             }
 
         return {
-            'transformer.wmt14.en-fr': moses_subword('https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-fr.joined-dict.transformer.tar.bz2'),
+            'transformer.wmt14.en-fr': moses_subword(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-fr.joined-dict.transformer.tar.bz2'),
             'transformer.wmt16.en-de': 'https://dl.fbaipublicfiles.com/fairseq/models/wmt16.en-de.joined-dict.transformer.tar.bz2',
-            'transformer.wmt18.en-de': moses_subword('https://dl.fbaipublicfiles.com/fairseq/models/wmt18.en-de.ensemble.tar.gz'),
-            'transformer.wmt19.en-de': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.ensemble.tar.gz'),
-            'transformer.wmt19.en-ru': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.ensemble.tar.gz'),
-            'transformer.wmt19.de-en': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.ensemble.tar.gz'),
-            'transformer.wmt19.ru-en': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.ensemble.tar.gz'),
-            'transformer.wmt19.en-de.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.single_model.tar.gz'),
-            'transformer.wmt19.en-ru.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.single_model.tar.gz'),
-            'transformer.wmt19.de-en.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.single_model.tar.gz'),
-            'transformer.wmt19.ru-en.single_model': moses_fastbpe('https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.single_model.tar.gz'),
+            'transformer.wmt18.en-de': moses_subword(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt18.en-de.ensemble.tar.gz'),
+            'transformer.wmt19.en-de': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.ensemble.tar.gz'),
+            'transformer.wmt19.en-ru': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.ensemble.tar.gz'),
+            'transformer.wmt19.de-en': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.ensemble.tar.gz'),
+            'transformer.wmt19.ru-en': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.ensemble.tar.gz'),
+            'transformer.wmt19.en-de.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-de.joined-dict.single_model.tar.gz'),
+            'transformer.wmt19.en-ru.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.en-ru.single_model.tar.gz'),
+            'transformer.wmt19.de-en.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.de-en.joined-dict.single_model.tar.gz'),
+            'transformer.wmt19.ru-en.single_model': moses_fastbpe(
+                'https://dl.fbaipublicfiles.com/fairseq/models/wmt19.ru-en.single_model.tar.gz'),
         }
         # fmt: on
 
@@ -175,14 +184,9 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='scalar quantization noise and scalar quantization at training time')
         # fmt: on
         # args for image MMT
-        parser.add_argument('--SA-image-dropout', type=float, default=0.1,
-                            help='image feat dropout before SA')
-        parser.add_argument('--SA-text-dropout', type=float, default=0,
-                            help='text feat dropout before SA')
-        parser.add_argument('--SA-attention-dropout', type=float, default=0.1,
-                            help='selective attn\'s dropout')
-        parser.add_argument('--image-pre-norm', action='store_true', default=False,
-                            help='normlization on image feature before fusing') 
+
+        parser.add_argument('--video-pre-norm', action='store_true', default=False,
+                            help='normlization on image feature before fusing')
 
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
@@ -214,7 +218,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                     "--share-all-embeddings requires --encoder-embed-dim to match --decoder-embed-dim"
                 )
             if args.decoder_embed_path and (
-                args.decoder_embed_path != args.encoder_embed_path
+                    args.decoder_embed_path != args.encoder_embed_path
             ):
                 raise ValueError(
                     "--share-all-embeddings not compatible with --decoder-embed-path"
@@ -264,16 +268,16 @@ class TransformerModel(FairseqEncoderDecoderModel):
     # TorchScript doesn't support optional arguments with variable length (**kwargs).
     # Current workaround is to add union of all arguments in child classes.
     def forward(
-        self,
-        src_tokens,
-        src_lengths,
-        prev_output_tokens,
-        imgs_list,
-        img_masks_list,
-        return_all_hiddens: bool = True,
-        features_only: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            src_tokens,
+            src_lengths,
+            prev_output_tokens,
+            imgs_list,
+            img_masks_list,
+            return_all_hiddens: bool = True,
+            features_only: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         """
         Run the forward pass for an encoder-decoder model.
@@ -301,10 +305,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
     # helper function in the Base Class.
     @torch.jit.export
     def get_normalized_probs(
-        self,
-        net_output: Tuple[Tensor, Optional[Dict[str, List[Optional[Tensor]]]]],
-        log_probs: bool,
-        sample: Optional[Dict[str, Tensor]] = None,
+            self,
+            net_output: Tuple[Tensor, Optional[Dict[str, List[Optional[Tensor]]]]],
+            log_probs: bool,
+            sample: Optional[Dict[str, Tensor]] = None,
     ):
         """Get normalized probabilities (or log probs) from a net's output."""
         return self.get_normalized_probs_scriptable(net_output, log_probs, sample)
@@ -376,24 +380,30 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = LayerNorm(embed_dim)
         else:
             self.layer_norm = None
-        
-        self.args = args
-        # code for video MMT
 
+        self.args = args
+        # code for image MMT
+        self.selective_attns = nn.ModuleList([])
+        self.selective_attns.extend([SelectiveAttention(qdim=embed_dim, kdim=i,
+                                                        vdim=i, attn_dim=embed_dim,
+                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
+                                                        num_heads=1, attn_drop=args.SA_attention_dropout) for i in
+                                     args.image_feat_dim])
 
         self.gate_denses = nn.ModuleList([])
-        self.gate_denses.extend([nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.video_feat_dim])
+        self.gate_denses.extend(
+            [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
 
-        self.video_dropout_module = FairseqDropout(
+        self.image_dropout_module = FairseqDropout(
             args.SA_image_dropout, module_name=self.__class__.__name__
         )
         self.text_dropout_module = FairseqDropout(
             args.SA_text_dropout, module_name=self.__class__.__name__
         )
 
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
+        self.image_pre_norm_module = nn.Identity()
+        if args.image_pre_norm:
+            self.image_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
 
@@ -418,15 +428,16 @@ class TransformerEncoder(FairseqEncoder):
         image = self.image_dropout_module(image)
         text = self.text_dropout_module(text)
 
-        output, _map = self.selective_attns[idx](query=text, key=image, value=image, key_padding_mask=image_mask)   # t, b, c
-        
+        output, _map = self.selective_attns[idx](query=text, key=image, value=image,
+                                                 key_padding_mask=image_mask)  # t, b, c
+
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_denses[idx](merge))
 
         # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
         # _map = _map[:,:,1:].softmax(dim=-1)
         # self.recoder.record_map(_map.cpu())
-        
+
         res = (1 - gate) * text + gate * output
         return res
 
@@ -434,7 +445,7 @@ class TransformerEncoder(FairseqEncoder):
         return TransformerEncoderLayer(args)
 
     def forward_embedding(
-        self, src_tokens, token_embedding: Optional[torch.Tensor] = None
+            self, src_tokens, token_embedding: Optional[torch.Tensor] = None
     ):
         # embed tokens and positions
         if token_embedding is None:
@@ -450,13 +461,13 @@ class TransformerEncoder(FairseqEncoder):
         return x, embed
 
     def forward(
-        self,
-        src_tokens,
-        src_lengths,
-        imgs_list,
-        img_masks_list,
-        return_all_hiddens: bool = False,
-        token_embeddings: Optional[torch.Tensor] = None,
+            self,
+            src_tokens,
+            src_lengths,
+            imgs_list,
+            img_masks_list,
+            return_all_hiddens: bool = False,
+            token_embeddings: Optional[torch.Tensor] = None,
     ):
         """
         Args:
@@ -484,7 +495,6 @@ class TransformerEncoder(FairseqEncoder):
         # import os
         # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
 
-
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
@@ -501,7 +511,7 @@ class TransformerEncoder(FairseqEncoder):
                 img = img.transpose(0, 1)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
-            
+
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask)
@@ -701,7 +711,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self.num_layers = len(self.layers)
 
         if args.decoder_normalize_before and not getattr(
-            args, "no_decoder_final_norm", False
+                args, "no_decoder_final_norm", False
         ):
             self.layer_norm = LayerNorm(embed_dim)
         else:
@@ -744,16 +754,16 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return TransformerDecoderLayer(args, no_encoder_attn)
 
     def forward(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        features_only: bool = False,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
-        src_lengths: Optional[Any] = None,
-        return_all_hiddens: bool = False,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            features_only: bool = False,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
+            src_lengths: Optional[Any] = None,
+            return_all_hiddens: bool = False,
     ):
         """
         Args:
@@ -786,13 +796,13 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return x, extra
 
     def extract_features(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         return self.extract_features_scriptable(
             prev_output_tokens,
@@ -810,13 +820,13 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     """
 
     def extract_features_scriptable(
-        self,
-        prev_output_tokens,
-        encoder_out: Optional[EncoderOut] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        full_context_alignment: bool = False,
-        alignment_layer: Optional[int] = None,
-        alignment_heads: Optional[int] = None,
+            self,
+            prev_output_tokens,
+            encoder_out: Optional[EncoderOut] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            full_context_alignment: bool = False,
+            alignment_layer: Optional[int] = None,
+            alignment_heads: Optional[int] = None,
     ):
         """
         Similar to *forward* but only return features.
@@ -937,9 +947,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         dim = tensor.size(0)
         # self._future_mask.device != tensor.device is not working in TorchScript. This is a workaround.
         if (
-            self._future_mask.size(0) == 0
-            or (not self._future_mask.device == tensor.device)
-            or self._future_mask.size(0) < dim
+                self._future_mask.size(0) == 0
+                or (not self._future_mask.device == tensor.device)
+                or self._future_mask.size(0) < dim
         ):
             self._future_mask = torch.triu(
                 utils.fill_with_neg_inf(torch.zeros([dim, dim])), 1
@@ -1010,66 +1020,81 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture("image_multimodal_transformer_SA", "image_multimodal_transformer_SA")
+@register_model_architecture('vatex_multimodal_transformer', 'gated')
 def base_architecture(args):
-    args.encoder_embed_path = getattr(args, "encoder_embed_path", None)
-    args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 512)
-    args.encoder_ffn_embed_dim = getattr(args, "encoder_ffn_embed_dim", 2048)
-    args.encoder_layers = getattr(args, "encoder_layers", 6)
-    args.encoder_attention_heads = getattr(args, "encoder_attention_heads", 8)
-    args.encoder_normalize_before = getattr(args, "encoder_normalize_before", False)
-    args.encoder_learned_pos = getattr(args, "encoder_learned_pos", False)
-    args.decoder_embed_path = getattr(args, "decoder_embed_path", None)
-    args.decoder_embed_dim = getattr(args, "decoder_embed_dim", args.encoder_embed_dim)
-    args.decoder_ffn_embed_dim = getattr(
-        args, "decoder_ffn_embed_dim", args.encoder_ffn_embed_dim
-    )
-    args.decoder_layers = getattr(args, "decoder_layers", 6)
-    args.decoder_attention_heads = getattr(args, "decoder_attention_heads", 8)
-    args.decoder_normalize_before = getattr(args, "decoder_normalize_before", False)
-    args.decoder_learned_pos = getattr(args, "decoder_learned_pos", False)
-    args.attention_dropout = getattr(args, "attention_dropout", 0.0)
-    args.activation_dropout = getattr(args, "activation_dropout", 0.0)
-    args.activation_fn = getattr(args, "activation_fn", "relu")
-    args.dropout = getattr(args, "dropout", 0.1)
-    args.adaptive_softmax_cutoff = getattr(args, "adaptive_softmax_cutoff", None)
-    args.adaptive_softmax_dropout = getattr(args, "adaptive_softmax_dropout", 0)
-    args.share_decoder_input_output_embed = getattr(
-        args, "share_decoder_input_output_embed", False
-    )
-    args.share_all_embeddings = getattr(args, "share_all_embeddings", False)
-    args.no_token_positional_embeddings = getattr(
-        args, "no_token_positional_embeddings", False
-    )
-    args.adaptive_input = getattr(args, "adaptive_input", False)
-    args.no_cross_attention = getattr(args, "no_cross_attention", False)
-    args.cross_self_attention = getattr(args, "cross_self_attention", False)
+    args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 2048)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 8)
+    args.encoder_normalize_before = getattr(args, 'encoder_normalize_before', False)
+    args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', False)
+    args.decoder_embed_path = getattr(args, 'decoder_embed_path', None)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', args.encoder_embed_dim)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', args.encoder_ffn_embed_dim)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 8)
+    args.decoder_normalize_before = getattr(args, 'decoder_normalize_before', False)
+    args.decoder_learned_pos = getattr(args, 'decoder_learned_pos', False)
+    args.attention_dropout = getattr(args, 'attention_dropout', 0.)
+    args.activation_dropout = getattr(args, 'activation_dropout', 0.)
+    args.activation_fn = getattr(args, 'activation_fn', 'relu')
+    args.dropout = getattr(args, 'dropout', 0.1)
+    args.adaptive_softmax_cutoff = getattr(args, 'adaptive_softmax_cutoff', None)
+    args.adaptive_softmax_dropout = getattr(args, 'adaptive_softmax_dropout', 0)
+    args.share_decoder_input_output_embed = getattr(args, 'share_decoder_input_output_embed', False)
+    args.share_all_embeddings = getattr(args, 'share_all_embeddings', False)
+    args.no_token_positional_embeddings = getattr(args, 'no_token_positional_embeddings', False)
+    args.adaptive_input = getattr(args, 'adaptive_input', False)
+    args.no_cross_attention = getattr(args, 'no_cross_attention', False)
+    args.cross_self_attention = getattr(args, 'cross_self_attention', False)
+    args.layer_wise_attention = getattr(args, 'layer_wise_attention', False)
 
-    args.decoder_output_dim = getattr(
-        args, "decoder_output_dim", args.decoder_embed_dim
-    )
-    args.decoder_input_dim = getattr(args, "decoder_input_dim", args.decoder_embed_dim)
+    args.decoder_output_dim = getattr(args, 'decoder_output_dim', args.decoder_embed_dim)
+    args.decoder_input_dim = getattr(args, 'decoder_input_dim', args.decoder_embed_dim)
 
-    args.no_scale_embedding = getattr(args, "no_scale_embedding", False)
-    args.layernorm_embedding = getattr(args, "layernorm_embedding", False)
-    args.tie_adaptive_weights = getattr(args, "tie_adaptive_weights", False)
+    args.no_scale_embedding = getattr(args, 'no_scale_embedding', False)
+    args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-@register_model_architecture("image_multimodal_transformer_SA", "image_multimodal_transformer_SA_top")
-def image_multimodal_transformer_SA_top(args):
-    args.encoder_embed_dim = getattr(args, "encoder_embed_dim", 128)
-    args.encoder_ffn_embed_dim = getattr(args, "encoder_ffn_embed_dim", 256)
-    args.encoder_attention_heads = getattr(args, "encoder_attention_heads", 4)
-    args.encoder_layers = getattr(args, "encoder_layers", 4)
-    args.decoder_embed_dim = getattr(args, "decoder_embed_dim", 128)
-    args.decoder_ffn_embed_dim = getattr(args, "decoder_ffn_embed_dim", 256)
-    args.decoder_attention_heads = getattr(args, "decoder_attention_heads", 4)
-    args.decoder_layers = getattr(args, "decoder_layers", 4)
-
-    # args for image MMT
-    args.is_fusion_top = getattr(args, 'is_fusion_top', True)
-
+@register_model_architecture('vatex_multimodal_transformer', 'gated_iwslt_de_en')
+def transformer_iwslt_de_en(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 512)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 1024)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
     base_architecture(args)
+
+
+@register_model_architecture('vatex_multimodal_transformer', 'gated_tiny')
+def transformer_tiny(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 4)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 128)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 256)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 4)
+    base_architecture(args)
+
+
+@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex')
+def uvr_video_vatex(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    base_architecture(args)
+
 
 
 

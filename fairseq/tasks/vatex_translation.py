@@ -245,6 +245,9 @@ class VatexTranslationTask(LegacyFairseqTask):
         parser.add_argument('--video-feat-path', nargs='+',
                             help='image features path')
         parser.add_argument('--video-ids-path', nargs='+')
+        parser.add_argument('--video-feat-dim', nargs='+', type=int,
+                            help='video features dimension')
+
 
     def __init__(self, args, src_dict, tgt_dict):
         super().__init__(args)

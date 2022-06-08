@@ -41,8 +41,8 @@ fairseq-generate  $test_DATA  \
 --remove-bpe \
 --gen-subset $who \
 --beam 5  \
---batch-size $length_penalty  \
---lenpen 0.8   \
+--batch-size  128  \
+--lenpen $length_penalty  \
 --output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
 
 
