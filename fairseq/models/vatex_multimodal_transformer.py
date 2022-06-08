@@ -502,23 +502,23 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        if self.is_fusion_top:
-            # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
-            videos = torch.mean(videos, dim=1)
-            bsz,video_dim=videos.size()[0],videos.size()[1]
-
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
-
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=-1)
-            gate = self.sigmoid(self.gate_dense(merge))
-            output = (1 - gate) * text_repr + gate * v_repr
-            x = output.transpose(0, 1)  # reback to T x B x C
+        # if self.is_fusion_top:
+        #     # x [ L x B x C]   videos [ B x l x C]
+        #     # avg_pooling
+        #     videos = torch.mean(videos, dim=1)
+        #     bsz,video_dim=videos.size()[0],videos.size()[1]
+        #
+        #     v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
+        #     v_repr = self.dense(v_embedding)  # B, 1, C
+        #
+        #     text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+        #     b, t, c = text_repr.shape
+        #     v_repr = v_repr.expand(b, t, c)
+        #     assert v_repr.shape[1] == text_repr.shape[1]
+        #     merge = torch.cat([text_repr, v_repr], dim=-1)
+        #     gate = self.sigmoid(self.gate_dense(merge))
+        #     output = (1 - gate) * text_repr + gate * v_repr
+        #     x = output.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
             encoder_out=x,  # T x B x C

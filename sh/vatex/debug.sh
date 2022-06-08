@@ -2,17 +2,19 @@
 set -e
 
 
-device=7
+device=6
 export CUDA_VISIBLE_DEVICES=$device
+source activate fairseq_mmt
 
 src_lang=en
 tgt_lang=zh
 
-data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
-#data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
+
+#data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
+data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.005
+lr=0.007
 warmup=2000
 max_tokens=4096
 update_freq=1
@@ -21,14 +23,19 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=1
-weight_decay=0.0
-arch=transformer_tiny
+weight_decay=0.1
+arch=gated_vatex
+video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
+video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
+video_feat_dim=1024
+
+
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=baseline_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_wd${weight_decay}_patience${patience}
+name=debug
 
-output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
+output_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/${name}
 
 
 mkdir -p $output_dir
@@ -46,12 +53,11 @@ fairseq-train $data \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --criterion $criterion --label-smoothing 0.1 \
-  --task translation \
+  --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
   --find-unused-parameters \
-  --eval-zh-bleu  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \
@@ -59,6 +65,9 @@ fairseq-train $data \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
+  --video-feat-path $video_feat_path \
+  --video-ids-path $video_ids_path \
+  --video-feat-dim $video_feat_dim \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
