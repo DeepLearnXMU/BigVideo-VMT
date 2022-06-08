@@ -2,7 +2,7 @@
 set -e
 
 
-device=6
+device=5,6
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -16,7 +16,7 @@ criterion=label_smoothed_cross_entropy
 fp16=1 #0
 lr=0.003
 warmup=2000
-max_tokens=4096
+max_tokens=2048
 update_freq=1
 keep_last_epochs=10
 patience=10
