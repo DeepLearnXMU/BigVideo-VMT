@@ -514,8 +514,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             for img, img_mask in zip(imgs_list, img_masks_list):
-                print(img.shape)
-                img = img.transpose(0, 1)   # B L C
+
                 x = x.transpose(0, 1)
                 if len(img.shape)==3:
                     # average
