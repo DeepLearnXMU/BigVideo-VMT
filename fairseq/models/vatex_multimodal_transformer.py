@@ -508,12 +508,14 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         if self.is_fusion_top:
-            print(x.shape)
+            # x [ L x B x C]   videos [ B x l x C]
+
+            #pooling
+
+            m = torch.nn.MaxPool3d(3, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)
+            videos = m (videos)
             print(videos.shape)
-            for img, img_mask in zip(imgs_list, img_masks_list):
-                img = img.transpose(0, 1)
-                xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
-                idx += 1
+
 
         x = self.f(xs, fun='sum')
 
