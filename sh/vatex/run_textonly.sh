@@ -2,7 +2,7 @@
 set -e
 
 
-device=4
+device=5
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -12,7 +12,7 @@ tgt_lang=zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.002
+lr=0.003
 warmup=2000
 max_tokens=4096
 update_freq=1
