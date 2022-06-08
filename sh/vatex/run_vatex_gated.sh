@@ -34,7 +34,7 @@ gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=vatex_textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_patience${patience}
 
-output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
+output_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/${name}
 
 
 mkdir -p $output_dir
