@@ -13,7 +13,7 @@ test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 ensemble=10
 
 checkpoint=checkpoint_best.pt
-length_penalty=0.6
+length_penalty=0.8
 
 echo "-----$who-------"
 fairseq-generate  $test_DATA  \
