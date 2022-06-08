@@ -434,7 +434,6 @@ class TransformerEncoder(FairseqEncoder):
 
         res = (1 - gate) * text + gate * v_repr
         res = res.transpose(0, 1)
-        print(res.shape)
         return res
 
     def build_encoder_layer(self, args):
@@ -530,8 +529,6 @@ class TransformerEncoder(FairseqEncoder):
                 idx += 1
 
         x = self.f(xs, fun='sum')
-        print(x.shape)
-        print(dsdsa)
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
