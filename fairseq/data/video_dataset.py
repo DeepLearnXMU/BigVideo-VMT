@@ -35,11 +35,17 @@ class VideoDataset(torch.utils.data.Dataset):
             self.video_dir="public_test/"
 
         self.video_list=[]
+        import datetime
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(time)
         for sent_id in self.sent_id_list:
             vid = sent_id[:-2]
             video, padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
                                                self.max_vid_len)
             self.video_list.append(video)
+        time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(time)
+        print(ads)
 
         assert ( len(self.video_list)==len(self.sent_id_list))
         self.size = len(self.sent_id_list)
