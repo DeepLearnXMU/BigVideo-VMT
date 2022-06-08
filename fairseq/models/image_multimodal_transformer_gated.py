@@ -186,7 +186,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for image MMT
         parser.add_argument('--image-pre-norm', action='store_true', default=False,
                             help='normlization on image feature before fusing')
-
+        parser.add_argument('--image-feat-path', nargs='+', 
+                            help='image features path')
+        parser.add_argument('--image-feat-dim', nargs='+', type=int,
+                            help='image features dimension')
         parser.add_argument('--is-fusion-top', type=bool, default=True,
                             help='fuse img feat after text encoding')
 
