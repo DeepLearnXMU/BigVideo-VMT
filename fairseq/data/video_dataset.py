@@ -34,15 +34,20 @@ class VideoDataset(torch.utils.data.Dataset):
         else:
             self.video_dir="public_test/"
 
+        self.video_list=[]
+        for sent_id in self.sent_id_list:
+            vid = sent_id[:-2]
+            video, padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
+                                               self.max_vid_len)
+            self.video_list.extend(video)
+
+        assert ( len(self.video_list)==len(self.sent_id_list))
         self.size = len(self.sent_id_list)
 
 
     def __getitem__(self, idx):
-        sent_id = self.sent_id_list[idx]
-        vid = sent_id[:-2]
-        img,padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
-                                  self.max_vid_len)
-        return img
+
+        return self.video_list[idx]
 
     def __len__(self):
         return self.size
