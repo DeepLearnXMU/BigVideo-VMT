@@ -517,8 +517,6 @@ class TransformerEncoder(FairseqEncoder):
             assert v_repr.shape[1] == text_repr.shape[1]
             merge = torch.cat([text_repr, v_repr], dim=-1)
             gate = self.sigmoid(self.gate_dense(merge))
-            print(gate.shape,v_repr.shape,text_repr.shape)
-            print(sdas)
             output = (1 - gate) * text_repr + gate * v_repr
             x = output.transpose(0, 1)  # reback to T x B x C
 
