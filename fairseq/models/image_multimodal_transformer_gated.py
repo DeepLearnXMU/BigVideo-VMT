@@ -417,6 +417,7 @@ class TransformerEncoder(FairseqEncoder):
     def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
         print(text.shape,image.shape)
         v_repr = self.denses[idx](image)
+        print(v_repr.shape)
         b, t, c = text.shape
         v_repr = v_repr.expand(b, t, c)
         assert v_repr.shape[1] == text.shape[1]
