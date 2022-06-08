@@ -8,6 +8,7 @@ export CUDA_VISIBLE_DEVICES=$device
 src_lang=en
 tgt_lang=zh
 
+
 #data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
