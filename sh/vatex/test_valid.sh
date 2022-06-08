@@ -15,15 +15,15 @@ ensemble=10
 checkpoint=checkpoint_best.pt
 length_penalty=0.8
 
-echo "-----$who-------"
-fairseq-generate  $test_DATA  \
---path $checkpoint_dir/$checkpoint \
---remove-bpe \
---gen-subset $who \
---beam 5  \
---batch-size 128  \
---lenpen $length_penalty   \
---output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
+#echo "-----$who-------"
+#fairseq-generate  $test_DATA  \
+#--path $checkpoint_dir/$checkpoint \
+#--remove-bpe \
+#--gen-subset $who \
+#--beam 5  \
+#--batch-size 128  \
+#--lenpen $length_penalty   \
+#--output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
 
 
 
