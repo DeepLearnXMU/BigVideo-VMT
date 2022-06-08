@@ -40,7 +40,7 @@ class VideoDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         sent_id = self.sent_id_list[idx]
         vid = sent_id[:-2]
-        img,padding = load_video_features(os.path.join(self.data_dir, 'vatex_features/', self.video_dir, vid + '.npy'),
+        img,padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
                                   self.max_vid_len)
         return img
 
