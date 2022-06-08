@@ -22,7 +22,7 @@ max_epoches=100
 dropout=0.3
 seed=1
 weight_decay=0.1
-arch=transformer_tiny
+arch=transformer_vatex
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 

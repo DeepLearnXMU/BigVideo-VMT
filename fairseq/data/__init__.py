@@ -58,6 +58,8 @@ from .multilingual.sampled_multi_epoch_dataset import SampledMultiEpochDataset
 from .fasta_dataset import FastaDataset, EncodedFastaDataset
 from .image_dataset import ImageDataset
 from .image_language_pair_dataset import ImageLanguagePairDataset
+from .video_dataset import VideoDataset
+from .video_language_dataset import VideoLanguagePairDataset
 
 from .iterators import (
     CountingIterator,
@@ -125,4 +127,6 @@ __all__ = [
     "TransformEosLangPairDataset",
     "TruncateDataset",
     "TruncatedDictionary",
+    "VideoDataset",
+    "VideoLanguageDataset"
 ]
