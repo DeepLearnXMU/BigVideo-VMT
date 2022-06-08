@@ -187,7 +187,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
 
         parser.add_argument('--video-pre-norm', action='store_true', default=False,
                             help='normlization on image feature before fusing')
-
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
 
@@ -383,27 +382,15 @@ class TransformerEncoder(FairseqEncoder):
 
         self.args = args
         # code for image MMT
-        self.selective_attns = nn.ModuleList([])
-        self.selective_attns.extend([SelectiveAttention(qdim=embed_dim, kdim=i,
-                                                        vdim=i, attn_dim=embed_dim,
-                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
-                                                        num_heads=1, attn_drop=args.SA_attention_dropout) for i in
-                                     args.image_feat_dim])
 
         self.gate_denses = nn.ModuleList([])
         self.gate_denses.extend(
             [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
 
-        self.image_dropout_module = FairseqDropout(
-            args.SA_image_dropout, module_name=self.__class__.__name__
-        )
-        self.text_dropout_module = FairseqDropout(
-            args.SA_text_dropout, module_name=self.__class__.__name__
-        )
 
         self.image_pre_norm_module = nn.Identity()
-        if args.image_pre_norm:
-            self.image_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
+        if args.video_pre_norm:
+            self.video_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
 
