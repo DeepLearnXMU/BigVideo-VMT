@@ -184,12 +184,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='scalar quantization noise and scalar quantization at training time')
         # fmt: on
         # args for image MMT
-        parser.add_argument('--SA-image-dropout', type=float, default=0.1,
-                            help='image feat dropout before SA')
-        parser.add_argument('--SA-text-dropout', type=float, default=0,
-                            help='text feat dropout before SA')
-        parser.add_argument('--SA-attention-dropout', type=float, default=0.1,
-                            help='selective attn\'s dropout')
         parser.add_argument('--image-pre-norm', action='store_true', default=False,
                             help='normlization on image feature before fusing')
 
@@ -429,13 +423,14 @@ class TransformerEncoder(FairseqEncoder):
             return res
 
     def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
+        print(text.shape)
+        print(image.shape)
+        print(sdads)
         image = self.image_pre_norm_module(image)
         image = self.image_dropout_module(image)
         text = self.text_dropout_module(text)
-        output, _map = self.selective_attns[idx](query=text, key=image, value=image,
-                                                 key_padding_mask=image_mask)  # t, b, c
 
-        merge = torch.cat([output, text], dim=-1)
+        merge = torch.cat([image, text], dim=-1)
         gate = torch.sigmoid(self.gate_denses[idx](merge))
 
         # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
@@ -528,7 +523,9 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             for img, img_mask in zip(imgs_list, img_masks_list):
-                img = img.transpose(0, 1)
+                img = img.transpose(0, 1)   # B L C
+                if len(img.shape)==3:
+                    img = torch.mean(img,dim=-2)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
 
