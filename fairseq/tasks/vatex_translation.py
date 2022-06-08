@@ -43,7 +43,7 @@ def load_langpair_dataset(
         max_target_positions,
         video_feat_path,  # extra video mmt parameter
         video_ids_path,    # extra video id
-        max_vid_len,
+        max_vid_len=40,
         prepend_bos=False,
         load_alignments=False,
         truncate_source=False,
@@ -328,6 +328,7 @@ class VatexTranslationTask(LegacyFairseqTask):
             pad_to_multiple=self.args.required_seq_len_multiple,
             video_feat_path=self.args.video_feat_path,
             video_ids_path=self.args.video_ids_path
+            vid
         )
 
     '''
