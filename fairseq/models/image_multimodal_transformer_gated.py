@@ -384,7 +384,7 @@ class TransformerEncoder(FairseqEncoder):
         # code for image MMT
 
         self.denses = nn.ModuleList([])
-        self.denses.extend([nn.Linear(args.image_feat_dim, embed_dim) for i in args.image_feat_dim ])
+        self.denses.extend([nn.Linear(args.image_feat_dim[i], embed_dim) for i in args.image_feat_dim ])
 
         self.gate_denses = nn.ModuleList([])
         self.gate_denses.extend(
