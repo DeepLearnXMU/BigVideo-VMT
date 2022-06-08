@@ -382,7 +382,7 @@ class TransformerEncoder(FairseqEncoder):
 
 
         self.gate_denses = nn.ModuleList([])
-        self.gate_denses.extend([nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.video_feat_dim])
+        self.gate_denses.extend([nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.image_feat_dim])
 
         self.video_dropout_module = FairseqDropout(
             args.SA_image_dropout, module_name=self.__class__.__name__
