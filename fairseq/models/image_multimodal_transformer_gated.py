@@ -415,9 +415,9 @@ class TransformerEncoder(FairseqEncoder):
         print(text.shape)
         print(image.shape)
         print(sdads)
-        image = self.image_pre_norm_module(image)
-        image = self.image_dropout_module(image)
-        text = self.text_dropout_module(text)
+        # image = self.image_pre_norm_module(image)
+        # image = self.image_dropout_module(image)
+        # text = self.text_dropout_module(text)
 
         merge = torch.cat([image, text], dim=-1)
         gate = torch.sigmoid(self.gate_denses[idx](merge))
