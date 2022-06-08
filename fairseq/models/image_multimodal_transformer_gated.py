@@ -416,21 +416,18 @@ class TransformerEncoder(FairseqEncoder):
 
     def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
 
-        print(text.shape)
-        print(image.shape)
-        print(sdads)
-        # image = self.image_pre_norm_module(image)
-        # image = self.image_dropout_module(image)
-        # text = self.text_dropout_module(text)
+        v_repr = self.denses[idx](image)
 
-        merge = torch.cat([image, text], dim=-1)
+        merge = torch.cat([v_repr, text], dim=-1)
         gate = torch.sigmoid(self.gate_denses[idx](merge))
 
         # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
         # _map = _map[:,:,1:].softmax(dim=-1)
         # self.recoder.record_map(_map.cpu())
 
-        res = (1 - gate) * text + gate * output
+        res = (1 - gate) * text + gate * v_repr
+        res = res.transpose(0, 1)
+        print(res.shape)
         return res
 
     def build_encoder_layer(self, args):
@@ -516,16 +513,19 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             for img, img_mask in zip(imgs_list, img_masks_list):
-                print(img.shape)
+
                 img = img.transpose(0, 1)   # B L C
                 x = x.transpose(0, 1)
                 if len(img.shape)==3:
-                    img = torch.mean(img,dim=-2)
+                    # average
+                    img = torch.mean(img,dim=-1)
 
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
                 idx += 1
 
         x = self.f(xs, fun='sum')
+        print(x.shape)
+        print(dsdsa)
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
