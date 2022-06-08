@@ -27,16 +27,20 @@ class VideoDataset(torch.utils.data.Dataset):
         self.max_vid_len = max_vid_len
 
         self.sent_id_list=[]
-        print(split)
-        print(video_ids_path)
         with open(video_ids_path+"/"+split+".ids", encoding='utf-8') as file:
             self.sent_id_list = [x.rstrip() for x in file.readlines()]
+        if split in ["train","valid"]:
+            self.video_dir="trainval/"
+        else:
+            self.video_dir="public_test/"
+
+        self.size = len(self.sent_id_list)
 
 
     def __getitem__(self, idx):
         sent_id = self.sent_id_list[idx]
         vid = sent_id[:-2]
-        img,padding = load_video_features(os.path.join(self.data_dir, 'vatex_features/', self.img_dir, vid + '.npy'),
+        img,padding = load_video_features(os.path.join(self.data_dir, 'vatex_features/', self.video_dir, vid + '.npy'),
                                   self.max_vid_len)
         return img
 
