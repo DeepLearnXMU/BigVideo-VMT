@@ -515,7 +515,7 @@ class TransformerEncoder(FairseqEncoder):
             m = torch.nn.MaxPool3d(3, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)
             videos = m (videos)
             print(videos.shape)
-
+            print(ads)
 
         x = self.f(xs, fun='sum')
 
