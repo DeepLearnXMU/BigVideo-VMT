@@ -382,12 +382,6 @@ class TransformerEncoder(FairseqEncoder):
 
         self.args = args
         # code for image MMT
-        self.selective_attns = nn.ModuleList([])
-        self.selective_attns.extend([SelectiveAttention(qdim=embed_dim, kdim=i,
-                                                        vdim=i, attn_dim=embed_dim,
-                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
-                                                        num_heads=1, attn_drop=args.SA_attention_dropout) for i in
-                                     args.image_feat_dim])
 
         self.gate_denses = nn.ModuleList([])
         self.gate_denses.extend(
