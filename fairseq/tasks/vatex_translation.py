@@ -328,7 +328,6 @@ class VatexTranslationTask(LegacyFairseqTask):
             pad_to_multiple=self.args.required_seq_len_multiple,
             video_feat_path=self.args.video_feat_path,
             video_ids_path=self.args.video_ids_path
-            vid
         )
 
     '''
