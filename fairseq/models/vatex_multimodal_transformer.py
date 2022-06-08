@@ -381,7 +381,7 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = None
 
         self.args = args
-        # code for image MMT
+        # code for video MMT
 
         self.dense = nn.Linear(self.img_dim, embed_dim)
         self.sigmoid = nn.Sigmoid()
