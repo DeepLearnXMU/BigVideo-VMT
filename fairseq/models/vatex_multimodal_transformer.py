@@ -383,12 +383,12 @@ class TransformerEncoder(FairseqEncoder):
         self.args = args
         # code for image MMT
 
-        self.gate_denses = nn.ModuleList([])
-        self.gate_denses.extend(
-            [nn.Linear(2 * args.encoder_embed_dim, args.encoder_embed_dim) for i in args.video_feat_dim])
+        self.dense = nn.Linear(self.img_dim, embed_dim)
+        self.sigmoid = nn.Sigmoid()
+        self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
 
 
-        self.image_pre_norm_module = nn.Identity()
+        self.video_pre_norm_module = nn.Identity()
         if args.video_pre_norm:
             self.video_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
 
