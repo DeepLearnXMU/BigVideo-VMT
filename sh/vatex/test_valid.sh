@@ -1,6 +1,6 @@
 
 
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=7
 
 
 checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/textonly_char_archtransformer_tiny_tgtzh_lr0.004_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10
