@@ -510,10 +510,9 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
 
-            #pooling
+            # avg_pooling
 
-            m = torch.nn.MaxPool3d(3, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)
-            videos = m (videos)
+            videos = torch.mean(videos, dim=1)
             print(videos.shape)
             print(ads)
 
