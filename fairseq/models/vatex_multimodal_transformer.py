@@ -479,8 +479,7 @@ class TransformerEncoder(FairseqEncoder):
         """
         # import os
         # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
-        print(videos.shape)
-        print(dsdsa)
+
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
@@ -509,7 +508,8 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         if self.is_fusion_top:
-
+            print(x.shape)
+            print(videos.shape)
             for img, img_mask in zip(imgs_list, img_masks_list):
                 img = img.transpose(0, 1)
                 xs.append(self.fuse_img_feat(x, idx, img, img_mask, text_mask=src_tokens.ne(self.padding_idx)))
