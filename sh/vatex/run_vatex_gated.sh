@@ -24,6 +24,9 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 arch=gated_tiny
+image_feat=vit_base_patch16_384
+
+
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
@@ -60,6 +63,9 @@ fairseq-train $data \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
+  --video-feat-path
+  --video-ids-path
+  --video-feat-dim
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
