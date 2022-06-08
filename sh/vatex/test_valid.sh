@@ -3,7 +3,7 @@
 export CUDA_VISIBLE_DEVICES=5
 
 
-checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/textonly_char_archtransformer_tiny_tgtzh_lr0.001_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10/
+checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/textonly_char_archtransformer_tiny_tgtzh_lr0.004_wu2000_me100_seed1_gpu1_mt4096_wd0.1_patience10
 
 script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
@@ -13,16 +13,18 @@ test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 ensemble=10
 
 checkpoint=checkpoint_best.pt
+length_penalty=1.0
 
-#echo "-----$who-------"
-#fairseq-generate  $test_DATA  \
-#--path $checkpoint_dir/$checkpoint \
-#--remove-bpe \
-#--gen-subset $who \
-#--beam 5  \
-#--batch-size 128  \
-#--lenpen 0.8   \
-#--output $checkpoint_dir/$checkpoint.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.gen-$who.log
+echo "-----$who-------"
+fairseq-generate  $test_DATA  \
+--path $checkpoint_dir/$checkpoint \
+--remove-bpe \
+--gen-subset $who \
+--beam 5  \
+--batch-size 128  \
+--lenpen $length_penalty   \
+--output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
+
 
 
 if [ -n "$ensemble" ]; then
@@ -39,9 +41,9 @@ fairseq-generate  $test_DATA  \
 --remove-bpe \
 --gen-subset $who \
 --beam 5  \
---batch-size 128  \
+--batch-size $length_penalty  \
 --lenpen 0.8   \
---output $checkpoint_dir/$checkpoint.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.gen-$who.log
+--output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
 
 
 
