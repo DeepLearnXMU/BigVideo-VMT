@@ -409,23 +409,7 @@ class TransformerEncoder(FairseqEncoder):
                 res = res + i
             return res
 
-    def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
-        image = self.image_pre_norm_module(image)
-        image = self.image_dropout_module(image)
-        text = self.text_dropout_module(text)
 
-        output, _map = self.selective_attns[idx](query=text, key=image, value=image,
-                                                 key_padding_mask=image_mask)  # t, b, c
-
-        merge = torch.cat([output, text], dim=-1)
-        gate = torch.sigmoid(self.gate_denses[idx](merge))
-
-        # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
-        # _map = _map[:,:,1:].softmax(dim=-1)
-        # self.recoder.record_map(_map.cpu())
-
-        res = (1 - gate) * text + gate * output
-        return res
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
@@ -511,12 +495,25 @@ class TransformerEncoder(FairseqEncoder):
             # x [ L x B x C]   videos [ B x l x C]
 
             # avg_pooling
-
             videos = torch.mean(videos, dim=1)
-            print(videos.shape)
-            print(ads)
+            bsz,video_dim=videos.size()[0],videos.size()[1]
 
-        x = self.f(xs, fun='sum')
+            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
+            v_repr = self.dense(v_embedding)  # B, 1, C
+            print(v_repr.shape)
+            print(dsdsa)
+
+            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+            b, t, c = text_repr.shape
+            v_repr = v_repr.expand(b, t, c)
+            assert v_repr.shape[1] == text_repr.shape[1]
+            merge = torch.cat([text_repr, v_repr], dim=-1)
+            gate = self.sigmoid(self.gate_dense(merge))
+
+
+
+
+
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
