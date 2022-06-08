@@ -378,7 +378,7 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = None
         
         self.args = args
-        # code for video MMT
+        # code for image MMT
 
 
         self.gate_denses = nn.ModuleList([])
@@ -391,9 +391,9 @@ class TransformerEncoder(FairseqEncoder):
             args.SA_text_dropout, module_name=self.__class__.__name__
         )
 
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
+        self.image_pre_norm_module = nn.Identity()
+        if args.image_pre_norm:
+            self.image_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
 
