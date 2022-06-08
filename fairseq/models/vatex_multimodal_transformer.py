@@ -1082,6 +1082,9 @@ def uvr_video_vatex(args):
     args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
     args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.is_fusion_top = getattr(args, 'is_fusion_top', True)
+
     base_architecture(args)
 
 
