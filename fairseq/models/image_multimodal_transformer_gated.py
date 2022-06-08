@@ -415,10 +415,14 @@ class TransformerEncoder(FairseqEncoder):
             return res
 
     def fuse_img_feat(self, text, idx, image, image_mask, text_mask):
-        print(text.shape,image.shape)
-        v_repr = self.denses[idx](image)
-        print(v_repr.shape)
+
         b, t, c = text.shape
+        v_repr = image.view(b, 1, self.img_dim)  # B, 1, img_dim
+        v_repr = self.denses[idx](v_repr)
+
+
+
+
         v_repr = v_repr.expand(b, t, c)
         assert v_repr.shape[1] == text.shape[1]
         merge = torch.cat([v_repr, text], dim=-1)
