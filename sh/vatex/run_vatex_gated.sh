@@ -2,7 +2,7 @@
 set -e
 
 
-device=6
+device=4
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -14,7 +14,7 @@ tgt_lang=zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.005
+lr=0.001
 warmup=2000
 max_tokens=4096
 update_freq=1
@@ -33,7 +33,7 @@ video_feat_dim=1024
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=vatex_textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_patience${patience}
+name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/${name}
 
