@@ -2,8 +2,10 @@
 set -e
 
 
-device=6
+device=4
 export CUDA_VISIBLE_DEVICES=$device
+
+source activate fairseq_mmt
 
 src_lang=en
 tgt_lang=zh
@@ -13,7 +15,7 @@ tgt_lang=zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.007
+lr=0.09
 warmup=2000
 max_tokens=4096
 update_freq=1
