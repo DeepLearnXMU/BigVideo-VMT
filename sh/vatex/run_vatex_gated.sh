@@ -2,7 +2,7 @@
 set -e
 
 
-device=6
+device=7
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -24,7 +24,9 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 arch=gated_tiny
-image_feat=vit_base_patch16_384
+video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
+video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
+video_feat_dim=1024
 
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
@@ -63,9 +65,9 @@ fairseq-train $data \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
-  --video-feat-path
-  --video-ids-path
-  --video-feat-dim
+  --video-feat-path $video_feat_path \
+  --video-ids-path $video_ids_path \
+  --video-feat-dim $ video_feat_dim \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
