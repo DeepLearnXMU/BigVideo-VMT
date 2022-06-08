@@ -1,8 +1,8 @@
 #! /usr/bin/bash
 set -e
 
-device=5
-task=multi30k-en2fr
+device=6
+task=multi30k-en2de
 image_feat=vit_base_patch16_384
 mask_data=mask0
 DATA=/home/sata/kly/fairseq_mmt/data-bin
@@ -61,7 +61,7 @@ patience=10
 max_update=8000
 dropout=0.3
 
-arch=image_multimodal_transformer_SA_top
+arch=image_multimodal_transformer_vatex_SA_top
 SA_attention_dropout=0.1
 SA_image_dropout=0.1
 
