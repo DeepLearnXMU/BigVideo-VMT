@@ -271,8 +271,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_tokens,
             src_lengths,
             prev_output_tokens,
-            imgs_list,
-            img_masks_list,
+            videos,
             return_all_hiddens: bool = True,
             features_only: bool = False,
             alignment_layer: Optional[int] = None,
@@ -286,7 +285,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         """
         encoder_out = self.encoder(
             src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,
-            img_masks_list=img_masks_list, imgs_list=imgs_list,
+            videos=videos
         )
         decoder_out = self.decoder(
             prev_output_tokens,
