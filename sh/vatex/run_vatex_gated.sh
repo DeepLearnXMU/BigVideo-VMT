@@ -2,8 +2,9 @@
 set -e
 
 
-device=7
+device=6
 export CUDA_VISIBLE_DEVICES=$device
+source activate fairseq_mmt
 
 src_lang=en
 tgt_lang=zh
