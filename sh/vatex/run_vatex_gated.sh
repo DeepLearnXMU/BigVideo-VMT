@@ -2,7 +2,7 @@
 set -e
 
 
-device=7
+device=4
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -23,7 +23,7 @@ patience=10
 max_epoches=100
 dropout=0.3
 seed=1
-weight_decay=0.001
+weight_decay=0.00005
 clip_norm=1.0
 arch=gated_vatex
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
