@@ -25,8 +25,8 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 clip_norm=0.0
-arch=gated_vatex
-is_fush_top=False
+arch=gated_vatex_notop
+
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
 video_feat_dim=1024
@@ -35,7 +35,7 @@ video_feat_dim=1024
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_ft${is_fush_top}
+name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/${name}
 
@@ -72,7 +72,6 @@ fairseq-train $data \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
-  --is-fush-top $is_fush_top \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
