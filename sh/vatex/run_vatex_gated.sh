@@ -2,7 +2,7 @@
 set -e
 
 
-device=6
+device=4
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -24,6 +24,7 @@ max_epoches=100
 dropout=0.3
 seed=1
 weight_decay=0.1
+clip_norm=1.0
 arch=gated_vatex
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
@@ -33,7 +34,7 @@ video_feat_dim=1024
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_patience${patience}
+name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/${name}
 
@@ -52,6 +53,7 @@ fairseq-train $data \
   --arch $arch \
   --dropout $dropout \
   --weight-decay $weight_decay  \
+  --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 \
   --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
