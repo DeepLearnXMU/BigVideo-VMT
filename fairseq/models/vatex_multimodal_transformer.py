@@ -518,6 +518,8 @@ class TransformerEncoder(FairseqEncoder):
             merge = torch.cat([text_repr, v_repr], dim=-1)
             gate = self.sigmoid(self.gate_dense(merge))
             output = (1 - gate) * text_repr + gate * v_repr
+            print(gate.shape)
+            print(dadsa)
             x = output.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
