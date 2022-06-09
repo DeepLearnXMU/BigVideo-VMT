@@ -79,7 +79,7 @@ batch_size=128
 beam=5
 src_lang=en
 
-model_dir=/home/sata/kly/fairseq_mmt/output/image_mmt/mmt_archimage_multimodal_transformer_SA_top_imgFeaturevit_base_patch16_384_maskmask0_SAAdp0.1_SAIdp0.1_tgtde_lr0.005_wu2000_mu8000_seed_gpu_mt4096_acc2_patience10
+model_dir=/home/sata/kly/fairseq_mmt/output/image_mmt/mmt_archimage_multimodal_transformer_gated_tiny_imgFeaturevit_base_patch16_384_maskmask0_SAAdp_SAIdp_tgtde_lr0.005_wu2000_mu8000_seed_gpu_mt4096_acc2_patience10/
 
 checkpoint=checkpoint_best.pt
 
