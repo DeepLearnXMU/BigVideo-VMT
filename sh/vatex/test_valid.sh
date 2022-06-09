@@ -11,6 +11,10 @@ who=valid
 test_DATA=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 #test_DATA=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 ensemble=10
+video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
+video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
+video_feat_dim=1024
+
 
 checkpoint=checkpoint_best.pt
 length_penalty=0.8
@@ -43,6 +47,9 @@ fairseq-generate  $test_DATA  \
 --beam 5  \
 --batch-size  128  \
 --lenpen $length_penalty  \
+--video-feat-path $video_feat_path \
+--video-ids-path $video_ids_path \
+--video-feat-dim $video_feat_dim \
 --output $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.txt  | tee $checkpoint_dir/$checkpoint.$length_length_penalty.gen-$who.log
 
 
