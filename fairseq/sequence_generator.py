@@ -219,7 +219,7 @@ class SequenceGenerator(nn.Module):
             ],
         )
         net_input = sample["net_input"]
-        print(net_input.keys)
+
 
         if "src_tokens" in net_input:
             src_tokens = net_input["src_tokens"]
