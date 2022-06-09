@@ -60,9 +60,11 @@ keep_last_epochs=10
 patience=10
 max_update=8000
 dropout=0.3
+seed=1
 
 arch=image_multimodal_transformer_gated_tiny
 
+gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=mmt_arch${arch}_imgFeature${image_feat}_mask${mask_data}_SAAdp${SA_attention_dropout}_SAIdp${SA_image_dropout}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_update}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_patience${patience}
 
@@ -105,6 +107,7 @@ cmd="fairseq-train $data_dir
   --optimizer adam --adam-betas '(0.9, 0.98)'
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup
   --max-tokens $max_tokens --update-freq $update_freq --max-update $max_update
+  --seed $seed
   --find-unused-parameters
   --share-all-embeddings
   --patience $patience

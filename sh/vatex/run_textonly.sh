@@ -16,7 +16,7 @@ data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 lr=0.001
-warmup=4000
+warmup=2000
 max_tokens=4096
 update_freq=1
 keep_last_epochs=10
@@ -25,11 +25,12 @@ max_epoches=100
 dropout=0.3
 seed=1
 weight_decay=0.1
+clip_norm=1.0
 arch=transformer_vatex
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_patience${patience}
+name=textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
 
@@ -51,9 +52,11 @@ fairseq-train $data \
   --criterion $criterion --label-smoothing 0.1 \
   --task translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
+  --clip-norm ${clip_norm}   \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
   --find-unused-parameters \
+  --seed $seed \
   --eval-zh-bleu  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
