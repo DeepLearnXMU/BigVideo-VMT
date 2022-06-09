@@ -35,7 +35,7 @@ DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 
 
-@register_model("vatex_multimodal_transformer")
+@register_model("vatex_multimodal_transformer_att")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -518,8 +518,8 @@ class TransformerEncoder(FairseqEncoder):
             merge = torch.cat([text_repr, v_repr], dim=-1)
             gate = self.sigmoid(self.gate_dense(merge))
             output = (1 - gate) * text_repr + gate * v_repr
-            # print(gate.shape)
-            # print(dadsa)
+            print(gate.shape)
+            print(dadsa)
             x = output.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
@@ -1048,20 +1048,8 @@ def base_architecture(args):
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'gated_iwslt_de_en')
-def transformer_iwslt_de_en(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 512)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 1024)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    base_architecture(args)
 
-
-@register_model_architecture('vatex_multimodal_transformer', 'gated_tiny')
+@register_model_architecture('vatex_multimodal_transformer', 'vatex_multimodal_transformer_att_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1074,7 +1062,7 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex')
+@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att')
 def uvr_video_vatex(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
