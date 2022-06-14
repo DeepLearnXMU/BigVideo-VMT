@@ -420,6 +420,7 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
         print(self.video_embed_positions.weights.shape)
+        print(sadsad)
 
         self.selective=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
                                                         vdim=args.video_feat_dim, attn_dim=embed_dim,
