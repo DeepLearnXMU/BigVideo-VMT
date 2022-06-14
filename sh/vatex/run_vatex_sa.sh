@@ -74,7 +74,7 @@ fairseq-train $data \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
-  --SA-video-dropout ${SA_video_dropout} --SA_attention_dropout ${SA_attention_dropout} \
+  --SA-video-dropout ${SA_video_dropout} --SA-attention-dropout ${SA_attention_dropout} \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
