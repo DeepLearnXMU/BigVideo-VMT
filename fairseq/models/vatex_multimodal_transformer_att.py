@@ -571,8 +571,6 @@ class TransformerEncoder(FairseqEncoder):
                 v_repr = v_embedding + self.video_embed_positions(v_tokens)
             else:
                 v_repr = v_embedding
-
-
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
             x = self.fuse_video_feat(video=v_repr,text=text_repr)
 
