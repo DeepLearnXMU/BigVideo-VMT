@@ -408,7 +408,7 @@ class TransformerEncoder(FairseqEncoder):
 
         self.is_fusion_top = args.is_fusion_top
 
-        print( args.max_video_positions)
+
         self.video_embed_positions = (
             PositionalEmbedding(
                 args.max_video_positions,
@@ -419,8 +419,7 @@ class TransformerEncoder(FairseqEncoder):
             if args.pe_for_video
             else None
         )
-        print(self.video_embed_positions.weights.shape)
-        print(sadsad)
+
 
         self.selective=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
                                                         vdim=args.video_feat_dim, attn_dim=embed_dim,
