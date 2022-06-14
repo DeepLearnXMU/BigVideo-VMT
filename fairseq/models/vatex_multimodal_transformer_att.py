@@ -558,6 +558,7 @@ class TransformerEncoder(FairseqEncoder):
             v_embedding = videos
             # print(v_embedding.shape)
             if self.args.pe_for_video:
+                print(self.video_embed_positions(v_embedding).shape)
                 v_repr = v_embedding + self.video_embed_positions(v_embedding)
             else:
                 v_repr = v_embedding
