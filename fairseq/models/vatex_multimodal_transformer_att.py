@@ -427,7 +427,7 @@ class TransformerEncoder(FairseqEncoder):
         )
 
 
-        self.selective=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
+        self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
                                                         vdim=args.video_feat_dim, attn_dim=embed_dim,
                                                         intermediate_dim=embed_dim, output_dim=embed_dim,
                                                         num_heads=1, attn_drop=args.SA_attention_dropout)
@@ -457,7 +457,7 @@ class TransformerEncoder(FairseqEncoder):
         video = self.video_pre_norm_module(video)
         video = self.video_dropout_module(video)
         text = self.text_dropout_module(text)
-        output, _map = self.selective_attns(query=text, key=video, value=video)  # t, b, c
+        output, _map = self.video_atts(query=text, key=video, value=video)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_dense(merge))
