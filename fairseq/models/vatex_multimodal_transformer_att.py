@@ -407,7 +407,7 @@ class TransformerEncoder(FairseqEncoder):
 
         self.is_fusion_top = args.is_fusion_top
 
-
+        print( args.max_video_positions)
         self.video_embed_positions = (
             PositionalEmbedding(
                 args.max_video_positions,
@@ -464,15 +464,12 @@ class TransformerEncoder(FairseqEncoder):
     def forward_embedding(
             self, src_tokens, token_embedding: Optional[torch.Tensor] = None
     ):
-        print(src_tokens.shape)
         # embed tokens and positions
         if token_embedding is None:
             token_embedding = self.embed_tokens(src_tokens)
         x = embed = self.embed_scale * token_embedding
-        print(x.shape)
         if self.embed_positions is not None:
             x = embed + self.embed_positions(src_tokens)
-        print(self.embed_positions(src_tokens).shape)
         if self.layernorm_embedding is not None:
             x = self.layernorm_embedding(x)
         x = self.dropout_module(x)
