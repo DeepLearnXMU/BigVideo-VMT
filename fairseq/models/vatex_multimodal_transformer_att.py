@@ -457,6 +457,8 @@ class TransformerEncoder(FairseqEncoder):
         video = self.video_pre_norm_module(video)
         video = self.video_dropout_module(video)
         text = self.text_dropout_module(text)
+        video = video.transpose(0, 1)
+        text = text.transpose(0, 1)
         output, _map = self.video_atts(query=text, key=video, value=video)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
@@ -572,9 +574,8 @@ class TransformerEncoder(FairseqEncoder):
 
 
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
             x = self.fuse_video_feat(v_repr,text_repr)
-            print(adssa)
+
 
 
         return EncoderOut(
