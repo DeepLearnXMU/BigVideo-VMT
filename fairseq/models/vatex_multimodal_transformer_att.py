@@ -552,23 +552,22 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
 
-
+            print(videos.shape)
             bsz,vid_len,video_dim=videos.size()[0],videos.size()[1],videos.size()[2]
             v_embedding = self.dense(videos) # B, v_len, video_dim -> B, v_len , c
-
+            print(v_embedding.shape)
             if self.args.pe_for_video:
                 v_repr = v_embedding + self.embed_positions(v_embedding)
-
+            else:
+                v_repr = v_embedding
 
 
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
             b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=-1)
-            gate = self.sigmoid(self.gate_dense(merge))
-            output = (1 - gate) * text_repr + gate * v_repr
-            x = output.transpose(0, 1)  # reback to T x B x C
+            print(v_repr.shape,text_repr.shape)
+            x = self.fuse_video_feat(v_repr,text_repr)
+            print(adssa)
+
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
