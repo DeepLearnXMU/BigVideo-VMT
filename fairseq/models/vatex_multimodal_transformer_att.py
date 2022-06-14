@@ -33,6 +33,7 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
+DEFAULT_VIDEO_LENGTH = 40
 
 
 @register_model("vatex_multimodal_transformer_att")
@@ -186,9 +187,21 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for image MMT
 
         parser.add_argument('--video-pre-norm', action='store_true', default=False,
-                            help='normlization on image feature before fusing')
+                            help='normlization on video feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,default=True,
                             help='fuse img feat after text encoding')
+        parser.add_argument('--pe_for_video', type=bool, default=True,
+                           help='video for position ')
+        parser.add_argument('--max-video-positions', type=int,default=40,
+                            help='max vid len')
+        parser.add_argument('--SA-image-dropout', type=float, default=0.1,
+                            help='image feat dropout before SA')
+        parser.add_argument('--SA-text-dropout', type=float, default=0,
+                            help='text feat dropout before SA')
+        parser.add_argument('--SA-attention-dropout', type=float, default=0.1,
+                            help='selective attn\'s dropout')
+
+
 
     @classmethod
     def build_model(cls, args, task):
@@ -351,6 +364,7 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
 
+
         if getattr(args, "layernorm_embedding", False):
             self.layernorm_embedding = LayerNorm(embed_dim)
         else:
@@ -393,6 +407,23 @@ class TransformerEncoder(FairseqEncoder):
 
         self.is_fusion_top = args.is_fusion_top
 
+
+        self.video_embed_positions = (
+            PositionalEmbedding(
+                args.max_video_positions,
+                embed_dim,
+                self.padding_idx,
+                learned=args.encoder_learned_pos,
+            )
+            if args.pe_for_video
+            else None
+        )
+
+        self.selective=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
+                                                        vdim=args.video_feat_dim, attn_dim=embed_dim,
+                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
+                                                        num_heads=1, attn_drop=args.SA_attention_dropout)
+
         self.recoder = utils.Recorder(args)
 
     def f(self, l, fun='sum'):
@@ -413,6 +444,22 @@ class TransformerEncoder(FairseqEncoder):
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
+
+    def fuse_video_feat(self, text, video):
+        video = self.video_pre_norm_module(video)
+        video = self.video_dropout_module(video)
+        text = self.text_dropout_module(text)
+        output, _map = self.selective_attns(query=text, key=video, value=video)  # t, b, c
+
+        merge = torch.cat([output, text], dim=-1)
+        gate = torch.sigmoid(self.gate_dense(merge))
+
+        # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
+        # _map = _map[:,:,1:].softmax(dim=-1)
+        # self.recoder.record_map(_map.cpu())
+
+        res = (1 - gate) * text + gate * output
+        return res
 
     def forward_embedding(
             self, src_tokens, token_embedding: Optional[torch.Tensor] = None
@@ -504,12 +551,15 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
-            videos = torch.mean(videos, dim=1)
-            bsz,video_dim=videos.size()[0],videos.size()[1]
 
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
+
+            bsz,vid_len,video_dim=videos.size()[0],videos.size()[1],videos.size()[2]
+            v_embedding = self.dense(videos) # B, v_len, video_dim -> B, v_len , c
+
+            if self.args.pe_for_video:
+                v_repr = v_embedding + self.embed_positions(v_embedding)
+
+
 
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
             b, t, c = text_repr.shape
@@ -518,8 +568,6 @@ class TransformerEncoder(FairseqEncoder):
             merge = torch.cat([text_repr, v_repr], dim=-1)
             gate = self.sigmoid(self.gate_dense(merge))
             output = (1 - gate) * text_repr + gate * v_repr
-            print(gate.shape)
-            print(dadsa)
             x = output.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
@@ -1074,6 +1122,9 @@ def uvr_video_vatex(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
+    args.pe_for_videos = getattr(args, 'pe_for_video', True)
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 

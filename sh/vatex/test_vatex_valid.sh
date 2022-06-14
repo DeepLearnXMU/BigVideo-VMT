@@ -3,7 +3,7 @@
 export CUDA_VISIBLE_DEVICES=4
 
 
-checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/vatex_char_archgated_vatex_tgtzh_lr0.001_wu2000_me100_seed1_gpu1_mt4096_acc1_wd0.1_patience10/
+checkpoint_dir=/home/sata/kly/fairseq_mmt/output/vatex_gated/vatex_char_archgated_vatex_tgtzh_lr0.001_wu2000_me100_seed1_gpu1_mt4096_acc1_wd0.00005_cn1.0_patience10/
 
 script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
