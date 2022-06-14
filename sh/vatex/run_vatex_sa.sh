@@ -2,7 +2,7 @@
 set -e
 
 
-device=7
+device=6
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -14,7 +14,7 @@ tgt_lang=zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.001
+lr=0.002
 warmup=2000
 max_tokens=4096
 update_freq=1
@@ -25,7 +25,7 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_multimodal_transformer_att_vatex_top_nope
+arch=vatex_multimodal_transformer_att_vatex_top_pe
 
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
