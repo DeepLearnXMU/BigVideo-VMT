@@ -15,6 +15,7 @@ def PositionalEmbedding(
     padding_idx: int,
     learned: bool = False,
 ):
+
     if learned:
         # if padding_idx is specified then offset the embedding ids by
         # this index and adjust num_embeddings appropriately

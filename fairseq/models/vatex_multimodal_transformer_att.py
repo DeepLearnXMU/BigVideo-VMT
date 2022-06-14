@@ -363,7 +363,7 @@ class TransformerEncoder(FairseqEncoder):
             if not args.no_token_positional_embeddings
             else None
         )
-        print(self.embed_positions.weights.shape)
+
 
 
         if getattr(args, "layernorm_embedding", False):
