@@ -194,7 +194,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                            help='video for position ')
         parser.add_argument('--max-video-positions', type=int,default=40,
                             help='max vid len')
-        parser.add_argument('--SA-image-dropout', type=float, default=0.1,
+        parser.add_argument('--SA-video-dropout', type=float, default=0.1,
                             help='image feat dropout before SA')
         parser.add_argument('--SA-text-dropout', type=float, default=0,
                             help='text feat dropout before SA')
@@ -402,6 +402,12 @@ class TransformerEncoder(FairseqEncoder):
         self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
 
 
+        self.video_dropout_module = FairseqDropout(
+            args.SA_video_dropout, module_name=self.__class__.__name__
+        )
+        self.text_dropout_module = FairseqDropout(
+            args.SA_text_dropout, module_name=self.__class__.__name__
+        )
         self.video_pre_norm_module = nn.Identity()
         if args.video_pre_norm:
             self.video_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
@@ -554,13 +560,12 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
 
-            print(videos.shape)
+
             bsz,vid_len,video_dim=videos.size()[0],videos.size()[1],videos.size()[2]
             v_embedding = videos
             # print(v_embedding.shape)
             if self.args.pe_for_video:
                 v_tokens = torch.mean(videos, dim=-1)
-                print(self.video_embed_positions(v_tokens).shape)
                 v_repr = v_embedding + self.video_embed_positions(v_tokens)
             else:
                 v_repr = v_embedding
@@ -568,7 +573,6 @@ class TransformerEncoder(FairseqEncoder):
 
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
             b, t, c = text_repr.shape
-            print(v_repr.shape,text_repr.shape)
             x = self.fuse_video_feat(v_repr,text_repr)
             print(adssa)
 
