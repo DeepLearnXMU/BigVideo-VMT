@@ -556,12 +556,11 @@ class TransformerEncoder(FairseqEncoder):
 
             print(videos.shape)
             bsz,vid_len,video_dim=videos.size()[0],videos.size()[1],videos.size()[2]
-            # v_embedding = self.dense(videos) # B, v_len, video_dim -> B, v_len , c
             v_embedding = videos
             # print(v_embedding.shape)
             if self.args.pe_for_video:
-                print(self.video_embed_positions(v_embedding).shape)
-                v_repr = v_embedding + self.video_embed_positions(v_embedding)
+                v_tokens = torch.mean(videos, dim=1)
+                v_repr = v_embedding + self.video_embed_positions(v_tokens)
             else:
                 v_repr = v_embedding
 
