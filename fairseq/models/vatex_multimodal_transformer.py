@@ -189,6 +189,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='normlization on image feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,default=True,
                             help='fuse img feat after text encoding')
+        parser.add_argument('--pe_for_video', type=bool, default=False,
+                            help='video for position ')
 
     @classmethod
     def build_model(cls, args, task):
@@ -395,6 +397,19 @@ class TransformerEncoder(FairseqEncoder):
 
         self.recoder = utils.Recorder(args)
 
+        self.video_embed_positions = (
+            PositionalEmbedding(
+                args.max_video_positions,
+                args.video_feat_dim,
+                self.padding_idx,
+                learned=args.encoder_learned_pos,
+            )
+            if args.pe_for_video
+            else None
+        )
+
+
+
     def f(self, l, fun='sum'):
         if fun == 'avg':
             size = len(l)
@@ -505,6 +520,10 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             # avg_pooling
+
+            if self.args.pe_for_video:
+                v_tokens = torch.mean(videos, dim=-1)
+                videos = videos + self.video_embed_positions(v_tokens)
             videos = torch.mean(videos, dim=1)
             bsz,video_dim=videos.size()[0],videos.size()[1]
 

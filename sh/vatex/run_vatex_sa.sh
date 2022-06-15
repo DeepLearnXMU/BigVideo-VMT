@@ -14,7 +14,7 @@ tgt_lang=zh
 data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
-lr=0.003
+lr=0.001
 warmup=2000
 max_tokens=4096
 update_freq=1
@@ -25,7 +25,7 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_multimodal_transformer_att_vatex_top_nope
+arch=vatex_multimodal_transformer_att_vatex_top_pe
 
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
@@ -37,7 +37,7 @@ SA_video_dropout=0.1
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}
+name=vatex_char_arch${arch}detach_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}
 
 output_dir=/home/sata/kly/fairseq_mmt/output/${arch}/${name}
 

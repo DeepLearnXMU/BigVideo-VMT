@@ -190,7 +190,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='normlization on video feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,default=True,
                             help='fuse img feat after text encoding')
-        parser.add_argument('--pe_for_video', type=bool, default=True,
+        parser.add_argument('--pe_for_video', type=bool, default=False,
                            help='video for position ')
         parser.add_argument('--max-video-positions', type=int,default=40,
                             help='max vid len')
@@ -567,7 +567,7 @@ class TransformerEncoder(FairseqEncoder):
             v_embedding = videos
             # print(v_embedding.shape)
             if self.args.pe_for_video:
-                v_tokens = torch.mean(videos, dim=-1)
+                v_tokens = torch.mean(videos, dim=-1).detach()
                 v_repr = v_embedding + self.video_embed_positions(v_tokens)
             else:
                 v_repr = v_embedding
