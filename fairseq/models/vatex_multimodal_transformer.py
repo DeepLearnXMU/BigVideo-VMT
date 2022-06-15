@@ -492,6 +492,9 @@ class TransformerEncoder(FairseqEncoder):
         if not self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             # avg_pooling
+            if self.args.pe_for_video:
+                v_tokens = torch.mean(videos, dim=-1)
+                videos = videos + self.video_embed_positions(v_tokens)
             videos = torch.mean(videos, dim=1)
             bsz, video_dim = videos.size()[0], videos.size()[1]
 
@@ -1139,6 +1142,24 @@ def uvr_video_vatex(args):
     if getattr(args, "max_video_positions", None) is None:
         args.max_video_positions = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
+
+@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_notop_pe')
+def uvr_video_vatex(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.is_fusion_top = getattr(args, 'is_fusion_top', False)
+    args.pe_for_videos = getattr(args, 'pe_for_video', True)
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    base_architecture(args)
+
 
 
 

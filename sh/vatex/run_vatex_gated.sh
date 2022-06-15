@@ -25,7 +25,7 @@ dropout=0.3
 seed=1
 weight_decay=0.1
 clip_norm=0.0
-arch=gated_vatex_top_pe
+arch=gated_vatex_notop_pe
 
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
