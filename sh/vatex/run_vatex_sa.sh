@@ -30,7 +30,7 @@ arch=vatex_multimodal_transformer_att_vatex_top_pe
 video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
 video_feat_dim=1024
-SA_attention_dropout=0.1
+SA_attention_dropout=0.2
 SA_video_dropout=0.2
 
 
