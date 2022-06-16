@@ -572,7 +572,7 @@ class TransformerEncoder(FairseqEncoder):
             else:
                 v_repr = v_embedding
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x,gate = self.fuse_video_feat(video=v_repr,text=text_repr)
+            x, gate = self.fuse_video_feat(video=v_repr,text=text_repr)
 
 
 
