@@ -469,7 +469,7 @@ class TransformerEncoder(FairseqEncoder):
         # self.recoder.record_map(_map.cpu())
 
         res = (1 - gate) * text + gate * output
-        return res
+        return res, gate
 
     def forward_embedding(
             self, src_tokens, token_embedding: Optional[torch.Tensor] = None
@@ -547,7 +547,7 @@ class TransformerEncoder(FairseqEncoder):
             merge = torch.cat([text_repr, v_repr], dim=-1)
             gate = self.sigmoid(self.gate_dense(merge))
             output = (1 - gate) * text_repr + gate * v_repr
-            x = output.transpose(0, 1)  # reback to T x B x C
+            x,gate = output.transpose(0, 1)  # reback to T x B x C
 
         # encoder layers
         for layer in self.layers:
@@ -572,7 +572,7 @@ class TransformerEncoder(FairseqEncoder):
             else:
                 v_repr = v_embedding
             text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x = self.fuse_video_feat(video=v_repr,text=text_repr)
+            x,gate = self.fuse_video_feat(video=v_repr,text=text_repr)
 
 
 
