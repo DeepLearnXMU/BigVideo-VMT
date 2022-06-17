@@ -31,7 +31,7 @@ video_feat_path=/home/sata/kly/videoNMT/data/vatex_features
 video_ids_path=/home/sata/kly/videoNMT/data/raw_texts/ids
 video_feat_dim=1024
 SA_attention_dropout=0.1
-SA_video_dropout=0.1
+SA_video_dropout=0.2
 
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
