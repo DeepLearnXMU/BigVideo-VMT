@@ -2,7 +2,7 @@
 set -e
 
 
-device=7
+device=4
 export CUDA_VISIBLE_DEVICES=$device
 source activate fairseq_mmt
 
@@ -22,7 +22,7 @@ keep_last_epochs=10
 patience=10
 max_epoches=100
 dropout=0.3
-seed=1
+seed=42
 weight_decay=0.1
 clip_norm=0.0
 arch=gated_vatex_notop_pe
