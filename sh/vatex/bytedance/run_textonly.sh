@@ -1,18 +1,32 @@
-#! /usr/bin/bash
-set -e
+#!/bin/bash
+
+export http_proxy=http://bj-rd-proxy.byted.org:3128
+export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 
-device=6,7
+mkdir ~/data
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.zip ~/data/en_zh.char.zip
+cd ~/data
+unzip ~/data/en_zh.char.zip
 
+pip config set global.index-url https://bytedpypi.byted.org/simple/
+cd /opt/tiger/common
+pip install --editable ./
+cd /opt/tiger/fairseq_mmt
+sudo pip install --editable ./
+pip install sacremoses
+pip install sacrebleu==1.5.1
+pip install timm==0.4.12
+pip install vizseq==0.1.15
+pip install nltk==3.6.4
+pip install sacrebleu==1.5.1
 
-source activate fairseq_mmt
 
 src_lang=en
 tgt_lang=zh
 
+local_data_dir=~/data/en_zh.char
 
-#data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
-data=/home/sata/kly/videoNMT/data/preprocess_follow/data-bin/en_zh.char
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 lr=0.001
@@ -27,18 +41,20 @@ seed=1207
 weight_decay=0.1
 clip_norm=0.0
 arch=transformer_vatex
-gpu_num=
+gpu_num=1
 
 
 name=textonly_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
-output_dir=/home/sata/kly/fairseq_mmt/output/vatex_baseline/${name}
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex
+local_logs_dir=~/fairseq_logs/vatex/
 
+hdfs dfs -mkdir -p $LOGS_DIR
+hdfs dfs -mkdir -p $output_dir
+mkdir -p $local_logs_dir
 
-mkdir -p $output_dir
-
-
-cp ${BASH_SOURCE[0]} $output_dir/train.sh
+hdfs dfs -put ${BASH_SOURCE[0]} $output_dir/train.sh
 
 
 
@@ -65,6 +81,9 @@ fairseq-train $data \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
-  --fp16  2>&1 | tee -a $output_dir/train.log
+  --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
+
+echo "---put log to $LOGS_DIR/log.${name}---"
+hdfs dfs -put $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
 
