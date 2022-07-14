@@ -1097,7 +1097,7 @@ def transformer_tiny(args):
 
 
 @register_model_architecture('vatex_multimodal_transformer', 'gated_vatex')
-def uvr_video_vatex(args):
+def gated_vatex(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1112,7 +1112,7 @@ def uvr_video_vatex(args):
     base_architecture(args)
 
 @register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_notop')
-def uvr_video_vatex(args):
+def gated_vatex_notop(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1127,7 +1127,7 @@ def uvr_video_vatex(args):
     base_architecture(args)
 
 @register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_top_pe')
-def uvr_video_vatex(args):
+def gated_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1144,7 +1144,7 @@ def uvr_video_vatex(args):
     base_architecture(args)
 
 @register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_notop_pe')
-def uvr_video_vatex(args):
+def gated_vatex_notop_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
