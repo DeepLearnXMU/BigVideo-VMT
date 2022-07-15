@@ -185,11 +185,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # fmt: on
         # args for image MMT
 
-        parser.add_argument('--video-pre-norm', action='store_true', default=False,
+        parser.add_argument('--video-pre-norm', type=bool,
                             help='normlization on image feature before fusing')
-        parser.add_argument('--is-fusion-top', type=bool,default=True,
+        parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
-        parser.add_argument('--pe_for_video', type=bool, default=False,
+        parser.add_argument('--pe-for-videos', type=bool,
                             help='video for position ')
 
     @classmethod
@@ -1108,6 +1108,8 @@ def gated_vatex(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
+    args.pe_for_video = getattr(args, 'pe_for_video', False)
+    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
 
     base_architecture(args)
 
@@ -1123,6 +1125,8 @@ def gated_vatex_notop(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
+    args.pe_for_video = getattr(args, 'pe_for_video', False)
+    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
 
     base_architecture(args)
 
@@ -1138,7 +1142,8 @@ def gated_vatex_top_pe(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
-    args.pe_for_videos = getattr(args, 'pe_for_video', True)
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
     if getattr(args, "max_video_positions", None) is None:
         args.max_video_positions = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
@@ -1155,7 +1160,9 @@ def gated_vatex_notop_pe(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
-    args.pe_for_videos = getattr(args, 'pe_for_video', True)
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+
     if getattr(args, "max_video_positions", None) is None:
         args.max_video_positions = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
