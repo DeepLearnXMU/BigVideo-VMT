@@ -183,10 +183,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--quant-noise-scalar', type=float, metavar='D', default=0,
                             help='scalar quantization noise and scalar quantization at training time')
         # fmt: on
-        # args for image MMT
+        # args for video MMT
 
         parser.add_argument('--video-pre-norm', type=bool,
-                            help='normlization on image feature before fusing')
+                            help='normlization on video feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
         parser.add_argument('--pe-for-videos', type=bool,
@@ -391,7 +391,7 @@ class TransformerEncoder(FairseqEncoder):
 
         self.video_pre_norm_module = nn.Identity()
         if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.image_feat_dim, 1e-5, True)
+            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
 

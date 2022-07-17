@@ -20,7 +20,7 @@ keep_last_epochs=10
 patience=10
 max_epoches=100
 dropout=0.3
-seed=1
+seed=1207
 weight_decay=0.1
 clip_norm=0.0
 arch=vatex_multimodal_transformer_att_vatex_top_pe
@@ -35,7 +35,7 @@ SA_video_dropout=0.1
 gpu_num=1
 
 
-name=vatex_char_arch${arch}detach_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}
+name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/sa/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/sa
 local_logs_dir=~/fairseq_logs/vatex/sa
