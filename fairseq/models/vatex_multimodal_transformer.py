@@ -401,7 +401,7 @@ class TransformerEncoder(FairseqEncoder):
             PositionalEmbedding(
                 args.max_video_positions,
                 args.video_feat_dim,
-                self.padding_idx,
+                0,
                 learned=args.encoder_learned_pos,
             )
             if args.pe_for_video

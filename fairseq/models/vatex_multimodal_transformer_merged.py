@@ -35,6 +35,7 @@ DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 40
 
+
 @register_model("vatex_multimodal_transformer_merged")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
@@ -196,7 +197,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--merge-before', type=bool,
                             help='video for position ')
 
-
     @classmethod
     def build_model(cls, args, task):
         """Build a new model instance."""
@@ -290,6 +290,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         Copied from the base class, but without ``**kwargs``,
         which are not supported by TorchScript.
         """
+
         encoder_out = self.encoder(
             src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,
             videos=videos
@@ -390,13 +391,6 @@ class TransformerEncoder(FairseqEncoder):
         # code for video MMT
 
         self.dense = nn.Linear(self.args.video_feat_dim, embed_dim)
-        self.sigmoid = nn.Sigmoid()
-        self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
-
-
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
 
@@ -406,14 +400,12 @@ class TransformerEncoder(FairseqEncoder):
             PositionalEmbedding(
                 args.max_video_positions,
                 args.video_feat_dim,
-                self.padding_idx,
+                0,
                 learned=args.encoder_learned_pos,
             )
             if args.pe_for_video
             else None
         )
-
-
 
     def f(self, l, fun='sum'):
         if fun == 'avg':
@@ -428,8 +420,6 @@ class TransformerEncoder(FairseqEncoder):
             for i in l[1:]:
                 res = res + i
             return res
-
-
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
@@ -497,21 +487,32 @@ class TransformerEncoder(FairseqEncoder):
         if not self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             # avg_pooling
+
             if self.args.pe_for_video:
                 v_tokens = torch.mean(videos, dim=-1)
                 videos = videos + self.video_embed_positions(v_tokens)
-            videos = torch.mean(videos, dim=1)
-            bsz, video_dim = videos.size()[0], videos.size()[1]
+            if self.args.average_before_merge:
 
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
+                videos = torch.mean(videos, dim=1)
+                bsz, video_dim = videos.size()[0], videos.size()[1]
 
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=1)
-            x = merge.transpose(0, 1)  # reback to T x B x C
+                v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
+                v_repr = self.dense(v_embedding)  # B, 1, C
+
+                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                if self.args.merge_before:
+                    merge = torch.cat([v_repr, text_repr], dim=1)
+                else:
+                    merge = torch.cat([text_repr, v_repr], dim=1)
+            else:
+                v_repr = self.dense(videos)  # B, 40 , C
+                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                print(text_repr.shape)
+                if self.args.merge_before:
+                    merge = torch.cat([v_repr, text_repr], dim=1)
+                else:
+                    merge = torch.cat([text_repr, v_repr], dim=1)
+                x = merge.transpose(0, 1)  # reback to T x B x C
 
         # encoder layers
         for layer in self.layers:
@@ -522,41 +523,42 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.layer_norm is not None:
             x = self.layer_norm(x)
-
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             # avg_pooling
-
+            v_tokens = torch.mean(videos, dim=-1)
+            v_mask =
             if self.args.pe_for_video:
                 v_tokens = torch.mean(videos, dim=-1)
                 videos = videos + self.video_embed_positions(v_tokens)
 
-            parser.add_argument('--average-before-merge', type=bool,
-                                help='video for position ')
-            parser.add_argument('--merge-before', type=bool,
-                                help='video for position ')
-            if not average_before_merge:
-                print(dfs)
-            videos = torch.mean(videos, dim=1)
-            bsz,video_dim=videos.size()[0],videos.size()[1]
+            if self.args.average_before_merge:
 
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
+                videos = torch.mean(videos, dim=1)
+                bsz, video_dim = videos.size()[0], videos.size()[1]
 
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=-1)
-            gate = self.sigmoid(self.gate_dense(merge))
-            output = (1 - gate) * text_repr + gate * v_repr
-            # print(gate.shape)
-            # print(dadsa)
-            x = output.transpose(0, 1)  # reback to T x B x C
+                v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
+                v_repr = self.dense(v_embedding)  # B, 1, C
+
+                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                if self.args.merge_before:
+                    merge = torch.cat([v_repr, text_repr], dim=1)
+                else:
+                    merge = torch.cat([text_repr, v_repr], dim=1)
+            else:
+
+                v_repr = self.dense(videos)  # B, 40 , C
+                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                print(text_repr.shape)
+                if self.args.merge_before:
+                    merge = torch.cat([v_repr, text_repr], dim=1)
+                else:
+                    merge = torch.cat([text_repr, v_repr], dim=1)
+            x = merge.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
-            encoder_padding_mask=encoder_padding_mask,  # B x T
+            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
             src_tokens=None,
@@ -1080,7 +1082,7 @@ def base_architecture(args):
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_iwslt_de_en')
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_iwslt_de_en')
 def transformer_iwslt_de_en(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
@@ -1093,7 +1095,7 @@ def transformer_iwslt_de_en(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_tiny')
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1106,7 +1108,7 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_vatex')
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex')
 def merged_vatex(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1120,10 +1122,13 @@ def merged_vatex(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.average_before_merge = getattr(args, 'average_before_merge', True)
+    args.merge_before = getattr(args, 'merge_before', False)
 
     base_architecture(args)
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_vatex_notop')
+
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop')
 def merged_vatex_notop(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1140,7 +1145,8 @@ def merged_vatex_notop(args):
 
     base_architecture(args)
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_vatex_top_pe')
+
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_pe')
 def merged_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1158,7 +1164,8 @@ def merged_vatex_top_pe(args):
         args.max_video_positions = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
 
-@register_model_architecture('vatex_multimodal_transformer', 'merged_vatex_notop_pe')
+
+@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_pe')
 def merged_vatex_notop_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)

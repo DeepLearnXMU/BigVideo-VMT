@@ -54,7 +54,7 @@ hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
 mkdir -p $local_logs_dir
 
-hdfs dfs -put ${BASH_SOURCE[0]} $output_dir/train.sh
+hdfs dfs -put -f ${BASH_SOURCE[0]} $output_dir/train.sh
 
 
 
@@ -84,6 +84,6 @@ fairseq-train $local_data_dir \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
-hdfs dfs -put $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
+hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
 
