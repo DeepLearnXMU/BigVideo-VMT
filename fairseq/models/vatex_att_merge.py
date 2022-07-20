@@ -27,6 +27,7 @@ from fairseq.modules import (
     TransformerDecoderLayer,
     TransformerEncoderLayer,
     SelectiveAttention,
+    adaptive_softmax,
 )
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
@@ -36,7 +37,7 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 40
 
 
-@register_model("vatex_multimodal_transformer_merged")
+@register_model("vatex_att_merge")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -186,12 +187,21 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # fmt: on
         # args for video MMT
 
-        parser.add_argument('--video-pre-norm', type=bool,
+        parser.add_argument('--video-pre-norm', action='store_true',
                             help='normlization on video feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
-        parser.add_argument('--pe-for-videos', type=bool,
+        parser.add_argument('--pe-for-video', type=bool,
                             help='video for position ')
+        parser.add_argument('--max-video-positions', type=int, default=40,
+                            help='max vid len')
+        parser.add_argument('--SA-video-dropout', type=float,
+                            help='video feat dropout before SA')
+        parser.add_argument('--SA-text-dropout', type=float,
+                            help='text feat dropout before SA')
+        parser.add_argument('--SA-attention-dropout', type=float,
+                            help='selective attn\'s dropout')
+
         parser.add_argument('--average-before-merge', type=bool,
                             help='video for position ')
         parser.add_argument('--merge-before', type=bool,
@@ -290,7 +300,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
         Copied from the base class, but without ``**kwargs``,
         which are not supported by TorchScript.
         """
-
         encoder_out = self.encoder(
             src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,
             videos=videos
@@ -391,10 +400,20 @@ class TransformerEncoder(FairseqEncoder):
         # code for video MMT
 
         self.dense = nn.Linear(self.args.video_feat_dim, embed_dim)
+        self.sigmoid = nn.Sigmoid()
+        self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
+
+        self.video_dropout_module = FairseqDropout(
+            args.SA_video_dropout, module_name=self.__class__.__name__
+        )
+        self.text_dropout_module = FairseqDropout(
+            args.SA_text_dropout, module_name=self.__class__.__name__
+        )
+        self.video_pre_norm_module = nn.Identity()
+        if args.video_pre_norm:
+            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
 
         self.is_fusion_top = args.is_fusion_top
-
-        self.recoder = utils.Recorder(args)
 
         self.video_embed_positions = (
             PositionalEmbedding(
@@ -406,6 +425,13 @@ class TransformerEncoder(FairseqEncoder):
             if args.pe_for_video
             else None
         )
+
+        self.video_atts = SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
+                                             vdim=args.video_feat_dim, attn_dim=embed_dim,
+                                             intermediate_dim=embed_dim, output_dim=embed_dim,
+                                             num_heads=1, attn_drop=args.SA_attention_dropout)
+
+        self.recoder = utils.Recorder(args)
 
     def f(self, l, fun='sum'):
         if fun == 'avg':
@@ -423,6 +449,34 @@ class TransformerEncoder(FairseqEncoder):
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
+
+    def fuse_video_feat(self, text, video):
+        video = self.video_pre_norm_module(video)
+        video = self.video_dropout_module(video)
+        text = self.text_dropout_module(text)
+        video = video.transpose(0, 1)
+        text = text.transpose(0, 1)
+        output, _map = self.video_atts(query=text, key=video, value=video)  # t, b, c
+
+        merge = torch.cat([output, text], dim=-1)
+        gate = torch.sigmoid(self.gate_dense(merge))
+
+        # self.recoder.record_gate(gate.cpu(), text_mask.cpu())
+        # _map = _map[:,:,1:].softmax(dim=-1)
+        # self.recoder.record_map(_map.cpu())
+
+        res = (1 - gate) * text + gate * output
+        return res, gate
+
+    def att_video_feat(self, text, video):
+        video = self.video_pre_norm_module(video)
+        video = self.video_dropout_module(video)
+        text = self.text_dropout_module(text)
+        video = video.transpose(0, 1)
+        text = text.transpose(0, 1)
+        output, _map = self.video_atts(query=text, key=video, value=video)  # t, b, c
+
+        return output, _map
 
     def forward_embedding(
             self, src_tokens, token_embedding: Optional[torch.Tensor] = None
@@ -486,43 +540,41 @@ class TransformerEncoder(FairseqEncoder):
 
         if not self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
-            v_tokens = torch.mean(videos, dim=-1)
-            # v_mask =
+            bsz, vid_len, video_dim = videos.size()[0], videos.size()[1], videos.size()[2]
+            v_embedding = videos
+            # print(v_embedding.shape)
             if self.args.pe_for_video:
                 v_tokens = torch.mean(videos, dim=-1)
-                videos = videos + self.video_embed_positions(v_tokens)
+                v_repr = v_embedding + self.video_embed_positions(v_tokens)
+            else:
+                v_repr = v_embedding
 
+            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+            v_att, gate = self.att_video_feat(video=v_repr, text=text_repr)  # T B C
+
+            v_att = v_att.transpose(0, 1)
             if self.args.average_before_merge:
-
-                videos = torch.mean(videos, dim=1)
-                bsz, video_dim = videos.size()[0], videos.size()[1]
-
-                v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-                v_repr = self.dense(v_embedding)  # B, 1, C
-
-                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                v_att = torch.mean(v_att, dim=1)
+                v_att = v_att.view(bsz, 1, text_repr.size()[-1])  # B, 1, text_dim
                 video_padding_mask = torch.tensor(False).cuda()
                 video_padding_mask = video_padding_mask.expand(bsz, 1)
                 if self.args.merge_before:
-                    merge = torch.cat([v_repr, text_repr], dim=1)
+                    merge = torch.cat([v_att, text_repr], dim=1)
                     encoder_padding_mask = torch.cat([video_padding_mask, encoder_padding_mask], dim=-1)
                 else:
-                    merge = torch.cat([text_repr, v_repr], dim=1)
+                    merge = torch.cat([text_repr, v_att], dim=1)
                     encoder_padding_mask = torch.cat([encoder_padding_mask, video_padding_mask], dim=-1)
             else:
 
-                v_repr = self.dense(videos)  # B, 40 , C
-                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                bsz, seq_len, video_dim = v_att.size()[0], v_att.size()[1], v_att.size()[2]
 
-                v_tokens = torch.mean(videos, dim=-1)
-                video_padding_mask = v_tokens.eq(0)
-
+                video_padding_mask = torch.tensor(False).cuda()
+                video_padding_mask = video_padding_mask.expand(bsz, seq_len)
                 if self.args.merge_before:
-                    merge = torch.cat([v_repr, text_repr], dim=1)
+                    merge = torch.cat([v_att, text_repr], dim=1)
                     encoder_padding_mask = torch.cat([video_padding_mask, encoder_padding_mask], dim=-1)
                 else:
-                    merge = torch.cat([text_repr, v_repr], dim=1)
+                    merge = torch.cat([text_repr, v_att], dim=1)
                     encoder_padding_mask = torch.cat([encoder_padding_mask, video_padding_mask], dim=-1)
             x = merge.transpose(0, 1)  # reback to T x B x C
 
@@ -535,51 +587,50 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.layer_norm is not None:
             x = self.layer_norm(x)
+
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
-            v_tokens = torch.mean(videos, dim=-1)
-            # v_mask =
+            bsz, vid_len, video_dim = videos.size()[0], videos.size()[1], videos.size()[2]
+            v_embedding = videos
+            # print(v_embedding.shape)
             if self.args.pe_for_video:
                 v_tokens = torch.mean(videos, dim=-1)
-                videos = videos + self.video_embed_positions(v_tokens)
+                v_repr = v_embedding + self.video_embed_positions(v_tokens)
+            else:
+                v_repr = v_embedding
 
+            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+            v_att, gate = self.att_video_feat(video=v_repr, text=text_repr)  # T B C
+
+            v_att = v_att.transpose(0, 1)
             if self.args.average_before_merge:
-
-                videos = torch.mean(videos, dim=1)
-                bsz, video_dim = videos.size()[0], videos.size()[1]
-
-                v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-                v_repr = self.dense(v_embedding)  # B, 1, C
-
-                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                v_att = torch.mean(v_att, dim=1)
+                v_att = v_att.view(bsz, 1, text_repr.size()[-1])  # B, 1, text_dim
                 video_padding_mask = torch.tensor(False).cuda()
                 video_padding_mask = video_padding_mask.expand(bsz, 1)
                 if self.args.merge_before:
-                    merge = torch.cat([v_repr, text_repr], dim=1)
+                    merge = torch.cat([v_att, text_repr], dim=1)
                     encoder_padding_mask = torch.cat([video_padding_mask, encoder_padding_mask], dim=-1)
                 else:
-                    merge = torch.cat([text_repr, v_repr], dim=1)
+                    merge = torch.cat([text_repr, v_att], dim=1)
                     encoder_padding_mask = torch.cat([encoder_padding_mask, video_padding_mask], dim=-1)
             else:
 
-                v_repr = self.dense(videos)  # B, 40 , C
-                text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
+                bsz, seq_len, video_dim = v_att.size()[0], v_att.size()[1], v_att.size()[2]
 
-                v_tokens = torch.mean(videos, dim=-1)
-                video_padding_mask = v_tokens.eq(0)
-
+                video_padding_mask = torch.tensor(False).cuda()
+                video_padding_mask = video_padding_mask.expand(bsz, seq_len)
                 if self.args.merge_before:
-                    merge = torch.cat([v_repr, text_repr], dim=1)
+                    merge = torch.cat([v_att, text_repr], dim=1)
                     encoder_padding_mask = torch.cat([video_padding_mask, encoder_padding_mask], dim=-1)
                 else:
-                    merge = torch.cat([text_repr, v_repr], dim=1)
+                    merge = torch.cat([text_repr, v_att], dim=1)
                     encoder_padding_mask = torch.cat([encoder_padding_mask, video_padding_mask], dim=-1)
             x = merge.transpose(0, 1)  # reback to T x B x C
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
-            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
+            encoder_padding_mask=encoder_padding_mask,  # B x T
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
             src_tokens=None,
@@ -1066,7 +1117,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged')
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1095,8 +1146,6 @@ def base_architecture(args):
     args.no_cross_attention = getattr(args, 'no_cross_attention', False)
     args.cross_self_attention = getattr(args, 'cross_self_attention', False)
     args.layer_wise_attention = getattr(args, 'layer_wise_attention', False)
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     args.decoder_output_dim = getattr(args, 'decoder_output_dim', args.decoder_embed_dim)
     args.decoder_input_dim = getattr(args, 'decoder_input_dim', args.decoder_embed_dim)
@@ -1105,20 +1154,7 @@ def base_architecture(args):
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_iwslt_de_en')
-def transformer_iwslt_de_en(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 512)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 1024)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    base_architecture(args)
-
-
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_tiny')
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1131,8 +1167,8 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_pe_av_be')
-def merged_vatex_top_pe_av_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_pe_av_be')
+def vatex_att_merge_vatex_top_pe_av_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1145,14 +1181,21 @@ def merged_vatex_top_pe_av_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_pe_av_af')
-def merged_vatex_top_pe_av_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_pe_av_af')
+def vatex_att_merge_vatex_top_pe_av_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1165,14 +1208,21 @@ def merged_vatex_top_pe_av_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_pe_noav_be')
-def merged_vatex_top_pe_noav_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_pe_noav_be')
+def vatex_att_merge_vatex_top_pe_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1185,14 +1235,21 @@ def merged_vatex_top_pe_noav_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_pe_noav_af')
-def merged_vatex_top_pe_noav_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_pe_noav_af')
+def vatex_att_merge_vatex_top_pe_noav_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1205,14 +1262,22 @@ def merged_vatex_top_pe_noav_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_nope_av_be')
-def merged_vatex_top_nope_av_be(args):
+#   TOP  NO PE
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_nope_av_be')
+def vatex_att_merge_vatex_top_nope_av_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1225,14 +1290,21 @@ def merged_vatex_top_nope_av_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_nope_av_af')
-def merged_vatex_top_nope_av_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_nope_av_af')
+def vatex_att_merge_vatex_top_nope_av_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1245,14 +1317,21 @@ def merged_vatex_top_nope_av_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_nope_noav_be')
-def merged_vatex_top_nope_noav_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_nope_noav_be')
+def vatex_att_merge_vatex_top_nope_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1265,14 +1344,21 @@ def merged_vatex_top_nope_noav_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_top_nope_noav_af')
-def merged_vatex_top_nope_noav_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_top_nope_noav_af')
+def vatex_att_merge_vatex_top_nope_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1285,18 +1371,23 @@ def merged_vatex_top_nope_noav_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
+## no top --------------------------------------------------
 
-##no top ============================
-
-
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_pe_av_be')
-def merged_vatex_notop_pe_av_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_pe_av_be')
+def vatex_att_merge_vatex_notop_pe_av_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1309,14 +1400,21 @@ def merged_vatex_notop_pe_av_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_pe_av_af')
-def merged_vatex_notop_pe_av_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_pe_av_af')
+def vatex_att_merge_vatex_notop_pe_av_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1329,14 +1427,21 @@ def merged_vatex_notop_pe_av_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_pe_noav_be')
-def merged_vatex_notop_pe_noav_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_pe_noav_be')
+def vatex_att_merge_vatex_notop_pe_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1349,14 +1454,21 @@ def merged_vatex_notop_pe_noav_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', True)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_pe_noav_af')
-def merged_vatex_notop_pe_noav_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_pe_noav_af')
+def vatex_att_merge_vatex_notop_pe_noav_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1369,14 +1481,22 @@ def merged_vatex_notop_pe_noav_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', False)
+
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_nope_av_be')
-def merged_vatex_notop_nope_av_be(args):
+#   noTOP  NO PE
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_nope_av_be')
+def vatex_att_merge_vatex_notop_nope_av_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1389,14 +1509,21 @@ def merged_vatex_notop_nope_av_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', True)
 
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_nope_av_af')
-def merged_vatex_notop_nope_av_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_nope_av_af')
+def vatex_att_merge_vatex_notop_nope_av_af(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1409,14 +1536,21 @@ def merged_vatex_notop_nope_av_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', True)
     args.merge_before = getattr(args, 'merge_before', False)
 
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_nope_noav_be')
-def merged_vatex_notop_nope_noav_be(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_nope_noav_be')
+def vatex_att_merge_vatex_notop_nope_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1429,14 +1563,21 @@ def merged_vatex_notop_nope_noav_be(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', True)
 
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_merged', 'merged_vatex_notop_nope_noav_af')
-def merged_vatex_notop_nope_noav_af(args):
+@register_model_architecture('vatex_att_merge', 'vatex_att_merge_vatex_notop_nope_noav_af')
+def vatex_att_merge_vatex_notop_nope_noav_be(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1449,13 +1590,14 @@ def merged_vatex_notop_nope_noav_af(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', False)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+    args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
+
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', False)
 
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+
     base_architecture(args)
-
-
-
-
-
-
