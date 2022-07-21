@@ -256,7 +256,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
             )
 
         encoder = cls.build_encoder(args, src_dict, encoder_embed_tokens)
-        fushion_encoder=cls.build_fushion_encoder()
+        fushion_encoder=cls.build_fushion_encoder(args,src_dict)
         decoder = cls.build_decoder(args, tgt_dict, decoder_embed_tokens)
         return cls(args, encoder, decoder,fushion_encoder)
 
@@ -286,8 +286,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
         )
 
     @classmethod
-    def build_fushion_encoder(cls, args, src_dict, x):
-        return Fushion_encoder(args)
+    def build_fushion_encoder(cls, args, src_dict):
+        return Fushion_encoder(args,src_dict)
 
 
     # TorchScript doesn't support optional arguments with variable length (**kwargs).
@@ -622,7 +622,7 @@ class FushionEncoder(FairseqEncoder):
         embed_tokens (torch.nn.Embedding): input embedding
     """
 
-    def __init__(self, args, dictionary, embed_tokens):
+    def __init__(self, args, dictionary):
         super().__init__(dictionary)
         self.register_buffer("version", torch.Tensor([3]))
 
@@ -631,13 +631,10 @@ class FushionEncoder(FairseqEncoder):
         )
         self.encoder_layerdrop = args.encoder_layerdrop
 
-        embed_dim = self.args.encoder_embed_dim
+        embed_dim = self.args.fushion_encoder_embed_dim
         self.padding_idx = embed_tokens.padding_idx
         self.max_source_positions = args.max_source_positions
 
-        self.embed_tokens = embed_tokens
-
-        self.embed_scale = 1.0 if args.no_scale_embedding else math.sqrt(embed_dim)
 
 
         if getattr(args, "layernorm_embedding", False):
