@@ -3,6 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+from logging import log
 import math
 
 import torch
@@ -30,21 +31,23 @@ def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=T
     return loss, nll_loss
 
 
-@register_criterion("label_smoothed_cross_entropy")
-class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
+@register_criterion("cross_modal_criterion")
+class CrossModalCriterion(FairseqCriterion):
     def __init__(
-        self,
-        task,
-        sentence_avg,
-        label_smoothing,
-        ignore_prefix_size=0,
-        report_accuracy=False,
+            self,
+            task,
+            sentence_avg,
+            label_smoothing,
+            ignore_prefix_size=0,
+            report_accuracy=False,
+            report_modal_similarity=False
     ):
         super().__init__(task)
         self.sentence_avg = sentence_avg
         self.eps = label_smoothing
         self.ignore_prefix_size = ignore_prefix_size
         self.report_accuracy = report_accuracy
+        self.report_modal_similarity = report_modal_similarity
 
     @staticmethod
     def add_args(parser):
@@ -56,6 +59,8 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
                             help='report accuracy metric')
         parser.add_argument('--ignore-prefix-size', default=0, type=int,
                             help='Ignore first N tokens')
+        parser.add_argument('--report-modal-similarity', action='store_true',
+                            help='report accuracy metric')
         # fmt: on
 
     def forward(self, model, sample, reduce=True):
@@ -83,6 +88,15 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
             n_correct, total = self.compute_accuracy(model, net_output, sample)
             logging_output["n_correct"] = utils.item(n_correct.data)
             logging_output["total"] = utils.item(total.data)
+
+        if self.report_modal_similarity:
+            text_h = net_output[1]['text_h'].detach()
+            video_h = net_output[1]['video_h'].detach()
+            text_mean = torch.mean(text_h, dim=1)
+            video_mean = torch.mean(video_h, dim=1)
+            sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
+            logging_output["modal_similarity"] = utils.item(sim.mean().data)
+
         return loss, sample_size, logging_output
 
     def get_lprobs_and_target(self, model, net_output, sample):
@@ -90,11 +104,11 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         target = model.get_targets(sample, net_output)
         if self.ignore_prefix_size > 0:
             if getattr(lprobs, "batch_first", False):
-                lprobs = lprobs[:, self.ignore_prefix_size :, :].contiguous()
-                target = target[:, self.ignore_prefix_size :].contiguous()
+                lprobs = lprobs[:, self.ignore_prefix_size:, :].contiguous()
+                target = target[:, self.ignore_prefix_size:].contiguous()
             else:
-                lprobs = lprobs[self.ignore_prefix_size :, :, :].contiguous()
-                target = target[self.ignore_prefix_size :, :].contiguous()
+                lprobs = lprobs[self.ignore_prefix_size:, :, :].contiguous()
+                target = target[self.ignore_prefix_size:, :].contiguous()
         return lprobs.view(-1, lprobs.size(-1)), target.view(-1)
 
     def compute_loss(self, model, net_output, sample, reduce=True):
@@ -150,6 +164,11 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
                 if meters["total"].sum > 0
                 else float("nan"),
             )
+
+        modal_similarity_sum = sum(log.get("modal_similarity", 0) for log in logging_outputs)
+        metrics.log_scalar(
+            "modal_similarity", modal_similarity_sum / len(logging_outputs), round=5
+        )
 
     @staticmethod
     def logging_outputs_can_be_summed() -> bool:
