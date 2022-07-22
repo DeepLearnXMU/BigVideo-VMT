@@ -90,10 +90,16 @@ class CrossModalCriterion(FairseqCriterion):
             logging_output["total"] = utils.item(total.data)
 
         if self.report_modal_similarity:
-            text_h = net_output[1]['text_h'].detach()
+            text_h = net_output[1]['text_h'].detach()   # B, t_len , C
             video_h = net_output[1]['video_h'].detach()
+
+            text_padding_mask=net_output[1]["text_padding_mask"].detach()  # B, t_len
+            video_padding_mask = net_output[1]["video_padding_mask"].detach()
+            text_h= text_h * (~text_padding_mask).float().unsqueeze(-1)
             text_mean = torch.mean(text_h, dim=1)
+
             video_mean = torch.mean(video_h, dim=1)
+
             sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
 
