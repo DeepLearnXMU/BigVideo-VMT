@@ -202,7 +202,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--fushion-encoder-layerdrop', type=float, metavar='D', default=0,
                             help='LayerDrop probability for encoder')
         parser.add_argument('--fushion-encoder-layers-to-keep', default=None,
-                           help='which layers to *keep* when pruning as a comma-separated list')
+                            help='which layers to *keep* when pruning as a comma-separated list')
         # fmt: on
         # args for video MMT
 
@@ -312,10 +312,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
         """
 
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths,videos=videos, return_all_hiddens=return_all_hiddens,
+            src_tokens, src_lengths=src_lengths, videos=videos, return_all_hiddens=return_all_hiddens,
 
         )
-        decoder_out= self.decoder(
+        decoder_out = self.decoder(
             prev_output_tokens,
             encoder_out=encoder_out,
             features_only=features_only,
@@ -440,8 +440,6 @@ class TransformerFushionEncoder(FairseqEncoder):
             else None
         )
 
-
-
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -528,7 +526,6 @@ class TransformerFushionEncoder(FairseqEncoder):
         text encoder
         """
 
-
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
@@ -587,8 +584,8 @@ class TransformerFushionEncoder(FairseqEncoder):
             encoder_out=x,  # T x B x C
             text_out=text_h,  # B, t_len , C
             video_out=video_h,  # B, v_len , C
-            text_padding_mask=text_padding_mask , # B,  t_len
-            video_padding_mask=video_padding_mask, # B, v_len
+            text_padding_mask=text_padding_mask,  # B,  t_len
+            video_padding_mask=video_padding_mask,  # B, v_len
             encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[(T + v_len) x B x C]
@@ -988,9 +985,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        text_h = encoder_out.text_out
-        video_h = encoder_out.video_out
-        return x, {"attn": [attn], "inner_states": inner_states,"text_h":text_h,"video_h":video_h}
+        return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.text_out,
+                   "video_h": encoder_out.video_out,
+                   "text_padding_mask": encoder_out.text_padding_mask,
+                   "video_padding_mask": encoder_out.video_padding_mask}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
@@ -1153,6 +1151,7 @@ def vatex_fushion_encoder_merge_before(args):
 
     base_architecture(args)
 
+
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before')
 def vatex_fushion_small_before(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
@@ -1197,6 +1196,7 @@ def vatex_fushion_encoder_merge_after(args):
     args.merge_before = getattr(args, 'merge_before', False)
 
     base_architecture(args)
+
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after')
 def vatex_fushion_small_after(args):

@@ -13,7 +13,7 @@ tgt_lang=zh
 
 local_data_dir=~/data/en_zh.char
 
-criterion=label_smoothed_cross_entropy
+criterion=cross_modal_criterion
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -57,7 +57,7 @@ fairseq-train $local_data_dir \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
-  --criterion $criterion --label-smoothing 0.1 \
+  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity \
   --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \

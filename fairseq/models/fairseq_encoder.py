@@ -31,8 +31,8 @@ FushionEncoderOut = NamedTuple(
         ("video_out",Tensor),  # B, v_len , C
         ("encoder_padding_mask", Optional[Tensor]),  # B x T
         ("encoder_embedding", Optional[Tensor]),  # B x T x C
-        ("text_padding_mask", Optional[Tensor]),  # B x t_len x C
-        ("video_padding_mask", Optional[Tensor]),  # B x v_len x C
+        ("text_padding_mask", Tensor),  # B x t_len x C
+        ("video_padding_mask", Tensor),  # B x v_len x C
         ("encoder_states", Optional[List[Tensor]]),  # List[T x B x C]
         ("src_tokens", Optional[Tensor]),  # B x T
         ("src_lengths", Optional[Tensor]),  # B x 1

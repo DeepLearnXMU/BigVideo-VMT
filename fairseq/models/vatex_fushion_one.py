@@ -963,9 +963,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        text_h = encoder_out.text_out
-        video_h = encoder_out.video_out
-        return x, {"attn": [attn], "inner_states": inner_states,"text_h":text_h,"video_h":video_h}
+        return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.text_out,
+                   "video_h": encoder_out.video_out,
+                   "text_padding_mask": encoder_out.text_padding_mask,
+                   "video_padding_mask": encoder_out.video_padding_mask}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
