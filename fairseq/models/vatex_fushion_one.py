@@ -1128,7 +1128,7 @@ def vatex_fushion_one_merge_before(args):
 
     base_architecture(args)
 
-@register_model_architecture('vatex_fushion_one', 'vatex_fushion_small_before')
+@register_model_architecture('vatex_fushion_one', 'vatex_fushion_one_small_before')
 def vatex_fushion_small_before(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1173,7 +1173,7 @@ def vatex_fushion_one_merge_after(args):
 
     base_architecture(args)
 
-@register_model_architecture('vatex_fushion_one', 'vatex_fushion_small_after')
+@register_model_architecture('vatex_fushion_one', 'vatex_fushion_one_small_after')
 def vatex_fushion_one_merge_after(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)

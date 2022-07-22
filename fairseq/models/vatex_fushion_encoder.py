@@ -1199,7 +1199,7 @@ def vatex_fushion_encoder_merge_after(args):
     base_architecture(args)
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after')
-def vatex_fushion_encoder_merge_after(args):
+def vatex_fushion_small_after(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
