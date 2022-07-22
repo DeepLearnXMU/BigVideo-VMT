@@ -5,7 +5,7 @@
 
 from logging import log
 import math
-
+import torch.nn.functional as F
 import torch
 from fairseq import metrics, utils
 from fairseq.criterions import FairseqCriterion, register_criterion
@@ -40,7 +40,11 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
             label_smoothing,
             ignore_prefix_size=0,
             report_accuracy=False,
-            report_modal_similarity=False
+            report_modal_similarity=False,
+            contrastive_weight=0.0,
+            contrastive_temperature=1.0,
+            use_dual_ctr=False,
+            ctr_dropout_rate=0.0
     ):
         super().__init__(task)
         self.sentence_avg = sentence_avg
@@ -89,7 +93,19 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         """
         net_output = model(**sample["net_input"])
 
-        loss, nll_loss = self.compute_loss(model, net_output, sample, reduce=reduce)
+        if model.training:
+            contrastive_loss = self.compute_contrastive_loss(net_output,
+                                                             reduce=reduce)
+        else:
+            contrastive_loss = torch.tensor(0.0)
+
+        label_smoothed_nll_loss, nll_loss = self.compute_loss(model, net_output, sample, reduce=reduce)
+
+        if label_smoothed_nll_loss is not None:
+            loss = label_smoothed_nll_loss + self.contrastive_weight * contrastive_loss
+        else:
+            loss = contrastive_loss
+
         sample_size = (
             sample["target"].size(0) if self.sentence_avg else sample["ntokens"]
         )
@@ -98,24 +114,28 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
             "nll_loss": nll_loss.data,
             "ntokens": sample["ntokens"],
             "nsentences": sample["target"].size(0),
+            "contrastive_loss": contrastive_loss.data,
             "sample_size": sample_size,
         }
+
         if self.report_accuracy:
             n_correct, total = self.compute_accuracy(model, net_output, sample)
             logging_output["n_correct"] = utils.item(n_correct.data)
             logging_output["total"] = utils.item(total.data)
 
         if self.report_modal_similarity:
-            text_h = net_output[1]['text_h'].detach()   # B, t_len , C
+            text_h = net_output[1]['text_h'].detach()  # B, t_len , C
             video_h = net_output[1]['video_h'].detach()
 
-            text_padding_mask=net_output[1]["text_padding_mask"].detach()  # B, t_len
+            text_padding_mask = net_output[1]["text_padding_mask"].detach()  # B, t_len
             video_padding_mask = net_output[1]["video_padding_mask"].detach()
-            text_h= text_h * (~text_padding_mask).float().unsqueeze(-1)
-            text_mean = torch.mean(text_h, dim=1)
+            text_padding_mask = (~text_padding_mask).float()
+            video_padding_mask = (~video_padding_mask).float()
 
-            video_mean = torch.mean(video_h, dim=1)
-
+            text_mean = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(dim=1).unsqueeze(
+                -1)
+            video_mean = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                dim=1).unsqueeze(-1)
             sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
 
@@ -153,13 +173,46 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         total = torch.sum(mask)
         return n_correct, total
 
+    def compute_contrastive_loss(self, net_output,
+                                 reduce=True):
+        out, extra = net_output
+        text_h = extra['text_h']  # B, t_len , C
+        video_h = extra['video_h']
+        text_padding_mask = extra["text_padding_mask"]  # B, t_len
+        video_padding_mask = extra["video_padding_mask"]
+        text_padding_mask = (~text_padding_mask).float()
+        video_padding_mask = (~video_padding_mask).float()
+
+        text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(dim=1).unsqueeze(
+            -1)  # Bx H
+        video_hidden = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+            dim=1).unsqueeze(-1)
+
+        batch_size, hidden_size = text_hidden.size()
+        logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
+                                     video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
+                                     dim=-1)
+        logits /= self.contrastive_temperature
+
+        if self.use_dual_ctr:
+            loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
+            loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
+            loss = loss_text + loss_video
+        else:
+            loss = -torch.nn.LogSoftmax(0)(logits).diag()
+        if reduce:
+            loss = loss.sum()
+        return loss
+
     @classmethod
     def reduce_metrics(cls, logging_outputs) -> None:
         """Aggregate logging outputs from data parallel training."""
         loss_sum = sum(log.get("loss", 0) for log in logging_outputs)
         nll_loss_sum = sum(log.get("nll_loss", 0) for log in logging_outputs)
         ntokens = sum(log.get("ntokens", 0) for log in logging_outputs)
+        nsentences = sum(log.get("nsentences", 0) for log in logging_outputs)
         sample_size = sum(log.get("sample_size", 0) for log in logging_outputs)
+        contrastive_loss_sum = sum(log.get("contrastive_loss", 0) for log in logging_outputs)
 
         metrics.log_scalar(
             "loss", loss_sum / sample_size / math.log(2), sample_size, round=3
@@ -169,6 +222,9 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         )
         metrics.log_derived(
             "ppl", lambda meters: utils.get_perplexity(meters["nll_loss"].avg)
+        )
+        metrics.log_scalar(
+            "contrasitve_loss", contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
         )
 
         total = utils.item(sum(log.get("total", 0) for log in logging_outputs))

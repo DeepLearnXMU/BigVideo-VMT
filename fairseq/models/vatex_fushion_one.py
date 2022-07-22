@@ -555,8 +555,8 @@ class TransformerFushionEncoder(FairseqEncoder):
                 assert encoder_states is not None
                 encoder_states.append(x)
 
-        if self.layer_norm is not None:
-            x = self.layer_norm(x)
+        if self.fushion_layer_norm is not None:
+            x = self.fushion_layer_norm(x)
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C

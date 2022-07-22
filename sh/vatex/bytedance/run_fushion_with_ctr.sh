@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=0
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -13,7 +13,15 @@ tgt_lang=zh
 
 local_data_dir=~/data/en_zh.char
 
-criterion=cross_modal_criterion
+criterion=cross_modal_criterion_with_ctr
+if [ $criterion == "label_smoothed_cross_entropy" ]; then
+        cri=LSCE
+    elif [ $criterion == "cross_modal_criterion" ]; then
+        cri=CMC
+    elif [ $criterion == "cross_modal_criterion_with_ctr" ]; then
+        cri=CMCCTR
+fi
+
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -26,7 +34,11 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_fushion_encoder_merge_before
+
+arch=vatex_fushion_one_merge_after
+
+contrastive_weight=1.0
+contrastive_temperature=1.0
 
 video_feat_path=~/data/vatex_features
 video_ids_path=~/data/raw_texts/ids
@@ -36,11 +48,11 @@ video_feat_dim=1024
 gpu_num=1
 
 
-name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
+name=vatex_char_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_ctrw${contrastive_weight}_ctrt${contrastive_temperature}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/fushion/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/fushion
-local_logs_dir=~/fairseq_logs/vatex/fushion
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/fushionOne/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/fushionOne
+local_logs_dir=~/fairseq_logs/vatex/fushionOne
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
@@ -58,6 +70,7 @@ fairseq-train $local_data_dir \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 --report-modal-similarity \
+  --contrastive-weight ${contrastive_weight}  --contrastive-temperature ${contrastive_temperature} \
   --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \

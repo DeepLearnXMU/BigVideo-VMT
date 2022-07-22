@@ -17,6 +17,9 @@ tar -zxvf raw_texts.tar.gz
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
+sudo cp -r /usr/local/bin/pip /usr/bin/pip
+sudo cp -r /usr/local/bin/pip3 /usr/bin/pip3
+sudo cp -r /usr/local/bin/pip3.7 /usr/bin/pip3.7
 pip config set global.index-url https://bytedpypi.byted.org/simple/
 cd /opt/tiger/common
 pip install --editable ./
