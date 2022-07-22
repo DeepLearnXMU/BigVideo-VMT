@@ -4,23 +4,6 @@ export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 
-mkdir ~/data
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.zip ~/data/en_zh.char.zip
-cd ~/data
-unzip ~/data/en_zh.char.zip
-
-pip config set global.index-url https://bytedpypi.byted.org/simple/
-cd /opt/tiger/common
-pip install --editable ./
-cd /opt/tiger/fairseq_mmt
-sudo pip install --editable ./
-pip install sacremoses
-pip install sacrebleu==1.5.1
-pip install timm==0.4.12
-pip install vizseq==0.1.15
-pip install nltk==3.6.4
-pip install sacrebleu==1.5.1
-
 
 src_lang=en
 tgt_lang=zh
