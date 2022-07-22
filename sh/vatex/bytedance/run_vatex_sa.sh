@@ -63,6 +63,7 @@ fairseq-train $local_data_dir \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
   --find-unused-parameters \
   --seed $seed \
+  --no-progress-bar  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \

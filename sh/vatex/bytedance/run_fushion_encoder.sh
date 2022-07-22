@@ -65,6 +65,7 @@ fairseq-train $local_data_dir \
   --log_interval 1 \
   --find-unused-parameters \
   --seed $seed \
+  --no-progress-bar  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \

@@ -69,6 +69,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
+  --no-progress-bar  \
   --keep-last-epochs $keep_last_epochs  \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
