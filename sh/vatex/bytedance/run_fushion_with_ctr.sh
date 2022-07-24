@@ -91,7 +91,7 @@ fairseq-train $local_data_dir \
   --video-feat-dim $video_feat_dim \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
-echo "---put log to $LOGS_DIR/log.${name}---"
-hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
+echo "---put log to $output_dir/log.${name}---"
+hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
 
 

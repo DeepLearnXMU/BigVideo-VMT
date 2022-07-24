@@ -77,7 +77,7 @@ fairseq-train $local_data_dir \
   --SA-video-dropout ${SA_video_dropout} --SA-attention-dropout ${SA_attention_dropout} \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
-echo "---put log to $LOGS_DIR/log.${name}---"
-hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
+echo "---put log to $output_dir/log.${name}---"
+hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
 
 

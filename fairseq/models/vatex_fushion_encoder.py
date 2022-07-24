@@ -427,7 +427,7 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         self.video_dense = nn.Linear(self.args.video_feat_dim, embed_dim)
 
-        self.recoder = utils.Recorder(args)
+        # self.recoder = utils.Recorder(args)
 
         self.video_embed_positions = (
             PositionalEmbedding(
@@ -673,6 +673,12 @@ class TransformerFushionEncoder(FairseqEncoder):
         for i in range(self.num_layers):
             # update layer norms
             self.layers[i].upgrade_state_dict_named(
+                state_dict, "{}.layers.{}".format(name, i)
+            )
+
+        for i in range(self.num_fushion_layers):
+            # update layer norms
+            self.fushion_layers[i].upgrade_state_dict_named(
                 state_dict, "{}.layers.{}".format(name, i)
             )
 
