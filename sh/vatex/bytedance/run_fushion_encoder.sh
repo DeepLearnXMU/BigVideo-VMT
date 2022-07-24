@@ -14,6 +14,14 @@ tgt_lang=zh
 local_data_dir=~/data/en_zh.char
 
 criterion=cross_modal_criterion
+if [ $criterion == "label_smoothed_cross_entropy" ]; then
+        cri=LSCE
+    elif [ $criterion == "cross_modal_criterion" ]; then
+        cri=CMC
+    elif [ $criterion == "cross_modal_criterion_with_ctr" ]; then
+        cri=CMCCTR
+fi
+
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -36,7 +44,7 @@ video_feat_dim=1024
 gpu_num=1
 
 
-name=vatex_char_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
+name=vatex_char_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/fushion/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/fushion
