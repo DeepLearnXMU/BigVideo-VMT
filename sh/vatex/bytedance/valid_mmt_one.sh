@@ -8,7 +8,7 @@ script_root=/opt/tiger/fairseq_mmt/perl
 multi_bleu=$script_root/multi-bleu.perl
 who=valid
 test_DATA=~/data/en_zh.char
-ensemble=10
+ensemble=3
 video_feat_path=~/data/vatex_features
 video_ids_path=~/data/raw_texts/ids
 video_feat_dim=1024
@@ -18,14 +18,15 @@ video_feat_dim=1024
 
 checkpoint=checkpoint_best.pt
 length_penalty=0.8
-
+best_point=46
 
 
 if [ -n "$ensemble" ]; then
       if [ ! -e "$checkpoint_dir/last$ensemble.ensemble.pt" ]; then
-              PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $checkpoint_dir --output $checkpoint_dir/last$ensemble.ensemble.pt --num-epoch-checkpoints $ensemble
+              PYTHONPATH=`pwd` python3 scripts/average_checkpoints.py --inputs $checkpoint_dir --output $checkpoint_dir/last$ensemble.up$best_point.pt --num-epoch-checkpoints $ensemble  \
+                                                                      --checkpoint-upper-bound $best_point
       fi
-      checkpoint=last$ensemble.ensemble.pt
+      checkpoint=last$ensemble.up$best_point.pt
 fi
 
 
@@ -41,7 +42,7 @@ fairseq-generate  $test_DATA  \
 --video-feat-path $video_feat_path \
 --video-ids-path $video_ids_path \
 --video-feat-dim $video_feat_dim \
---output $local_output_dir/$checkpoint.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
+--output $local_output_dir/$local_output_dir.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
 
 echo "move to $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log "
 hdfs dfs -put $local_output_dir/$checkpoint.$length_penalty.gen-$who.log $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log

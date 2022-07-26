@@ -44,6 +44,7 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
             contrastive_weight=0.0,
             contrastive_temperature=1.0,
             use_dual_ctr=False,
+            use_v2t_ctr=False,
             ctr_dropout_rate=0.0
     ):
         super().__init__(task)
@@ -57,6 +58,7 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         self.contrastive_temperature = contrastive_temperature
 
         self.use_dual_ctr = use_dual_ctr
+        self.use_v2t_ctr = use_v2t_ctr
         self.ctr_dropout_rate = ctr_dropout_rate
 
     @staticmethod
@@ -78,6 +80,8 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                             help='the temperature in the contrastive loss')
         parser.add_argument("--use-dual-ctr", action="store_true",
                             help="if we want to use dual contrastive loss")
+        parser.add_argument("--use-v2t-ctr", action="store_true",
+                            help="if we want to use video find text")
         parser.add_argument("--ctr-dropout-rate", default=0., type=float,
                             help='the dropout rate of hidden units')
 
@@ -198,6 +202,8 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
             loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
             loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
             loss = loss_text + loss_video
+        elif self.use_v2t_ctr:
+            loss= -torch.nn.LogSoftmax(1)(logits).diag()
         else:
             loss = -torch.nn.LogSoftmax(0)(logits).diag()
         if reduce:
