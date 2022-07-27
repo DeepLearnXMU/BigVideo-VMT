@@ -1,0 +1,21 @@
+origin="video_id_/origin/"
+new="video_id_/new/"
+
+with open(origin+"test.ids", 'r', encoding='utf-8') as file:
+    origin_test = [ x.strip() for x in file.readlines()]
+with open(new+"test.ids", 'r', encoding='utf-8') as file:
+    new_test = [ x.strip() for x in file.readlines()]
+
+assert len(origin_test)==len(new_test)
+
+
+diff_test=[]
+for i in len(origin_test):
+    if origin_test[i]!=new_test[i]:
+        diff_test.append(new_test[i])
+print(len(diff_test))
+test_output="test.supp.ids"
+with open(test_output, "w", encoding="utf-8") as w:
+    for line in diff_test:
+        w.write(line+ "\n")
+

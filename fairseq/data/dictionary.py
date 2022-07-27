@@ -35,6 +35,7 @@ class Dictionary(object):
         self.pad_index = self.add_symbol(pad)
         self.eos_index = self.add_symbol(eos)
         self.unk_index = self.add_symbol(unk)
+
         if extra_special_symbols:
             for s in extra_special_symbols:
                 self.add_symbol(s)

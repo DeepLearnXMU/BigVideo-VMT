@@ -75,6 +75,7 @@ def collate(
     )
 
     videos = torch.FloatTensor(np.array([s['video'] for s in samples]))
+    video_paddings  = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
 
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
@@ -122,6 +123,7 @@ def collate(
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
             "videos": videos,  #
+            "video_padding":video_paddings
         },
         "target": target,
     }
@@ -215,7 +217,7 @@ class VideoLanguagePairDataset(FairseqDataset):
             src,
             src_sizes,
             src_dict,
-            videos,
+            video_dataset,
             tgt=None,
             tgt_sizes=None,
             tgt_dict=None,
@@ -304,7 +306,8 @@ class VideoLanguagePairDataset(FairseqDataset):
         else:
             self.buckets = None
         self.pad_to_multiple = pad_to_multiple
-        self.videos = videos  # extra code
+        self.video_dataset = video_dataset  # extra code
+
 
     def get_batch_shapes(self):
         return self.buckets
@@ -313,8 +316,7 @@ class VideoLanguagePairDataset(FairseqDataset):
         tgt_item = self.tgt[index] if self.tgt is not None else None
         src_item = self.src[index]
 
-        video_item = self.videos[index]  # list for image data
-
+        video_item,video_padding_item = self.video_dataset[index]  # list for video data
 
         # Append EOS to end of tgt sentence if it does not have an EOS and remove
         # EOS from end of src sentence if it exists. This is useful when we use
@@ -344,6 +346,7 @@ class VideoLanguagePairDataset(FairseqDataset):
             "source": src_item,
             "target": tgt_item,
             "video": video_item,
+            "video_padding":video_padding_item
         }
         if self.align_dataset is not None:
             example["alignment"] = self.align_dataset[index]

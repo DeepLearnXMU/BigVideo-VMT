@@ -35,6 +35,7 @@ class VideoDataset(torch.utils.data.Dataset):
             self.video_dir="public_test/"
 
         self.video_list=[]
+        self.padding_list=[]
 
 
         for sent_id in self.sent_id_list:
@@ -42,6 +43,7 @@ class VideoDataset(torch.utils.data.Dataset):
             video, padding = load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
                                                self.max_vid_len)
             self.video_list.append(video)
+            self.padding_list.append( padding)
 
 
 
@@ -51,7 +53,7 @@ class VideoDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
 
-        return self.video_list[idx]
+        return self.video_list[idx],self.padding_list[idx]
 
     def __len__(self):
         return self.size
