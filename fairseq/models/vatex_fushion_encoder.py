@@ -1164,7 +1164,7 @@ def base_architecture(args):
     args.fushion_encoder_normalize_before = getattr(args, 'fushion_encoder_normalize_before', False)
     args.fushion_encoder_learned_pos = getattr(args, 'fushion_encoder_learned_pos', False)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
-    args.fushion_encoder_normalize_before = getattr(args, 'video_learned_pos', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
 
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_encoder_merge_before')
@@ -1378,13 +1378,13 @@ def vatex_fushion_small_before_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', True)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_woln')
-def vatex_fushion_small_before_learnedpe_wln(args):
+def vatex_fushion_small_before_learnedpe_woln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1405,7 +1405,7 @@ def vatex_fushion_small_before_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', True)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
@@ -1432,7 +1432,7 @@ def vatex_fushion_small_after_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', False)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
@@ -1459,7 +1459,7 @@ def vatex_fushion_small_after_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', False)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 

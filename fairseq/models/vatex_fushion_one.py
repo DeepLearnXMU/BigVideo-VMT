@@ -1135,7 +1135,7 @@ def base_architecture(args):
     args.fushion_encoder_normalize_before = getattr(args, 'fushion_encoder_normalize_before', False)
     args.fushion_encoder_learned_pos = getattr(args, 'fushion_encoder_learned_pos', False)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
-    args.fushion_encoder_learned_pos = getattr(args, 'video_learned_pos', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
 
 
 @register_model_architecture('vatex_fushion_one', 'vatex_fushion_one_before')
@@ -1345,7 +1345,7 @@ def vatex_fushion_one_before_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', True)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
@@ -1372,7 +1372,7 @@ def vatex_fushion_one_before_learnedpe_woln(args):
     args.merge_before = getattr(args, 'merge_before', True)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
@@ -1399,7 +1399,7 @@ def vatex_fushion_one_after_learnedpe_wln(args):
     args.merge_before = getattr(args, 'merge_before', False)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
@@ -1426,7 +1426,7 @@ def vatex_fushion_one_after_learnedpe_woln(args):
     args.merge_before = getattr(args, 'merge_before',False)
 
     args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
-    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', True)
 
     base_architecture(args)
 
