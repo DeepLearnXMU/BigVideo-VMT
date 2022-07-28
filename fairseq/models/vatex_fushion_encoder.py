@@ -197,14 +197,15 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='num encoder attention heads')
         parser.add_argument('--fushion-encoder-normalize-before', action='store_true',
                             help='apply layernorm before each encoder block')
-        parser.add_argument('--fushion-encoder-learned-pos', action='store_true',
-                            help='use learned positional embeddings in the encoder')
+
         parser.add_argument('--fushion-encoder-layerdrop', type=float, metavar='D', default=0,
                             help='LayerDrop probability for encoder')
         parser.add_argument('--fushion-encoder-layers-to-keep', default=None,
                             help='which layers to *keep* when pruning as a comma-separated list')
         parser.add_argument('--video-layernorm-embedding', action='store_true',
                             help='add layernorm to video - embedding')
+        parser.add_argument('--video-learned-pos', action='store_true',
+                            help='use learned positional embeddings in the video encoder')
         # fmt: on
         # args for video MMT
 
@@ -444,7 +445,7 @@ class TransformerFushionEncoder(FairseqEncoder):
                 args.max_video_positions,
                 embed_dim,
                 self.padding_idx,
-                learned=args.encoder_learned_pos,
+                learned=args.video_learned_pos,
             )
             if args.pe_for_video
             else None
@@ -1163,6 +1164,7 @@ def base_architecture(args):
     args.fushion_encoder_normalize_before = getattr(args, 'fushion_encoder_normalize_before', False)
     args.fushion_encoder_learned_pos = getattr(args, 'fushion_encoder_learned_pos', False)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+    args.fushion_encoder_normalize_before = getattr(args, 'video_learned_pos', False)
 
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_encoder_merge_before')
@@ -1251,7 +1253,7 @@ def vatex_fushion_small_before_pewoln(args):
     args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
 
     args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', True)
 
@@ -1354,6 +1356,112 @@ def vatex_fushion_small_after_pewln(args):
 
 
 
+@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_wln')
+def vatex_fushion_small_before_learnedpe_wln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 3)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.average_before_merge = getattr(args, 'average_before_merge', False)
+    args.merge_before = getattr(args, 'merge_before', True)
+
+    args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
+    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+
+    base_architecture(args)
+
+
+@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_woln')
+def vatex_fushion_small_before_learnedpe_wln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 3)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+    args.average_before_merge = getattr(args, 'average_before_merge', False)
+    args.merge_before = getattr(args, 'merge_before', True)
+
+    args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
+    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+
+    base_architecture(args)
+
+
+@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_learnedpe_wln')
+def vatex_fushion_small_after_learnedpe_wln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 3)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.average_before_merge = getattr(args, 'average_before_merge', False)
+    args.merge_before = getattr(args, 'merge_before', False)
+
+    args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
+    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+
+    base_architecture(args)
+
+
+@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_learnedpe_woln')
+def vatex_fushion_small_after_learnedpe_wln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 3)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+    args.average_before_merge = getattr(args, 'average_before_merge', False)
+    args.merge_before = getattr(args, 'merge_before', False)
+
+    args.encoder_learned_pos = getattr(args, 'encoder_learned_pos', True)
+    args.video_encoder_learned_pos = getattr(args, 'video_learned_pos', True)
+
+    base_architecture(args)
 
 
 
