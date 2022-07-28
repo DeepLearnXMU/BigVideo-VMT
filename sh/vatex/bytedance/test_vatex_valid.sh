@@ -26,11 +26,12 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 #pip install nltk==3.6.4
 #pip install sacrebleu==1.5.1
 
+export CUDA_VISIBLE_DEVICES=0
 
 
-
-base_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/gated
+base_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0727/fushion
 local_output_dir=~/fairseq_results
+mkdir -p $local_output_dir
 script_root=/home/kly/fairseq/perl
 multi_bleu=$script_root/multi-bleu.perl
 who=valid
@@ -41,10 +42,9 @@ video_ids_path=~/data/raw_texts/ids
 video_feat_dim=1024
 length_penalty=0.8
 
-for item in "vatex_char_archgated_vatex_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10_dp0.1" \
-            "vatex_char_archgated_vatex_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10_dp0.2" \
-            "vatex_char_archgated_vatex_top_pe_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10_dp0.1" \
-            "vatex_char_archgated_vatex_top_pe_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10_dp0.1" \
+for item in "vatex_char_archvatex_fushion_small_after_pewln_criCMC_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10" \
+            "vatex_char_archvatex_fushion_small_after_pewoln_criCMC_tgtzh_lr0.001_wu2000_me100_seed1207_gpu1_mt4096_acc1_wd0.1_cn0.0_patience10" \
+
 
 do
 
@@ -65,7 +65,7 @@ do
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
-  --output $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
+  --output $local_output_dir/$checkpoint.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
 
   echo "move to $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log "
   hdfs dfs -put $local_output_dir/$checkpoint.$length_penalty.gen-$who.log $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log
@@ -93,7 +93,7 @@ do
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
-  --output $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
+  --output $local_output_dir/$checkpoint.$length_penalty.gen-$who.log | tee $local_output_dir/$checkpoint.$length_penalty.gen-$who.log
 
   echo "move to $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log "
   hdfs dfs -put $local_output_dir/$checkpoint.$length_penalty.gen-$who.log $checkpoint_dir/$checkpoint.$length_penalty.gen-$who.log

@@ -599,7 +599,7 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         x = merge.transpose(0, 1)  # reback to T x B x C
         # encoder layers
-        encoder_states = [] if return_all_hiddens else None
+
 
         for layer in self.fushion_layers:
             x = layer(x, encoder_padding_mask)
@@ -1331,7 +1331,7 @@ def vatex_fushion_small_after_pewln(args):
     base_architecture(args)
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_pewoln')
-def vatex_fushion_small_after_pewln(args):
+def vatex_fushion_small_after_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1347,7 +1347,7 @@ def vatex_fushion_small_after_pewln(args):
     args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
 
     args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
     args.average_before_merge = getattr(args, 'average_before_merge', False)
     args.merge_before = getattr(args, 'merge_before', False)
 
