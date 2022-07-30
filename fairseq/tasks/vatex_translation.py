@@ -27,7 +27,7 @@ EVAL_BLEU_ORDER = 4
 logger = logging.getLogger(__name__)
 
 
-def load_langpair_dataset(
+def load_Videolangpair_dataset(
         data_path,
         split,
         src,
@@ -43,7 +43,7 @@ def load_langpair_dataset(
         max_target_positions,
         video_feat_path,  # extra video mmt parameter
         video_ids_path,    # extra video id
-        max_vid_len=40,
+        max_vid_len,
         prepend_bos=False,
         load_alignments=False,
         truncate_source=False,
@@ -247,6 +247,8 @@ class VatexTranslationTask(LegacyFairseqTask):
         parser.add_argument('--video-ids-path', type=str)
         parser.add_argument('--video-feat-dim', type=int,
                             help='video features dimension')
+        parse.add_argument('--max-vid-len',type=int,
+                           help='video features len')
 
 
     def __init__(self, args, src_dict, tgt_dict):
@@ -307,7 +309,7 @@ class VatexTranslationTask(LegacyFairseqTask):
         # infer langcode
         src, tgt = self.args.source_lang, self.args.target_lang
 
-        self.datasets[split] = load_langpair_dataset(
+        self.datasets[split] = load_Videolangpair_dataset(
             data_path,
             split,
             src,

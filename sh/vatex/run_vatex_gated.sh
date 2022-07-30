@@ -56,7 +56,7 @@ fairseq-train $data \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 \
-  --task vatex_translation \
+  --task vatex_translation --video-feat-path $image_feat_path \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
@@ -72,6 +72,7 @@ fairseq-train $data \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
+  --video-feat-type     \
   --fp16  2>&1 | tee -a $output_dir/train.log
 
 
