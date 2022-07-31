@@ -21,7 +21,7 @@ class VideoDataset(torch.utils.data.Dataset):
     """
     For loading image datasets
     """
-    def __init__(self, video_feat_path: str, video_ids_path: str,video_feat_type:str, max_vid_len:int,split:str):
+    def __init__(self, video_feat_path: str, video_ids_path: str,max_vid_len:int,split:str,video_feat_type:str, ):
         self.video_feat_path = video_feat_path
         self.video_ids_path = video_ids_path
         self.max_vid_len = max_vid_len
@@ -30,11 +30,16 @@ class VideoDataset(torch.utils.data.Dataset):
         with open(video_ids_path+"/"+split+".ids", encoding='utf-8') as file:
             self.sent_id_list = [x.rstrip() for x in file.readlines()]
 
-        if
-        if split in ["train","valid"]:
-            self.video_dir="trainval/"
-        else:
-            self.video_dir="public_test/"
+        if video_feat_type=="I3D":
+            if split in ["train","valid"]:
+                self.video_dir="trainval/"
+            else:
+                self.video_dir="public_test/"
+        elif video_feat_type=="VIT_cls":
+            self.video_dir =  "cls" + "/" + self.split
+        elif video_feat_type == "VIT_patch":
+            self.video_dir = "cls" + "/" + self.split
+
 
         self.video_list=[]
         self.padding_list=[]

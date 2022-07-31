@@ -43,6 +43,7 @@ def load_Videolangpair_dataset(
         max_target_positions,
         video_feat_path,  # extra video mmt parameter
         video_ids_path,    # extra video id
+        video_feat_type,
         max_vid_len,
         prepend_bos=False,
         load_alignments=False,
@@ -144,7 +145,7 @@ def load_Videolangpair_dataset(
 
 
 
-    video_dataset = VideoDataset(video_feat_path, video_ids_path,max_vid_len,split)
+    video_dataset = VideoDataset(video_feat_path, video_ids_path,max_vid_len,split,video_feat_type)
     assert len(video_dataset) == len(src_dataset)
 
 
@@ -249,6 +250,8 @@ class VatexTranslationTask(LegacyFairseqTask):
                             help='video features dimension')
         parse.add_argument('--max-vid-len',type=int,
                            help='video features len')
+        parser.add_argument('--video-feat-type', type=int,
+                            help='video features dimension')
 
 
     def __init__(self, args, src_dict, tgt_dict):
@@ -329,7 +332,8 @@ class VatexTranslationTask(LegacyFairseqTask):
             shuffle=(split != "test"),
             pad_to_multiple=self.args.required_seq_len_multiple,
             video_feat_path=self.args.video_feat_path,
-            video_ids_path=self.args.video_ids_path
+            video_ids_path=self.args.video_ids_path,
+            video_feat_type=self.args.video_feat_type
         )
 
     '''

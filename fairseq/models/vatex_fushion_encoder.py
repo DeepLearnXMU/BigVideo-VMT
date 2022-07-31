@@ -502,16 +502,16 @@ class TransformerFushionEncoder(FairseqEncoder):
 
     def video_forward_embedding(self, videos, video_padding_mask):
 
+
         bsz, video_length = videos.size()[0], videos.size()[1]
-        video_position_ids = torch.arange(video_length, dtype=torch.long,
-                                          device=videos.device)
-
-        video_position_ids = video_position_ids.expand(bsz, video_length)
-        video_position_ids = video_position_ids + 2
-        video_position_ids.masked_fill_(video_padding_mask, 1)
-
+        video_shapes=len(videos.size())
         videos = self.video_dense(videos)  # B T_v  C
-        if self.args.pe_for_video:
+        if self.args.pe_for_video and video_shapes>2:
+            video_position_ids = torch.arange(video_length, dtype=torch.long,
+                                              device=videos.device)
+            video_position_ids = video_position_ids.expand(bsz, video_length)
+            video_position_ids = video_position_ids + 2
+            video_position_ids.masked_fill_(video_padding_mask, 1)
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
