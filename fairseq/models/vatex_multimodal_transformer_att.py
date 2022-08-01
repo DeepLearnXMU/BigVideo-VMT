@@ -431,9 +431,6 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
 
-        self.video_embedding_dropout_module = FairseqDropout(
-            args.video_embedding_dropout, module_name=self.__class__.__name__
-        )
 
 
         self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
@@ -515,7 +512,7 @@ class TransformerEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-        videos = self.video_embedding_dropout_module(videos)
+
 
         return videos
 
@@ -562,13 +559,15 @@ class TransformerEncoder(FairseqEncoder):
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
 
+        text_padding_mask = encoder_padding_mask
+
         encoder_states = [] if return_all_hiddens else None
 
         if not self.is_fusion_top:
             video_padding_mask = ~video_padding.bool()
-            v_repr = self.video_forward_embedding(videos, video_padding_mask)
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=v_repr, text=text_repr)
+            video_h = self.video_forward_embedding(videos, video_padding_mask)
+            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h)
 
         # encoder layers
         for layer in self.layers:
@@ -583,9 +582,10 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             video_padding_mask = ~video_padding.bool()
-            v_repr = self.video_forward_embedding(videos, video_padding_mask)
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=v_repr, text=text_repr)
+
+            video_h = self.video_forward_embedding(videos, video_padding_mask)
+            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h)
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
@@ -983,7 +983,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        return x, {"attn": [attn], "inner_states": inner_states}
+        return x, {"attn": [attn], "inner_states": inner_states,}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""

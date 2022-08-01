@@ -1,9 +1,19 @@
 #!/bin/bash
 
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=0
 src_lang=en
 tgt_lang=zh
+
+criterion=cross_modal_criterion
+if [ $criterion == "label_smoothed_cross_entropy" ]; then
+        cri=LSCE
+    elif [ $criterion == "cross_modal_criterion" ]; then
+        cri=CMC
+    elif [ $criterion == "cross_modal_criterion_with_ctr" ]; then
+        cri=CMCCTR
+fi
+
 
 mask=mask0    #mask1,2,3,4,c,p
 if [ $mask == "mask0" ]; then
@@ -13,7 +23,6 @@ fi
 
 #data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 
-criterion=label_smoothed_cross_entropy
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -40,14 +49,14 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=1024
 fi
 
-SA_attention_dropout=0.1
+SA_attention_dropout=0.0
 SA_video_dropout=0.1
 
 
 gpu_num=1
 
 
-name=vatex_$mask_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}
+name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/sa/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/sa
 local_logs_dir=~/fairseq_logs/vatex_0731/sa

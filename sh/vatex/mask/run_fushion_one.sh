@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=4
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -38,7 +38,7 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_fushion_one_after_pewoln
+arch=vatex_fushion_one_before_pewoln
 
 video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
 video_ids_path=~/data/raw_texts/ids
@@ -50,11 +50,11 @@ if [ $video_feat_type == "VIT_cls"  ]; then
   elif [ $video_feat_type == "I3D" ]; then
         video_feat_dim=1024
 fi
-
+video_embedding_dropout=0.1
 gpu_num=1
 
 
-name=vatex_$mask_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}
+name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vdp${video_embedding_dropout}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/fushionOne/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/fushionOne
@@ -95,6 +95,7 @@ fairseq-train $local_data_dir \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
+  --video-embedding-dropout $video_embedding_dropout \
   --max-vid-len 15   \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 

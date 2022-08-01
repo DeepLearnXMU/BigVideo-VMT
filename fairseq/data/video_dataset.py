@@ -50,8 +50,7 @@ class VideoDataset(torch.utils.data.Dataset):
             feats = np.zeros((1, 768))
             empty_flag = True
         elif self.video_feat_type == "I3D":
-            feats = np.load(fpath, encoding='latin1')[
-                0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
+            feats = np.load(fpath, encoding='latin1')[0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
         elif self.video_feat_type in ["VIT_cls", "VIT_cls"]:
             feats = np.load(fpath, encoding='latin1')
         padding = np.ones(max_length)
@@ -63,7 +62,7 @@ class VideoDataset(torch.utils.data.Dataset):
             inds = sorted(random.sample(range(feats.shape[0]), max_length))
             feats = feats[inds]
         if empty_flag:
-            padding = 0
+            padding[:] = 0
         assert feats.shape[0] == max_length
         # mask = np.array(padding, dtype=bool)
         return np.float32(feats), padding

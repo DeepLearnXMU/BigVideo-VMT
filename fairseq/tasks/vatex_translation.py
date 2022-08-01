@@ -251,7 +251,7 @@ class VatexTranslationTask(LegacyFairseqTask):
         parser.add_argument('--max-vid-len',type=int,
                            help='video features len')
         parser.add_argument('--video-feat-type', type=str,
-                            help='video features dimension')
+                            help='video features type')
 
 
     def __init__(self, args, src_dict, tgt_dict):

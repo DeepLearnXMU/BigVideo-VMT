@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=2
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -11,7 +11,7 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 src_lang=en
 tgt_lang=zh
 
-local_data_dir=~/data/en_zh.char
+
 
 criterion=cross_modal_criterion
 if [ $criterion == "label_smoothed_cross_entropy" ]; then
@@ -22,6 +22,10 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
+mask=mask0    #mask1,2,3,4,c,p
+if [ $mask == "mask0" ]; then
+        local_data_dir=~/data/en_zh.char
+fi
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -34,21 +38,28 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_fushion_encoder_merge_before
+arch=vatex_fushion_small_after_pewoln
 
-video_feat_path=~/data/vatex_features
+video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
 video_ids_path=~/data/raw_texts/ids
-video_feat_dim=1024
-
+video_feat_type="VIT_cls"
+if [ $video_feat_type == "VIT_cls"  ]; then
+        video_feat_dim=768
+  elif [ $video_feat_type == "VIT_patch" ]; then
+        video_feat_dim=768
+  elif [ $video_feat_type == "I3D" ]; then
+        video_feat_dim=1024
+fi
+video_embedding_dropout=0.1
 
 gpu_num=1
 
 
-name=vatex_char_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
+name=vatex_$mask_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vdp${video_embedding_dropout}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/fushion/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/fushion
-local_logs_dir=~/fairseq_logs/vatex/fushion
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/fushion/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/fushion
+local_logs_dir=~/fairseq_logs/vatex_0731/fushion
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
@@ -84,9 +95,10 @@ fairseq-train $local_data_dir \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
+  --video-feat-type $video_feat_type \
+  --video-embedding-dropout $video_embedding_dropout \
+  --max-vid-len 15   \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $output_dir/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
-
-
