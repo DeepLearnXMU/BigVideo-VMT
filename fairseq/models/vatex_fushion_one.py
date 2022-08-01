@@ -216,6 +216,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='add layernorm to video - embedding')
         parser.add_argument('--video-learned-pos', action='store_true',
                             help='use learned positional embeddings in the video encoder')
+        parser.add_argument('--video-embedding-dropout', type=float, metavar='D',
+                            help='video embedding dropout probability')
 
     @classmethod
     def build_model(cls, args, task):
@@ -437,6 +439,10 @@ class TransformerFushionEncoder(FairseqEncoder):
             else None
         )
 
+        self.video_embedding_dropout_module = FairseqDropout(
+            args.video_embedding_dropout, module_name=self.__class__.__name__
+        )
+
 
 
     def build_encoder_layer(self, args):
@@ -501,7 +507,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-        videos = self.dropout_module(videos)
+        videos = self.video_embedding_dropout_module(videos)
 
         return videos
 

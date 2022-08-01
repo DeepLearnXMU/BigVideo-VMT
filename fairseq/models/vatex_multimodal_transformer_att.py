@@ -187,6 +187,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for video MMT
         parser.add_argument('--video-layernorm-embedding', action='store_true',
                             help='add layernorm to video - embedding')
+        parser.add_argument('--video-embedding-dropout', type=float, metavar='D',
+                            help='video embedding dropout probability')
 
         parser.add_argument('--video-pre-norm', action='store_true',
                             help='normlization on video feature before fusing')
@@ -429,6 +431,10 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
 
+        self.video_embedding_dropout_module = FairseqDropout(
+            args.video_embedding_dropout, module_name=self.__class__.__name__
+        )
+
 
         self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
                                                         vdim=args.video_feat_dim, attn_dim=embed_dim,
@@ -499,7 +505,7 @@ class TransformerEncoder(FairseqEncoder):
 
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
-        videos = self.video_dense(videos)  # B T_v  C
+
         if self.args.pe_for_video and video_shapes > 2:
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
@@ -509,7 +515,7 @@ class TransformerEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-        videos = self.dropout_module(videos)
+        videos = self.video_embedding_dropout_module(videos)
 
         return videos
 

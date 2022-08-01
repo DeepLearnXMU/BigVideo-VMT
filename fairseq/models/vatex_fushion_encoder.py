@@ -206,6 +206,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='add layernorm to video - embedding')
         parser.add_argument('--video-learned-pos', action='store_true',
                             help='use learned positional embeddings in the video encoder')
+        parser.add_argument('--video-embedding-dropout', type=float, metavar='D',
+                            help='video embedding dropout probability')
         # fmt: on
         # args for video MMT
 
@@ -451,6 +453,10 @@ class TransformerFushionEncoder(FairseqEncoder):
             else None
         )
 
+        self.video_embedding_dropout_module = FairseqDropout(
+            args.video_embedding_dropout, module_name=self.__class__.__name__
+        )
+
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -502,11 +508,10 @@ class TransformerFushionEncoder(FairseqEncoder):
 
     def video_forward_embedding(self, videos, video_padding_mask):
 
-
         bsz, video_length = videos.size()[0], videos.size()[1]
-        video_shapes=len(videos.size())
+        video_shapes = len(videos.size())
         videos = self.video_dense(videos)  # B T_v  C
-        if self.args.pe_for_video and video_shapes>2:
+        if self.args.pe_for_video and video_shapes > 2:
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
@@ -515,7 +520,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-        videos = self.dropout_module(videos)
+        videos = self.video_embedding_dropout_module(videos)
 
         return videos
 
@@ -599,7 +604,6 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         x = merge.transpose(0, 1)  # reback to T x B x C
         # encoder layers
-
 
         for layer in self.fushion_layers:
             x = layer(x, encoder_padding_mask)
@@ -1236,6 +1240,7 @@ def vatex_fushion_small_before_pewln(args):
 
     base_architecture(args)
 
+
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_pewoln')
 def vatex_fushion_small_before_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
@@ -1330,6 +1335,7 @@ def vatex_fushion_small_after_pewln(args):
 
     base_architecture(args)
 
+
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_pewoln')
 def vatex_fushion_small_after_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
@@ -1352,8 +1358,6 @@ def vatex_fushion_small_after_pewoln(args):
     args.merge_before = getattr(args, 'merge_before', False)
 
     base_architecture(args)
-
-
 
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_wln')
@@ -1438,7 +1442,7 @@ def vatex_fushion_small_after_learnedpe_wln(args):
 
 
 @register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_learnedpe_woln')
-def vatex_fushion_small_after_learnedpe_wln(args):
+def vatex_fushion_small_after_learnedpe_woln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)

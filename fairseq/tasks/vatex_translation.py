@@ -248,9 +248,9 @@ class VatexTranslationTask(LegacyFairseqTask):
         parser.add_argument('--video-ids-path', type=str)
         parser.add_argument('--video-feat-dim', type=int,
                             help='video features dimension')
-        parse.add_argument('--max-vid-len',type=int,
+        parser.add_argument('--max-vid-len',type=int,
                            help='video features len')
-        parser.add_argument('--video-feat-type', type=int,
+        parser.add_argument('--video-feat-type', type=str,
                             help='video features dimension')
 
 
@@ -333,7 +333,8 @@ class VatexTranslationTask(LegacyFairseqTask):
             pad_to_multiple=self.args.required_seq_len_multiple,
             video_feat_path=self.args.video_feat_path,
             video_ids_path=self.args.video_ids_path,
-            video_feat_type=self.args.video_feat_type
+            video_feat_type=self.args.video_feat_type,
+            max_vid_len=self.args.max_vid_len
         )
 
     '''

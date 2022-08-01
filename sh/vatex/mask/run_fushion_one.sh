@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=3
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -38,7 +38,7 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
-arch=vatex_fushion_small_after_pewoln
+arch=vatex_fushion_one_after_pewoln
 
 video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
 video_ids_path=~/data/raw_texts/ids
@@ -56,9 +56,9 @@ gpu_num=1
 
 name=vatex_$mask_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/fushion/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/fushion
-local_logs_dir=~/fairseq_logs/vatex_0731/fushion
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/fushionOne/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/fushionOne
+local_logs_dir=~/fairseq_logs/vatex_0731/fushionOne
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir

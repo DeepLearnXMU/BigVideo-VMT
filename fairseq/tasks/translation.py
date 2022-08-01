@@ -450,9 +450,11 @@ class TranslationTask(LegacyFairseqTask):
         if self.args.eval_bleu_print_samples:
             logger.info("example hypothesis: " + hyps[0])
             logger.info("example reference: " + refs[0])
+
+        if self.args.target_lang == "zh":
+            return sacrebleu.corpus_bleu(hyps, [refs], tokenize="zh")
+
         if self.args.eval_tokenized_bleu:
             return sacrebleu.corpus_bleu(hyps, [refs], tokenize="none")
-        elif self.args.eval_zh_bleu:
-            return sacrebleu.corpus_bleu(hyps, [refs], tokenize="zh")
         else:
             return sacrebleu.corpus_bleu(hyps, [refs])
