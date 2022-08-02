@@ -12,6 +12,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/raw_texts.tar.gz ~/data/raw_texts.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized/vit_base_patch16_224/cls.tar.gz ~/data/vatex/video/images_resized/vit_base_patch16_224
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
 cd ~/data
 tar -zxvf en_zh.tar.gz
 tar -zxvf vatex_features.tar.gz

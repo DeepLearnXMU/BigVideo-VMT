@@ -36,7 +36,7 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 40
 
 
-@register_model("vatex_fushion_encoder")
+@register_model("double_crossatt")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -1123,7 +1123,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_encoder_base')
+@register_model_architecture('double_crossatt', 'double_crossatt_base')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1173,8 +1173,8 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_encoder_merge_before')
-def vatex_fushion_encoder_merge_before(args):
+@register_model_architecture('double_crossatt', 'double_crossatt_merge_before')
+def double_crossatt_merge_before(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1196,7 +1196,7 @@ def vatex_fushion_encoder_merge_before(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_before')
 def vatex_fushion_small_before(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1219,7 +1219,7 @@ def vatex_fushion_small_before(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_pewln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_before_pewln')
 def vatex_fushion_small_before_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1243,7 +1243,7 @@ def vatex_fushion_small_before_pewln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_pewoln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_before_pewoln')
 def vatex_fushion_small_before_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1267,8 +1267,8 @@ def vatex_fushion_small_before_pewoln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_encoder_merge_after')
-def vatex_fushion_encoder_merge_after(args):
+@register_model_architecture('double_crossatt', 'double_crossatt_merge_after')
+def double_crossatt_merge_after(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1291,7 +1291,7 @@ def vatex_fushion_encoder_merge_after(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_after')
 def vatex_fushion_small_after(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1314,7 +1314,7 @@ def vatex_fushion_small_after(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_pewln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_after_pewln')
 def vatex_fushion_small_after_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1338,7 +1338,7 @@ def vatex_fushion_small_after_pewln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_pewoln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_after_pewoln')
 def vatex_fushion_small_after_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1362,7 +1362,7 @@ def vatex_fushion_small_after_pewoln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_wln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_before_learnedpe_wln')
 def vatex_fushion_small_before_learnedpe_wln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1389,7 +1389,7 @@ def vatex_fushion_small_before_learnedpe_wln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_before_learnedpe_woln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_before_learnedpe_woln')
 def vatex_fushion_small_before_learnedpe_woln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1416,7 +1416,7 @@ def vatex_fushion_small_before_learnedpe_woln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_learnedpe_wln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_after_learnedpe_wln')
 def vatex_fushion_small_after_learnedpe_wln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1443,7 +1443,7 @@ def vatex_fushion_small_after_learnedpe_wln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_small_after_learnedpe_woln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_small_after_learnedpe_woln')
 def vatex_fushion_small_after_learnedpe_woln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1470,7 +1470,7 @@ def vatex_fushion_small_after_learnedpe_woln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_tiny_before_pewln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_tiny_before_pewln')
 def vatex_fushion_tiny_before_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1494,7 +1494,7 @@ def vatex_fushion_tiny_before_pewln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_tiny_before_pewoln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_tiny_before_pewoln')
 def vatex_fushion_tiny_before_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1518,7 +1518,7 @@ def vatex_fushion_tiny_before_pewoln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_tiny_after_pewln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_tiny_after_pewln')
 def vatex_fushion_tiny_after_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1542,7 +1542,7 @@ def vatex_fushion_tiny_after_pewln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_fushion_encoder', 'vatex_fushion_tiny_after_pewoln')
+@register_model_architecture('double_crossatt', 'vatex_fushion_tiny_after_pewoln')
 def vatex_fushion_tiny_after_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
