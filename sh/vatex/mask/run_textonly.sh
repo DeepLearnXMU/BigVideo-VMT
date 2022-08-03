@@ -25,8 +25,12 @@ weight_decay=0.1
 clip_norm=0.0
 arch=transformer_vatex
 gpu_num=1
-mask=mask1    #mask1,2,3,4,c,p
-local_data_dir=~/data/vatex/masking/masking/data/$mask/data-bin/vatex.en-zh.$mask/
+mask=mask0    #mask1,2,3,4,c,p
+if [ $mask == "mask0" ]; then
+        local_data_dir=~/data/en_zh.char
+else
+        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
+fi
 
 
 name=textonly_$mask_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}

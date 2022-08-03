@@ -19,7 +19,7 @@ mask=mask0    #mask1,2,3,4,c,p
 if [ $mask == "mask0" ]; then
         local_data_dir=~/data/en_zh.char
 else
-        local_data_dir=~/data/vatex/masking/data/${mask}/data-bin/vatex.en-zh.${mask}
+        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
 fi
 
 
@@ -62,9 +62,9 @@ gpu_num=1
 
 
 name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/sa/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/sa
-local_logs_dir=~/fairseq_logs/vatex_0731/sa
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/${mask}/sa/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/${mask}/sa
+local_logs_dir=~/fairseq_logs/vatex_0731/${mask}/sa
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir

@@ -26,7 +26,7 @@ mask=mask0    #mask1,2,3,4,c,p
 if [ $mask == "mask0" ]; then
         local_data_dir=~/data/en_zh.char
 else
-        local_data_dir=~/data/vatex/masking/data/${mask}/data-bin/vatex.en-zh.${mask}
+        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
 fi
 fp16=1 #0
 lr=0.001
@@ -62,9 +62,9 @@ gpu_num=1
 
 name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vdp${video_embedding_dropout}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/fushion/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/fushion
-local_logs_dir=~/fairseq_logs/vatex_0731/fushion
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/${mask}/fushion/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/${mask}/fushion
+local_logs_dir=~/fairseq_logs/vatex_0731/${mask}/fushion
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir

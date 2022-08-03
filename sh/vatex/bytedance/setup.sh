@@ -6,6 +6,7 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 
 mkdir ~/data
+mkdir -p ~/data/vatex/
 mkdir -p ~/data/vatex/video/images_resized/vit_base_patch16_224
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.tar.gz ~/data/en_zh.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/vatex_features.tar.gz ~/data/vatex_features.tar.gz
@@ -13,6 +14,8 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized/vit_base_patch16_224/cls.tar.gz ~/data/vatex/video/images_resized/vit_base_patch16_224
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/masking ~/data/vatex/
+
 cd ~/data
 tar -zxvf en_zh.tar.gz
 tar -zxvf vatex_features.tar.gz
