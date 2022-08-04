@@ -567,6 +567,7 @@ class TransformerDecoderFushionLayer(nn.Module):
         Returns:
             encoded output of shape `(seq_len, batch, embed_dim)`
         """
+
         if need_head_weights:
             need_attn = True
 
@@ -653,6 +654,7 @@ class TransformerDecoderFushionLayer(nn.Module):
             x = self.residual_connection(x, residual)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
+
         # enc attn
 
         if self.encoder_attn is not None and encoder_out is not None:
@@ -694,6 +696,7 @@ class TransformerDecoderFushionLayer(nn.Module):
             if self.normalize_before:
                 x = self.video_attn_layer_norm(x)
             if prev_attn_state is not None:
+
                 prev_key, prev_value = prev_attn_state[:2]
                 saved_state: Dict[str, Optional[Tensor]] = {
                     "prev_key": prev_key,
@@ -702,9 +705,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 if len(prev_attn_state) >= 3:
                     saved_state["prev_key_padding_mask"] = prev_attn_state[2]
                 assert incremental_state is not None
-                self.encoder_attn._set_input_buffer(incremental_state, saved_state)
-
-            testout = x.transpose(0, 1)
+                self.video_attn._set_input_buffer(incremental_state, saved_state)
 
             videos = videos.transpose(0, 1)
             x, attn = self.video_attn(
@@ -721,8 +722,6 @@ class TransformerDecoderFushionLayer(nn.Module):
             x = self.residual_connection(x, residual)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
-
-            testout = x.transpose(0, 1)
 
         x = self.activation_fn(self.fc1(x))
         x = self.activation_dropout_module(x)
