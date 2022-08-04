@@ -1091,6 +1091,28 @@ def vatex_double_crossatt_pewoln(args):
     base_architecture(args)
 
 
+@register_model_architecture('vatex_double_crossatt', 'vatex_double_crossatt_pewoln')
+def vatex_double_crossatt_pewoln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+
+    base_architecture(args)
+
+
 
 
 
