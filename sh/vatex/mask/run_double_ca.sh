@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=5
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -22,7 +22,7 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
-mask=mask0    #mask1,2,3,4,c,p
+mask=mask_verb_3    #mask1,2,3,4,c,p
 if [ $mask == "mask0" ]; then
         local_data_dir=~/data/en_zh.char
 else
@@ -44,7 +44,7 @@ arch=vatex_double_crossatt_pewln
 
 video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
 video_ids_path=~/data/raw_texts/ids
-video_feat_type="VIT_cls"
+video_feat_type="I3D"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224

@@ -16,7 +16,7 @@ from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from fairseq.models.fairseq_encoder import EncoderOut, EncoderOut
+from fairseq.models.fairseq_encoder import FushionEncoderOut
 from fairseq.modules import (
     AdaptiveSoftmax,
     FairseqDropout,
@@ -293,7 +293,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
         """
 
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens)
+            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens, videos=videos,
+            video_padding=video_padding)
 
         decoder_out = self.decoder(
             prev_output_tokens,
@@ -303,8 +304,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
             alignment_heads=alignment_heads,
             src_lengths=src_lengths,
             return_all_hiddens=return_all_hiddens,
-            videos=videos,
-            video_padding_mask=video_padding
         )
         return decoder_out
 
@@ -412,6 +411,8 @@ class TransformerEncoder(FairseqEncoder):
             self,
             src_tokens,
             src_lengths,
+            videos=None,
+            video_padding=None,
             return_all_hiddens: bool = False,
             token_embeddings: Optional[torch.Tensor] = None,
     ):
@@ -458,17 +459,23 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        return EncoderOut(
+        videos = videos.transpose(0, 1)
+
+        return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            encoder_padding_mask=encoder_padding_mask,  # B x T
+            text_out=None,  # B, t_len , C
+            video_out=videos,  # B, v_len , C
+            text_padding_mask=None,  # B,  t_len
+            video_padding_mask=video_padding,  # B, v_len
+            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
             encoder_embedding=encoder_embedding,  # B x T x C
-            encoder_states=encoder_states,  # List[T x B x C]
+            encoder_states=encoder_states,  # List[(T + v_len) x B x C]
             src_tokens=None,
             src_lengths=None,
         )
 
     @torch.jit.export
-    def reorder_encoder_out(self, encoder_out: EncoderOut, new_order):
+    def reorder_encoder_out(self, encoder_out: FushionEncoderOut, new_order):
         """
         Reorder encoder output according to *new_order*.
 
@@ -481,7 +488,7 @@ class TransformerEncoder(FairseqEncoder):
         """
         """
         Since encoder_padding_mask and encoder_embedding are both of type
-        Optional[Tensor] in EncoderOut, they need to be copied as local
+        Optional[Tensor] in FushionEncoderOut, they need to be copied as local
         variables for Torchscript Optional refinement
         """
         encoder_padding_mask: Optional[Tensor] = encoder_out.encoder_padding_mask
@@ -515,8 +522,23 @@ class TransformerEncoder(FairseqEncoder):
             for idx, state in enumerate(encoder_states):
                 encoder_states[idx] = state.index_select(1, new_order)
 
-        return EncoderOut(
+        new_video_out = (
+            encoder_out.video_out
+            if encoder_out.video_out is None
+            else encoder_out.video_out.index_select(1, new_order)
+        )
+        new_video_padding_mask = (
+            encoder_out.video_padding_mask
+            if encoder_out.video_padding_mask is None
+            else encoder_out.video_padding_mask.index_select(0, new_order)
+        )
+
+        return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
+            text_out=encoder_out.text_out,  # B, t_len , C
+            video_out=new_video_out,  # B, v_len , C
+            text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
+            video_padding_mask=new_video_padding_mask,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T
             encoder_embedding=new_encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
@@ -702,6 +724,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
     def video_forward_embedding(self, videos, video_padding_mask):
 
+        videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
         videos = self.video_dense(videos)  # B T_v  C
@@ -722,7 +745,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def forward(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             features_only: bool = False,
             full_context_alignment: bool = False,
@@ -730,8 +753,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             alignment_heads: Optional[int] = None,
             src_lengths: Optional[Any] = None,
             return_all_hiddens: bool = False,
-            videos=None,
-            video_padding_mask=None
     ):
         """
         Args:
@@ -759,8 +780,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             full_context_alignment=full_context_alignment,
             alignment_layer=alignment_layer,
             alignment_heads=alignment_heads,
-            videos=videos,
-            video_padding_mask=video_padding_mask
         )
         if not features_only:
             x = self.output_layer(x)
@@ -769,13 +788,11 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
             alignment_heads: Optional[int] = None,
-            videos=None,
-            video_padding_mask=None
     ):
         return self.extract_features_scriptable(
             prev_output_tokens,
@@ -784,8 +801,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             full_context_alignment,
             alignment_layer,
             alignment_heads,
-            videos,
-            video_padding_mask
         )
 
     """
@@ -797,13 +812,12 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features_scriptable(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
             alignment_heads: Optional[int] = None,
-            videos=None,
-            video_padding_mask=None
+
     ):
         """
         Similar to *forward* but only return features.
@@ -866,7 +880,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # videos process
-        video_padding_mask = ~video_padding_mask.bool()
+        videos = encoder_out.video_out
+
+        video_padding_mask = ~encoder_out.video_padding_mask.bool()
+
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 
         # decoder layers
