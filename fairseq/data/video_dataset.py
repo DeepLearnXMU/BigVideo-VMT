@@ -9,7 +9,8 @@ class VideoDataset(torch.utils.data.Dataset):
     For loading image datasets
     """
 
-    def __init__(self, video_feat_path: str, video_ids_path: str, max_vid_len: int, split: str, video_feat_type: str, ):
+    def __init__(self, video_feat_path: str, video_ids_path: str, max_vid_len: int, split: str, video_feat_type: str,
+                 video_feat_dim: int):
         self.video_feat_path = video_feat_path
         self.video_ids_path = video_ids_path
         self.max_vid_len = max_vid_len
@@ -19,6 +20,7 @@ class VideoDataset(torch.utils.data.Dataset):
             self.sent_id_list = [x.rstrip() for x in file.readlines()]
 
         self.video_feat_type = video_feat_type
+        self.video_feat_dim = video_feat_dim
         if video_feat_type == "I3D":
             if split in ["train", "valid"]:
                 self.video_dir = "trainval/"
@@ -32,6 +34,7 @@ class VideoDataset(torch.utils.data.Dataset):
 
         self.video_list = []
         self.padding_list = []
+        self.video_pad = np.random.RandomState(0).normal(loc=0.0, scale=1, size=(video_feat_dim), )
 
         for sent_id in self.sent_id_list:
             vid = sent_id[:-2]
@@ -50,7 +53,8 @@ class VideoDataset(torch.utils.data.Dataset):
             feats = np.zeros((1, 768))
             empty_flag = True
         elif self.video_feat_type == "I3D":
-            feats = np.load(fpath, encoding='latin1')[0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
+            feats = np.load(fpath, encoding='latin1')[
+                0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
         elif self.video_feat_type in ["VIT_cls", "VIT_cls"]:
             feats = np.load(fpath, encoding='latin1')
         padding = np.ones(max_length)
@@ -62,7 +66,9 @@ class VideoDataset(torch.utils.data.Dataset):
             inds = sorted(random.sample(range(feats.shape[0]), max_length))
             feats = feats[inds]
         if empty_flag:
-            padding[:] = 0
+            feats[0] = self.video_pad
+            padding[0] = 1
+            padding[1:] = 0
         assert feats.shape[0] == max_length
         # mask = np.array(padding, dtype=bool)
         return np.float32(feats), padding

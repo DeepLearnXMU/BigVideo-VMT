@@ -173,7 +173,7 @@ class TransformerDecoderLayer(nn.Module):
     """
 
     def __init__(
-        self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False
+            self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False
     ):
         super().__init__()
         self.embed_dim = args.decoder_embed_dim
@@ -244,7 +244,7 @@ class TransformerDecoderLayer(nn.Module):
         return quant_noise(nn.Linear(input_dim, output_dim), q_noise, qn_block_size)
 
     def build_self_attention(
-        self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
+            self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
     ):
         return MultiheadAttention(
             embed_dim,
@@ -276,17 +276,17 @@ class TransformerDecoderLayer(nn.Module):
         return residual + x
 
     def forward(
-        self,
-        x,
-        encoder_out: Optional[torch.Tensor] = None,
-        encoder_padding_mask: Optional[torch.Tensor] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        prev_self_attn_state: Optional[List[torch.Tensor]] = None,
-        prev_attn_state: Optional[List[torch.Tensor]] = None,
-        self_attn_mask: Optional[torch.Tensor] = None,
-        self_attn_padding_mask: Optional[torch.Tensor] = None,
-        need_attn: bool = False,
-        need_head_weights: bool = False,
+            self,
+            x,
+            encoder_out: Optional[torch.Tensor] = None,
+            encoder_padding_mask: Optional[torch.Tensor] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            prev_self_attn_state: Optional[List[torch.Tensor]] = None,
+            prev_attn_state: Optional[List[torch.Tensor]] = None,
+            self_attn_mask: Optional[torch.Tensor] = None,
+            self_attn_padding_mask: Optional[torch.Tensor] = None,
+            need_attn: bool = False,
+            need_head_weights: bool = False,
     ):
         """
         Args:
@@ -319,9 +319,9 @@ class TransformerDecoderLayer(nn.Module):
             self.self_attn._set_input_buffer(incremental_state, saved_state)
         _self_attn_input_buffer = self.self_attn._get_input_buffer(incremental_state)
         if self.cross_self_attention and not (
-            incremental_state is not None
-            and _self_attn_input_buffer is not None
-            and "prev_key" in _self_attn_input_buffer
+                incremental_state is not None
+                and _self_attn_input_buffer is not None
+                and "prev_key" in _self_attn_input_buffer
         ):
             if self_attn_mask is not None:
                 assert encoder_out is not None
@@ -414,6 +414,7 @@ class TransformerDecoderLayer(nn.Module):
     def make_generation_fast_(self, need_attn: bool = False, **kwargs):
         self.need_attn = need_attn
 
+
 class TransformerDecoderFushionLayer(nn.Module):
     """Decoder layer block.
 
@@ -432,7 +433,7 @@ class TransformerDecoderFushionLayer(nn.Module):
     """
 
     def __init__(
-        self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False,video_att_before=False
+            self, args, no_encoder_attn=False, add_bias_kv=False, add_zero_attn=False, video_att_before=False
     ):
         super().__init__()
         self.embed_dim = args.decoder_embed_dim
@@ -478,8 +479,6 @@ class TransformerDecoderFushionLayer(nn.Module):
             self.encoder_attn = self.build_encoder_attention(self.embed_dim, args)
             self.encoder_attn_layer_norm = LayerNorm(self.embed_dim, export=export)
 
-
-
         self.fc1 = self.build_fc1(
             self.embed_dim,
             args.decoder_ffn_embed_dim,
@@ -500,7 +499,7 @@ class TransformerDecoderFushionLayer(nn.Module):
 
         self.video_attn = self.build_encoder_attention(self.embed_dim, args)
         self.video_attn_layer_norm = LayerNorm(self.embed_dim, export=export)
-        self.video_att_before=video_before
+        self.video_att_before = video_att_before
 
     def build_fc1(self, input_dim, output_dim, q_noise, qn_block_size):
         return quant_noise(nn.Linear(input_dim, output_dim), q_noise, qn_block_size)
@@ -509,7 +508,7 @@ class TransformerDecoderFushionLayer(nn.Module):
         return quant_noise(nn.Linear(input_dim, output_dim), q_noise, qn_block_size)
 
     def build_self_attention(
-        self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
+            self, embed_dim, args, add_bias_kv=False, add_zero_attn=False
     ):
         return MultiheadAttention(
             embed_dim,
@@ -541,19 +540,19 @@ class TransformerDecoderFushionLayer(nn.Module):
         return residual + x
 
     def forward(
-        self,
-        x,
-        encoder_out: Optional[torch.Tensor] = None,
-        encoder_padding_mask: Optional[torch.Tensor] = None,
-        incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
-        prev_self_attn_state: Optional[List[torch.Tensor]] = None,
-        prev_attn_state: Optional[List[torch.Tensor]] = None,
-        self_attn_mask: Optional[torch.Tensor] = None,
-        self_attn_padding_mask: Optional[torch.Tensor] = None,
-        need_attn: bool = False,
-        need_head_weights: bool = False,
-        videos=videos,
-        video_padding_mask=video_padding
+            self,
+            x,
+            encoder_out: Optional[torch.Tensor] = None,
+            encoder_padding_mask: Optional[torch.Tensor] = None,
+            incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
+            prev_self_attn_state: Optional[List[torch.Tensor]] = None,
+            prev_attn_state: Optional[List[torch.Tensor]] = None,
+            self_attn_mask: Optional[torch.Tensor] = None,
+            self_attn_padding_mask: Optional[torch.Tensor] = None,
+            need_attn: bool = False,
+            need_head_weights: bool = False,
+            videos=None,
+            video_padding_mask=None
     ):
         """
         Args:
@@ -586,9 +585,9 @@ class TransformerDecoderFushionLayer(nn.Module):
             self.self_attn._set_input_buffer(incremental_state, saved_state)
         _self_attn_input_buffer = self.self_attn._get_input_buffer(incremental_state)
         if self.cross_self_attention and not (
-            incremental_state is not None
-            and _self_attn_input_buffer is not None
-            and "prev_key" in _self_attn_input_buffer
+                incremental_state is not None
+                and _self_attn_input_buffer is not None
+                and "prev_key" in _self_attn_input_buffer
         ):
             if self_attn_mask is not None:
                 assert encoder_out is not None
@@ -623,10 +622,11 @@ class TransformerDecoderFushionLayer(nn.Module):
         if not self.normalize_before:
             x = self.self_attn_layer_norm(x)
 
+        # video attn
         if self.video_att_before:
-            residual=x
+            residual = x
             if self.normalize_before:
-                x = self.encoder_attn_layer_norm(x)
+                x = self.video_attn_layer_norm(x)
             if prev_attn_state is not None:
                 prev_key, prev_value = prev_attn_state[:2]
                 saved_state: Dict[str, Optional[Tensor]] = {
@@ -638,6 +638,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 assert incremental_state is not None
                 self.encoder_attn._set_input_buffer(incremental_state, saved_state)
 
+            videos = videos.transpose(0, 1)
             x, attn = self.video_attn(
                 query=x,
                 key=videos,
@@ -651,13 +652,13 @@ class TransformerDecoderFushionLayer(nn.Module):
             x = self.dropout_module(x)
             x = self.residual_connection(x, residual)
             if not self.normalize_before:
-                x = self.video_layer_norm(x)
-
+                x = self.video_attn_layer_norm(x)
+        # enc attn
 
         if self.encoder_attn is not None and encoder_out is not None:
             residual = x
             if self.normalize_before:
-                x = self.video_layer_norm(x)
+                x = self.video_attn_layer_norm(x)
             if prev_attn_state is not None:
                 prev_key, prev_value = prev_attn_state[:2]
                 saved_state: Dict[str, Optional[Tensor]] = {
@@ -688,11 +689,10 @@ class TransformerDecoderFushionLayer(nn.Module):
         if self.normalize_before:
             x = self.final_layer_norm(x)
 
-
         if not self.video_att_before:
-            residual=x
+            residual = x
             if self.normalize_before:
-                x = self.video_layer_norm(x)
+                x = self.video_attn_layer_norm(x)
             if prev_attn_state is not None:
                 prev_key, prev_value = prev_attn_state[:2]
                 saved_state: Dict[str, Optional[Tensor]] = {
@@ -704,6 +704,9 @@ class TransformerDecoderFushionLayer(nn.Module):
                 assert incremental_state is not None
                 self.encoder_attn._set_input_buffer(incremental_state, saved_state)
 
+            testout = x.transpose(0, 1)
+
+            videos = videos.transpose(0, 1)
             x, attn = self.video_attn(
                 query=x,
                 key=videos,
@@ -717,8 +720,9 @@ class TransformerDecoderFushionLayer(nn.Module):
             x = self.dropout_module(x)
             x = self.residual_connection(x, residual)
             if not self.normalize_before:
-                x = self.video_layer_norm(x)
+                x = self.video_attn_layer_norm(x)
 
+            testout = x.transpose(0, 1)
 
         x = self.activation_fn(self.fc1(x))
         x = self.activation_dropout_module(x)
