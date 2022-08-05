@@ -507,7 +507,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-        videos = self.video_embedding_dropout_module(videos)
+        videos = self.dropout_module(videos)
 
         return videos
 
