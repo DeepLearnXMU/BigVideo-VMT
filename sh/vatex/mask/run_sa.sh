@@ -46,12 +46,15 @@ video_feat_type="VIT_cls"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
-  elif [ $video_feat_type == "VIT_patch" ]; then
+        max_vid_len=15
+  elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
+        max_vid_len=200
   elif [ $video_feat_type == "I3D" ]; then
         video_feat_dim=1024
         video_feat_path=~/data/vatex_features/
+        max_vid_len=40
 fi
 
 SA_attention_dropout=0.0
@@ -61,7 +64,7 @@ SA_video_dropout=0.1
 gpu_num=1
 
 
-name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}
+name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}_vlen${max_vid_len}
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/${mask}/sa/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/${mask}/sa
 local_logs_dir=~/fairseq_logs/vatex_0731/${mask}/sa
@@ -101,11 +104,15 @@ fairseq-train $local_data_dir \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
-  --max-vid-len 15   \
+  --max-vid-len $max_vid_len   \
   --SA-video-dropout ${SA_video_dropout} --SA-attention-dropout ${SA_attention_dropout} \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
+put_result=$?
+if [ $put_result == 1  ]; then
+        hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
+fi
 

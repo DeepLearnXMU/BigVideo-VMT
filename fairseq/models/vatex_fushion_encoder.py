@@ -453,9 +453,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             else None
         )
 
-        self.video_embedding_dropout_module = FairseqDropout(
-            args.video_embedding_dropout, module_name=self.__class__.__name__
-        )
+
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
