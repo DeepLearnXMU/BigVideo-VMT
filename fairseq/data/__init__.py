@@ -60,6 +60,7 @@ from .image_dataset import ImageDataset
 from .image_language_pair_dataset import ImageLanguagePairDataset
 from .video_dataset import VideoDataset
 from .video_language_dataset import VideoLanguagePairDataset
+from .video_language_multi_dataset import VideoLanguagePairMultiDataset
 
 from .iterators import (
     CountingIterator,
@@ -128,5 +129,6 @@ __all__ = [
     "TruncateDataset",
     "TruncatedDictionary",
     "VideoDataset",
-    "VideoLanguageDataset"
+    "VideoLanguagePairDataset",
+    "VideoLanguagePairMultiDataset"
 ]

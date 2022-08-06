@@ -74,14 +74,14 @@ def collate(
         [s["source"].ne(pad_idx).long().sum() for s in samples]
     )
 
+    #videos
     videos = torch.FloatTensor(np.array([s['video'] for s in samples]))
-    video_paddings = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
+    video_paddings  = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
 
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
     src_tokens = src_tokens.index_select(0, sort_order)
     videos = videos.index_select(0, sort_order)
-    video_paddings = video_paddings.index_select(0, sort_order)
 
 
     prev_output_tokens = None
@@ -173,7 +173,7 @@ def collate(
     return batch
 
 
-class VideoLanguagePairDataset(FairseqDataset):
+class VideoLanguagePairMultiDataset(FairseqDataset):
     """
     A pair of torch.utils.data.Datasets.
 
@@ -307,7 +307,7 @@ class VideoLanguagePairDataset(FairseqDataset):
         else:
             self.buckets = None
         self.pad_to_multiple = pad_to_multiple
-        self.video_dataset = video_dataset  # extra code
+        self.video_datasets = video_dataset_list  # extra code
 
 
     def get_batch_shapes(self):
@@ -317,7 +317,9 @@ class VideoLanguagePairDataset(FairseqDataset):
         tgt_item = self.tgt[index] if self.tgt is not None else None
         src_item = self.src[index]
 
-        video_item,video_padding_item = self.video_dataset[index]  # list for video data
+        # video_item,video_padding_item = self.video_dataset[index]  # list for video data
+        video_items = [i[index][0] for i in self.video_datasets]  # list for video data
+        video_padding_items = [i[index][1] for i in self.video_datasets]  # list for video mask data
 
         # Append EOS to end of tgt sentence if it does not have an EOS and remove
         # EOS from end of src sentence if it exists. This is useful when we use
@@ -346,8 +348,8 @@ class VideoLanguagePairDataset(FairseqDataset):
             "id": index,
             "source": src_item,
             "target": tgt_item,
-            "video": video_item,
-            "video_padding":video_padding_item
+            "video_list": video_items,
+            "video_padding_list":video_padding_items
         }
         if self.align_dataset is not None:
             example["alignment"] = self.align_dataset[index]
