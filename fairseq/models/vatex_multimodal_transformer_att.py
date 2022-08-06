@@ -464,13 +464,13 @@ class TransformerEncoder(FairseqEncoder):
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
-    def fuse_video_feat(self, text, video):
-        video = self.video_pre_norm_module(video)
+    def fuse_video_feat(self, text, video,video_padding_mask):
+        # video = self.video_pre_norm_module(video)
         video = self.video_dropout_module(video)
         text = self.text_dropout_module(text)
         video = video.transpose(0, 1)
         text = text.transpose(0, 1)
-        output, _map = self.video_atts(query=text, key=video, value=video)  # t, b, c
+        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mask=video_padding_mask)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_dense(merge))
@@ -567,7 +567,7 @@ class TransformerEncoder(FairseqEncoder):
             video_padding_mask = ~video_padding.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h)
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
 
         # encoder layers
         for layer in self.layers:
@@ -585,7 +585,7 @@ class TransformerEncoder(FairseqEncoder):
 
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h)
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
 
         return EncoderOut(
             encoder_out=x,  # T x B x C

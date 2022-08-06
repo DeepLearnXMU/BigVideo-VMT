@@ -69,7 +69,7 @@ def collate(
         left_pad=left_pad_source,
         pad_to_length=pad_to_length["source"] if pad_to_length is not None else None,
     )
-    # sort by descending source length
+
     src_lengths = torch.LongTensor(
         [s["source"].ne(pad_idx).long().sum() for s in samples]
     )
@@ -77,6 +77,7 @@ def collate(
     videos = torch.FloatTensor(np.array([s['video'] for s in samples]))
     video_paddings = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
 
+    # sort by descending source length
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
     src_tokens = src_tokens.index_select(0, sort_order)
