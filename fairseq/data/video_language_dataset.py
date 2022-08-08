@@ -219,7 +219,7 @@ class VideoLanguagePairDataset(FairseqDataset):
             src,
             src_sizes,
             src_dict,
-            video_dataset_list,
+            video_dataset,
             tgt=None,
             tgt_sizes=None,
             tgt_dict=None,

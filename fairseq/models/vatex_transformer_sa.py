@@ -36,7 +36,7 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 40
 
 
-@register_model("vatex_multimodal_transformer_att")
+@register_model("vatex_transformer_sa")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -195,17 +195,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
         parser.add_argument('--pe-for-video', type=bool,
-                           help='video for position ')
-        parser.add_argument('--max-video-positions', type=int,default=40,
+                            help='video for position ')
+        parser.add_argument('--max-video-positions', type=int, default=40,
                             help='max vid len')
-        parser.add_argument('--SA-video-dropout', type=float,
-                            help='video feat dropout before SA')
-        parser.add_argument('--SA-text-dropout', type=float,
-                            help='text feat dropout before SA')
         parser.add_argument('--SA-attention-dropout', type=float,
                             help='selective attn\'s dropout')
-
-
 
     @classmethod
     def build_model(cls, args, task):
@@ -302,7 +296,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         which are not supported by TorchScript.
         """
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,video_padding=video_padding,
+            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens, video_padding=video_padding,
             videos=videos
         )
         decoder_out = self.decoder(
@@ -369,8 +363,6 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
 
-
-
         if getattr(args, "layernorm_embedding", False):
             self.layernorm_embedding = LayerNorm(embed_dim)
         else:
@@ -406,24 +398,12 @@ class TransformerEncoder(FairseqEncoder):
         self.sigmoid = nn.Sigmoid()
         self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
 
-
-        self.video_dropout_module = FairseqDropout(
-            args.SA_video_dropout, module_name=self.__class__.__name__
-        )
-        self.text_dropout_module = FairseqDropout(
-            args.SA_text_dropout, module_name=self.__class__.__name__
-        )
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
-
         self.is_fusion_top = args.is_fusion_top
-
 
         self.video_embed_positions = (
             PositionalEmbedding(
                 args.max_video_positions,
-                args.video_feat_dim,
+                embed_dim,
                 self.padding_idx,
                 learned=args.encoder_learned_pos,
             )
@@ -431,12 +411,10 @@ class TransformerEncoder(FairseqEncoder):
             else None
         )
 
-
-
-        self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
-                                                        vdim=args.video_feat_dim, attn_dim=embed_dim,
-                                                        intermediate_dim=embed_dim, output_dim=embed_dim,
-                                                        num_heads=1, attn_drop=args.SA_attention_dropout)
+        self.video_atts = SelectiveAttention(qdim=embed_dim, kdim=embed_dim,
+                                             vdim=embed_dim, attn_dim=embed_dim,
+                                             intermediate_dim=embed_dim, output_dim=embed_dim,
+                                             num_heads=1, attn_drop=args.SA_attention_dropout)
 
         if getattr(args, "video_layernorm_embedding", False):
             self.video_layernorm_embedding = LayerNorm(embed_dim)
@@ -459,18 +437,15 @@ class TransformerEncoder(FairseqEncoder):
                 res = res + i
             return res
 
-
-
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
-    def fuse_video_feat(self, text, video,video_padding_mask):
-        # video = self.video_pre_norm_module(video)
-        video = self.video_dropout_module(video)
-        text = self.text_dropout_module(text)
+    def fuse_video_feat(self, text, video, video_padding_mask):
+
         video = video.transpose(0, 1)
         text = text.transpose(0, 1)
-        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mask=video_padding_mask)  # t, b, c
+        output, _map = self.video_atts(query=text, key=video, value=video,
+                                       key_padding_mask=video_padding_mask)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_dense(merge))
@@ -501,18 +476,20 @@ class TransformerEncoder(FairseqEncoder):
     def video_forward_embedding(self, videos, video_padding_mask):
 
         bsz, video_length = videos.size()[0], videos.size()[1]
-        video_shapes = len(videos.size())
+
+        videos = self.dense(videos)
 
         if self.args.pe_for_video:
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx + 1
+            video_position_ids = video_position_ids + 2
             video_position_ids.masked_fill_(video_padding_mask, 1)
             videos = videos + self.video_embed_positions(video_position_ids)
+
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-
+        videos = self.dropout_module(videos)
 
         return videos
 
@@ -567,7 +544,7 @@ class TransformerEncoder(FairseqEncoder):
             video_padding_mask = ~video_padding.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h, video_padding_mask=video_padding_mask)
 
         # encoder layers
         for layer in self.layers:
@@ -585,7 +562,7 @@ class TransformerEncoder(FairseqEncoder):
 
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
+            x, gate = self.fuse_video_feat(video=video_h, text=text_h, video_padding_mask=video_padding_mask)
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
@@ -693,7 +670,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         args (argparse.Namespace): parsed command-line arguments
         dictionary (~fairseq.data.Dictionary): decoding dictionary
         embed_tokens (torch.nn.Embedding): output embedding
-        no_encoder_attn (bool, optional): whether to attend to encoder outputs
         no_encoder_attn (bool, optional): whether to attend to encoder outputs
             (default: False).
     """
@@ -984,7 +960,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        return x, {"attn": [attn], "inner_states": inner_states,}
+        return x, {"attn": [attn], "inner_states": inner_states, }
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
@@ -1077,7 +1053,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att')
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1114,8 +1090,7 @@ def base_architecture(args):
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
 
-
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_tiny')
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1128,8 +1103,8 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_vatex_top_pe')
-def vatex_multimodal_transformer_att_vatex_top_pe(args):
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_vatex_top_pe')
+def vatex_transformer_sa_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1142,8 +1117,6 @@ def vatex_multimodal_transformer_att_vatex_top_pe(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
@@ -1151,8 +1124,9 @@ def vatex_multimodal_transformer_att_vatex_top_pe(args):
 
     base_architecture(args)
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_vatex_top_nope')
-def vatex_multimodal_transformer_att_vatex_top_nope(args):
+
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_vatex_top_nope')
+def vatex_transformer_sa_vatex_top_nope(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1165,8 +1139,6 @@ def vatex_multimodal_transformer_att_vatex_top_nope(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
@@ -1175,8 +1147,8 @@ def vatex_multimodal_transformer_att_vatex_top_nope(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_vatex_top_pe_prenorm')
-def vatex_multimodal_transformer_att_vatex_top_pe_prenorm(args):
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_vatex_top_pe_prenorm')
+def vatex_transformer_sa_vatex_top_pe_prenorm(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1189,8 +1161,6 @@ def vatex_multimodal_transformer_att_vatex_top_pe_prenorm(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', True)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
@@ -1198,9 +1168,9 @@ def vatex_multimodal_transformer_att_vatex_top_pe_prenorm(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_att',
-                             'vatex_multimodal_transformer_att_vatex_top_nope_prenorm')
-def vatex_multimodal_transformer_att_vatex_top_nope_prenorm(args):
+@register_model_architecture('vatex_transformer_sa',
+                             'vatex_transformer_sa_vatex_top_nope_prenorm')
+def vatex_transformer_sa_vatex_top_nope_prenorm(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1213,8 +1183,7 @@ def vatex_multimodal_transformer_att_vatex_top_nope_prenorm(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', False)
     args.video_pre_norm = getattr(args, 'video_pre_norm', True)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
+
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
@@ -1222,8 +1191,8 @@ def vatex_multimodal_transformer_att_vatex_top_nope_prenorm(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_vatex_top_pewln')
-def vatex_multimodal_transformer_att_vatex_top_pewln(args):
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_top_pewln')
+def vatex_transformer_sa_top_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1235,9 +1204,6 @@ def vatex_multimodal_transformer_att_vatex_top_pewln(args):
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
@@ -1248,8 +1214,8 @@ def vatex_multimodal_transformer_att_vatex_top_pewln(args):
     base_architecture(args)
 
 
-@register_model_architecture('vatex_multimodal_transformer_att', 'vatex_multimodal_transformer_att_vatex_top_pewoln')
-def vatex_multimodal_transformer_att_vatex_top_pewoln(args):
+@register_model_architecture('vatex_transformer_sa', 'vatex_transformer_sa_top_pewoln')
+def vatex_transformer_sa_top_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1262,8 +1228,6 @@ def vatex_multimodal_transformer_att_vatex_top_pewoln(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
-    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
     if getattr(args, "max_video_positions", None) is None:
