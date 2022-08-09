@@ -74,8 +74,8 @@ def collate(
         [s["source"].ne(pad_idx).long().sum() for s in samples]
     )
 
-    videos = torch.FloatTensor(np.array([s['video'] for s in samples]))
-    video_paddings = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
+    videos = torch.Tensor(np.array([s['video'] for s in samples]))
+    video_paddings = torch.Tensor(np.array([s['video_padding'] for s in samples]))
 
     # sort by descending source length
     src_lengths, sort_order = src_lengths.sort(descending=True)

@@ -16,7 +16,7 @@ from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from fairseq.models.fairseq_encoder import EncoderOut
+from fairseq.models.fairseq_encoder import FushionEncoderOut
 from fairseq.modules import (
     AdaptiveSoftmax,
     FairseqDropout,
@@ -26,6 +26,7 @@ from fairseq.modules import (
     SinusoidalPositionalEmbedding,
     TransformerDecoderLayer,
     TransformerEncoderLayer,
+    TransformerDecoderFushionLayer,
     SelectiveAttention,
 )
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
@@ -33,9 +34,10 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
-DEFAULT_VIDEO_LENGTH = 2
+DEFAULT_VIDEO_LENGTH = 32
 
-@register_model("vatex_multimodal_transformer")
+
+@register_model("vatex_double_crossatt_multi")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -182,15 +184,17 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='block size of quantization noise at training time')
         parser.add_argument('--quant-noise-scalar', type=float, metavar='D', default=0,
                             help='scalar quantization noise and scalar quantization at training time')
+
         # fmt: on
         # args for video MMT
+        # args for fushion encoder
 
-        parser.add_argument('--video-pre-norm', type=bool,
-                            help='normlization on video feature before fusing')
-        parser.add_argument('--is-fusion-top', type=bool,
-                            help='fuse img feat after text encoding')
-        parser.add_argument('--pe-for-videos', type=bool,
-                            help='video for position ')
+        parser.add_argument('--video-layernorm-embedding', action='store_true',
+                            help='add layernorm to video - embedding')
+        parser.add_argument('--video-learned-pos', action='store_true',
+                            help='use learned positional embeddings in the video encoder')
+        parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
+        parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
 
     @classmethod
     def build_model(cls, args, task):
@@ -274,6 +278,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_lengths,
             prev_output_tokens,
             videos,
+            video_padding,
             return_all_hiddens: bool = True,
             features_only: bool = False,
             alignment_layer: Optional[int] = None,
@@ -285,10 +290,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
         Copied from the base class, but without ``**kwargs``,
         which are not supported by TorchScript.
         """
+
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,
-            videos=videos
-        )
+            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens, videos=videos,
+            video_padding=video_padding)
+
         decoder_out = self.decoder(
             prev_output_tokens,
             encoder_out=encoder_out,
@@ -381,51 +387,6 @@ class TransformerEncoder(FairseqEncoder):
         else:
             self.layer_norm = None
 
-        self.args = args
-        # code for video MMT
-
-        self.dense = nn.Linear(self.args.video_feat_dim, embed_dim)
-        self.sigmoid = nn.Sigmoid()
-        self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
-
-
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
-
-        self.is_fusion_top = args.is_fusion_top
-
-        self.recoder = utils.Recorder(args)
-
-        self.video_embed_positions = (
-            PositionalEmbedding(
-                args.max_video_positions,
-                args.video_feat_dim,
-                0,
-                learned=args.encoder_learned_pos,
-            )
-            if args.pe_for_video
-            else None
-        )
-
-
-
-    def f(self, l, fun='sum'):
-        if fun == 'avg':
-            size = len(l)
-            res = l[0]
-            for i in l[1:]:
-                res = res + i
-            return res / size
-
-        elif fun == 'sum':
-            res = l[0]
-            for i in l[1:]:
-                res = res + i
-            return res
-
-
-
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -449,7 +410,8 @@ class TransformerEncoder(FairseqEncoder):
             self,
             src_tokens,
             src_lengths,
-            videos,
+            videos=None,
+            video_padding=None,
             return_all_hiddens: bool = False,
             token_embeddings: Optional[torch.Tensor] = None,
     ):
@@ -476,9 +438,6 @@ class TransformerEncoder(FairseqEncoder):
                   hidden states of shape `(src_len, batch, embed_dim)`.
                   Only populated if *return_all_hiddens* is True.
         """
-        # import os
-        # torch.save(src_tokens.cpu(), os.path.join(self.args.save_dir, 'visualization', str(self.recoder.n)+'tokens.pth'), _use_new_zipfile_serialization=False)
-
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
@@ -488,27 +447,6 @@ class TransformerEncoder(FairseqEncoder):
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
 
         encoder_states = [] if return_all_hiddens else None
-
-        if not self.is_fusion_top:
-            # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
-            if self.args.pe_for_video:
-                v_tokens = torch.mean(videos, dim=-1)
-                videos = videos + self.video_embed_positions(v_tokens)
-            videos = torch.mean(videos, dim=1)
-            bsz, video_dim = videos.size()[0], videos.size()[1]
-
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
-
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=-1)
-            gate = self.sigmoid(self.gate_dense(merge))
-            output = (1 - gate) * text_repr + gate * v_repr
-            x = output.transpose(0, 1)  # reback to T x B x C
 
         # encoder layers
         for layer in self.layers:
@@ -520,44 +458,23 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        if self.is_fusion_top:
-            # x [ L x B x C]   videos [ B x l x C]
-            # avg_pooling
+        videos = videos.transpose(0, 1)
 
-            if self.args.pe_for_video:
-                v_tokens = torch.mean(videos, dim=-1)
-                videos = videos + self.video_embed_positions(v_tokens)
-            videos = torch.mean(videos, dim=1)
-            bsz,video_dim=videos.size()[0],videos.size()[1]
-
-            v_embedding = videos.view(bsz, 1, video_dim)  # B, 1, video_dim
-            v_repr = self.dense(v_embedding)  # B, 1, C
-
-            text_repr = x.transpose(0, 1)  # T x B x C -> B x T x C
-            b, t, c = text_repr.shape
-            v_repr = v_repr.expand(b, t, c)
-            assert v_repr.shape[1] == text_repr.shape[1]
-            merge = torch.cat([text_repr, v_repr], dim=-1)
-            gate = self.sigmoid(self.gate_dense(merge))
-            output = (1 - gate) * text_repr + gate * v_repr
-            # print(gate.shape)
-            # print(dadsa)
-            x = output.transpose(0, 1)  # reback to T x B x C
-
-        if self.args.recoder_gate:
-            print(gate[~src_tokens.eq(self.padding_idx)].mean())
-
-        return EncoderOut(
+        return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            encoder_padding_mask=encoder_padding_mask,  # B x T
+            text_out=None,  # B, t_len , C
+            video_out=videos,  # B, v_len , C
+            text_padding_mask=None,  # B,  t_len
+            video_padding_mask=video_padding,  # B, v_len
+            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
             encoder_embedding=encoder_embedding,  # B x T x C
-            encoder_states=encoder_states,  # List[T x B x C]
+            encoder_states=encoder_states,  # List[(T + v_len) x B x C]
             src_tokens=None,
             src_lengths=None,
         )
 
     @torch.jit.export
-    def reorder_encoder_out(self, encoder_out: EncoderOut, new_order):
+    def reorder_encoder_out(self, encoder_out: FushionEncoderOut, new_order):
         """
         Reorder encoder output according to *new_order*.
 
@@ -570,7 +487,7 @@ class TransformerEncoder(FairseqEncoder):
         """
         """
         Since encoder_padding_mask and encoder_embedding are both of type
-        Optional[Tensor] in EncoderOut, they need to be copied as local
+        Optional[Tensor] in FushionEncoderOut, they need to be copied as local
         variables for Torchscript Optional refinement
         """
         encoder_padding_mask: Optional[Tensor] = encoder_out.encoder_padding_mask
@@ -604,8 +521,23 @@ class TransformerEncoder(FairseqEncoder):
             for idx, state in enumerate(encoder_states):
                 encoder_states[idx] = state.index_select(1, new_order)
 
-        return EncoderOut(
+        new_video_out = (
+            encoder_out.video_out
+            if encoder_out.video_out is None
+            else encoder_out.video_out.index_select(1, new_order)
+        )
+        new_video_padding_mask = (
+            encoder_out.video_padding_mask
+            if encoder_out.video_padding_mask is None
+            else encoder_out.video_padding_mask.index_select(0, new_order)
+        )
+
+        return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
+            text_out=encoder_out.text_out,  # B, t_len , C
+            video_out=new_video_out,  # B, v_len , C
+            text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
+            video_padding_mask=new_video_padding_mask,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T
             encoder_embedding=new_encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
@@ -720,7 +652,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self.layers = nn.ModuleList([])
         self.layers.extend(
             [
-                self.build_decoder_layer(args, no_encoder_attn)
+                self.build_decoder_layer(args, no_encoder_attn, video_att_before=args.video_att_before)
                 for _ in range(args.decoder_layers)
             ]
         )
@@ -766,13 +698,53 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 self.output_projection.weight, mean=0, std=self.output_embed_dim ** -0.5
             )
 
-    def build_decoder_layer(self, args, no_encoder_attn=False):
-        return TransformerDecoderLayer(args, no_encoder_attn)
+        # code for video MMT  fushion
+
+        self.video_denses = nn.Linear(self.args.video_feat_dim, embed_dim)
+
+        if getattr(args, "video_layernorm_embedding", False):
+            self.video_layernorm_embedding = LayerNorm(embed_dim)
+        else:
+            self.video_layernorm_embedding = None
+
+        self.video_embed_positions = (
+            PositionalEmbedding(
+                args.max_video_positions,
+                embed_dim,
+                self.padding_idx,
+                learned=args.video_learned_pos,
+            )
+            if args.pe_for_video
+            else None
+        )
+
+    def build_decoder_layer(self, args, no_encoder_attn=False, video_att_before=False):
+        return TransformerDecoderFushionLayer(args, no_encoder_attn, video_att_before=video_att_before)
+
+    def video_forward_embedding(self, videos, video_padding_mask):
+
+        videos = videos.transpose(0, 1)
+        bsz, video_length = videos.size()[0], videos.size()[1]
+        video_shapes = len(videos.size())
+        videos = self.video_dense(videos)  # B T_v  C
+
+        if self.args.pe_for_video and video_shapes > 2:
+            video_position_ids = torch.arange(video_length, dtype=torch.long,
+                                              device=videos.device)
+            video_position_ids = video_position_ids.expand(bsz, video_length)
+            video_position_ids = video_position_ids + 2
+            video_position_ids.masked_fill_(video_padding_mask, 1)
+            videos = videos + self.video_embed_positions(video_position_ids)
+        if self.video_layernorm_embedding:
+            videos = self.video_layernorm_embedding(videos)
+        videos = self.dropout_module(videos)
+
+        return videos
 
     def forward(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             features_only: bool = False,
             full_context_alignment: bool = False,
@@ -799,6 +771,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 - the decoder's output of shape `(batch, tgt_len, vocab)`
                 - a dictionary with any model-specific outputs
         """
+
         x, extra = self.extract_features(
             prev_output_tokens,
             encoder_out=encoder_out,
@@ -814,7 +787,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
@@ -838,11 +811,12 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features_scriptable(
             self,
             prev_output_tokens,
-            encoder_out: Optional[EncoderOut] = None,
+            encoder_out: Optional[FushionEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
             alignment_heads: Optional[int] = None,
+
     ):
         """
         Similar to *forward* but only return features.
@@ -904,6 +878,13 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.cross_self_attention or prev_output_tokens.eq(self.padding_idx).any():
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
+        # videos process
+        videos = encoder_out.video_out
+
+        video_padding_mask = ~encoder_out.video_padding_mask.bool()
+
+        video_h = self.video_forward_embedding(videos, video_padding_mask)
+
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
@@ -922,6 +903,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 self_attn_padding_mask=self_attn_padding_mask,
                 need_attn=bool((idx == alignment_layer)),
                 need_head_weights=bool((idx == alignment_layer)),
+                videos=video_h,
+                video_padding_mask=video_padding_mask
             )
             inner_states.append(x)
             if layer_attn is not None and idx == alignment_layer:
@@ -943,7 +926,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        return x, {"attn": [attn], "inner_states": inner_states}
+        return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.encoder_out.transpose(0, 1),
+                   "video_h": video_h,
+                   "text_padding_mask": encoder_out.encoder_padding_mask,
+                   "video_padding_mask": video_padding_mask}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
@@ -973,52 +959,52 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self._future_mask = self._future_mask.to(tensor)
         return self._future_mask[:dim, :dim]
 
-    def upgrade_state_dict_named(self, state_dict, name):
-        """Upgrade a (possibly old) state dict for new versions of fairseq."""
-        if isinstance(self.embed_positions, SinusoidalPositionalEmbedding):
-            weights_key = "{}.embed_positions.weights".format(name)
-            if weights_key in state_dict:
-                del state_dict[weights_key]
-            state_dict[
-                "{}.embed_positions._float_tensor".format(name)
-            ] = torch.FloatTensor(1)
+    # def upgrade_state_dict_named(self, state_dict, name):
+    #     """Upgrade a (possibly old) state dict for new versions of fairseq."""
+    #     if isinstance(self.embed_positions, SinusoidalPositionalEmbedding):
+    #         weights_key = "{}.embed_positions.weights".format(name)
+    #         if weights_key in state_dict:
+    #             del state_dict[weights_key]
+    #         state_dict[
+    #             "{}.embed_positions._float_tensor".format(name)
+    #         ] = torch.FloatTensor(1)
 
-        if f"{name}.output_projection.weight" not in state_dict:
-            if self.share_input_output_embed:
-                embed_out_key = f"{name}.embed_tokens.weight"
-            else:
-                embed_out_key = f"{name}.embed_out"
-            if embed_out_key in state_dict:
-                state_dict[f"{name}.output_projection.weight"] = state_dict[
-                    embed_out_key
-                ]
-                if not self.share_input_output_embed:
-                    del state_dict[embed_out_key]
+    #     if f"{name}.output_projection.weight" not in state_dict:
+    #         if self.share_input_output_embed:
+    #             embed_out_key = f"{name}.embed_tokens.weight"
+    #         else:
+    #             embed_out_key = f"{name}.embed_out"
+    #         if embed_out_key in state_dict:
+    #             state_dict[f"{name}.output_projection.weight"] = state_dict[
+    #                 embed_out_key
+    #             ]
+    #             if not self.share_input_output_embed:
+    #                 del state_dict[embed_out_key]
 
-        for i in range(self.num_layers):
-            # update layer norms
-            layer_norm_map = {
-                "0": "self_attn_layer_norm",
-                "1": "encoder_attn_layer_norm",
-                "2": "final_layer_norm",
-            }
-            for old, new in layer_norm_map.items():
-                for m in ("weight", "bias"):
-                    k = "{}.layers.{}.layer_norms.{}.{}".format(name, i, old, m)
-                    if k in state_dict:
-                        state_dict[
-                            "{}.layers.{}.{}.{}".format(name, i, new, m)
-                        ] = state_dict[k]
-                        del state_dict[k]
+    #     for i in range(self.num_layers):
+    #         # update layer norms
+    #         layer_norm_map = {
+    #             "0": "self_attn_layer_norm",
+    #             "1": "encoder_attn_layer_norm",
+    #             "2": "final_layer_norm",
+    #         }
+    #         for old, new in layer_norm_map.items():
+    #             for m in ("weight", "bias"):
+    #                 k = "{}.layers.{}.layer_norms.{}.{}".format(name, i, old, m)
+    #                 if k in state_dict:
+    #                     state_dict[
+    #                         "{}.layers.{}.{}.{}".format(name, i, new, m)
+    #                     ] = state_dict[k]
+    #                     del state_dict[k]
 
-        version_key = "{}.version".format(name)
-        if utils.item(state_dict.get(version_key, torch.Tensor([1]))[0]) <= 2:
-            # earlier checkpoints did not normalize after the stack of layers
-            self.layer_norm = None
-            self.normalize = False
-            state_dict[version_key] = torch.Tensor([1])
+    #     version_key = "{}.version".format(name)
+    #     if utils.item(state_dict.get(version_key, torch.Tensor([1]))[0]) <= 2:
+    #         # earlier checkpoints did not normalize after the stack of layers
+    #         self.layer_norm = None
+    #         self.normalize = False
+    #         state_dict[version_key] = torch.Tensor([1])
 
-        return state_dict
+    #     return state_dict
 
 
 def Embedding(num_embeddings, embedding_dim, padding_idx):
@@ -1036,7 +1022,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('vatex_multimodal_transformer', 'gated')
+@register_model_architecture('vatex_double_crossatt_multi', 'vatex_double_crossatt_multi_base')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1065,6 +1051,8 @@ def base_architecture(args):
     args.no_cross_attention = getattr(args, 'no_cross_attention', False)
     args.cross_self_attention = getattr(args, 'cross_self_attention', False)
     args.layer_wise_attention = getattr(args, 'layer_wise_attention', False)
+    if getattr(args, "max_video_positions", None) is None:
+        args.max_video_positions = DEFAULT_VIDEO_LENGTH
 
     args.decoder_output_dim = getattr(args, 'decoder_output_dim', args.decoder_embed_dim)
     args.decoder_input_dim = getattr(args, 'decoder_input_dim', args.decoder_embed_dim)
@@ -1072,87 +1060,16 @@ def base_architecture(args):
     args.no_scale_embedding = getattr(args, 'no_scale_embedding', False)
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
+    # fushion_encoder
 
-@register_model_architecture('vatex_multimodal_transformer', 'gated_iwslt_de_en')
-def transformer_iwslt_de_en(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 1024)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 512)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 1024)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    base_architecture(args)
-
-
-@register_model_architecture('vatex_multimodal_transformer', 'gated_tiny')
-def transformer_tiny(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 4)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 128)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 256)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 4)
-    base_architecture(args)
-
-
-@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex')
-def gated_vatex(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    # args for video MMT
-    args.is_fusion_top = getattr(args, 'is_fusion_top', True)
-    args.pe_for_video = getattr(args, 'pe_for_video', False)
-    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-
-    base_architecture(args)
-
-@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_notop')
-def gated_vatex_notop(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    # args for video MMT
-    args.is_fusion_top = getattr(args, 'is_fusion_top', False)
-    args.pe_for_video = getattr(args, 'pe_for_video', False)
-    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-
-    base_architecture(args)
-
-@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_top_pe')
-def gated_vatex_top_pe(args):
-    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
-    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
-    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
-    args.encoder_layers = getattr(args, 'encoder_layers', 6)
-    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
-    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
-    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
-    args.decoder_layers = getattr(args, 'decoder_layers', 6)
-    # args for video MMT
-    args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
-    base_architecture(args)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+    args.video_att_before = getattr(args, 'video_att_before', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
 
-@register_model_architecture('vatex_multimodal_transformer', 'gated_vatex_notop_pe')
-def gated_vatex_notop_pe(args):
+
+@register_model_architecture('vatex_double_crossatt_multi', 'vatex_double_crossatt_multi_pewln')
+def vatex_double_crossatt_multi_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
@@ -1162,15 +1079,85 @@ def gated_vatex_notop_pe(args):
     args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
-    args.is_fusion_top = getattr(args, 'is_fusion_top', False)
-    args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+
     base_architecture(args)
 
 
+@register_model_architecture('vatex_double_crossatt_multi', 'vatex_double_crossatt_multi_pewoln')
+def vatex_double_crossatt_multi_pewoln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+
+    base_architecture(args)
+
+
+@register_model_architecture('vatex_double_crossatt_multi', 'vatex_double_crossatt_multi_be_pewln')
+def vatex_double_crossatt_multi_be_pewln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+
+    args.video_att_before = getattr(args, 'video_att_before', True)
+
+    base_architecture(args)
+
+@register_model_architecture('vatex_double_crossatt_multi', 'vatex_double_crossatt_multi_be_pewoln')
+def vatex_double_crossatt_multi_be_pewoln(args):
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+
+    args.video_att_before = getattr(args, 'video_att_before', True)
+
+
+    base_architecture(args)
 
 
 

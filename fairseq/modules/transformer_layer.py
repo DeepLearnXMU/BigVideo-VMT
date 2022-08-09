@@ -539,6 +539,9 @@ class TransformerDecoderFushionLayer(nn.Module):
     def residual_connection(self, x, residual):
         return residual + x
 
+    def controlled_residual_connection(self, x, residual,alpha=1.0):
+        return alpha * residual + x
+
     def forward(
             self,
             x,
@@ -651,7 +654,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 need_head_weights=need_head_weights,
             )
             x = self.dropout_module(x)
-            x = self.residual_connection(x, residual)
+            x = self.controlled_residual_connection(x, residual)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 
@@ -719,7 +722,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 need_head_weights=need_head_weights,
             )
             x = self.dropout_module(x)
-            x = self.residual_connection(x, residual)
+            x = self.controlled_residual_connection(x, residual)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 

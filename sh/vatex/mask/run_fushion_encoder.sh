@@ -56,7 +56,7 @@ if [ $video_feat_type == "VIT_cls"  ]; then
   elif [ $video_feat_type == "I3D" ]; then
         video_feat_dim=1024
         video_feat_path=~/data/vatex_features/
-        max_vid_len=40
+        max_vid_len=32
 fi
 
 

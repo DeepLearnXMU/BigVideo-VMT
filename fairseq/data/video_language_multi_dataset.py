@@ -73,15 +73,26 @@ def collate(
     src_lengths = torch.LongTensor(
         [s["source"].ne(pad_idx).long().sum() for s in samples]
     )
-
-    #videos
-    videos = torch.FloatTensor(np.array([s['video'] for s in samples]))
-    video_paddings  = torch.FloatTensor(np.array([s['video_padding'] for s in samples]))
-
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
     src_tokens = src_tokens.index_select(0, sort_order)
-    videos = videos.index_select(0, sort_order)
+
+    #videos
+    videos_list = [[] for i in range(len(samples[0]["videos_list"]))]
+    for s in samples:
+        for idx, video in enumerate(s["video_list"]):
+            videos_list[idx].append(torch.Tensor(video))
+    for idx, v_tensor in enumerate(videos_list):
+        v_tensor = v_tensor.index_select(0, sort_order)
+        videos_list[idx] = v_tensor
+
+    video_padding_list = [[] for i in range(len(samples[0]["video_padding_list"]))]
+    for s in samples:
+        for idx, video_padding in enumerate(s["video_padding_list"]):
+            video_padding_list[idx].append(torch.Tensor(video_padding))
+    for idx, vp_tensor in enumerate(video_padding_list):
+        vp_tensor = vp_tensor.index_select(0, sort_order)
+        video_padding_list[idx] = vp_tensor
 
 
     prev_output_tokens = None
@@ -318,8 +329,8 @@ class VideoLanguagePairMultiDataset(FairseqDataset):
         src_item = self.src[index]
 
         # video_item,video_padding_item = self.video_dataset[index]  # list for video data
-        video_items = [i[index][0] for i in self.video_datasets]  # list for video data
-        video_padding_items = [i[index][1] for i in self.video_datasets]  # list for video mask data
+        video_items = np.array([i[index][0] for i in self.video_datasets])  # list for video data
+        video_padding_items = np.array([i[index][1] for i in self.video_datasets])  # list for video mask data
 
         # Append EOS to end of tgt sentence if it does not have an EOS and remove
         # EOS from end of src sentence if it exists. This is useful when we use

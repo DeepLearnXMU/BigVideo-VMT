@@ -3,7 +3,7 @@
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
-
+export CUDA_VISIBLE_DEVICES=1
 
 src_lang=en
 tgt_lang=zh
@@ -25,19 +25,17 @@ weight_decay=0.1
 clip_norm=0.0
 arch=transformer_vatex
 gpu_num=1
-mask=mask0    #mask1,2,3,4,c,p
-if [ $mask == "mask0" ]; then
-        local_data_dir=~/data/en_zh.char
-else
-        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
-fi
+mask=mask_verb_35565  #mask1,2,3,4,c,p
+
+local_data_dir=~/data/fairseq_bin_filter/vatex.en-zh.${mask}
 
 
-name=textonly_$mask_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex/masking/$mask/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex/masking/$mask
-local_logs_dir=~/fairseq_logs/vatex/masking/$mask
+name=textonly_filter_${mask}_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}
+
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0809/$mask/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0809/$mask
+local_logs_dir=~/fairseq_logs/vatex_0809/$mask
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
@@ -66,11 +64,12 @@ fairseq-train $local_data_dir   \
   --eval-bleu-remove-bpe  \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric  \
   --patience $patience  \
-  --keep-last-epochs $keep_last_epochs  | tee -a $local_logs_dir/log.${name}
+  --keep-last-epochs $keep_last_epochs   \
+  --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 
 
 echo "---put log to $LOGS_DIR/log.${name}---"
-hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
+hdfs dfs -put -f $local_logs_dir/log.${name}  $LOGS_DIR/log.${name}
 
 

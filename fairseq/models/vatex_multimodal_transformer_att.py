@@ -33,7 +33,7 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
-DEFAULT_VIDEO_LENGTH = 40
+DEFAULT_VIDEO_LENGTH = 32
 
 
 @register_model("vatex_multimodal_transformer_att")
@@ -439,7 +439,7 @@ class TransformerEncoder(FairseqEncoder):
                                                         num_heads=1, attn_drop=args.SA_attention_dropout)
 
         if getattr(args, "video_layernorm_embedding", False):
-            self.video_layernorm_embedding = LayerNorm(embed_dim)
+            self.video_layernorm_embedding = LayerNorm(args.video_feat_dim)
         else:
             self.video_layernorm_embedding = None
 
@@ -465,12 +465,12 @@ class TransformerEncoder(FairseqEncoder):
         return TransformerEncoderLayer(args)
 
     def fuse_video_feat(self, text, video,video_padding_mask):
-        # video = self.video_pre_norm_module(video)
+
         video = self.video_dropout_module(video)
         text = self.text_dropout_module(text)
         video = video.transpose(0, 1)
         text = text.transpose(0, 1)
-        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mask=video_padding_mask)  # t, b, c
+        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mvask=ideo_padding_mask)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_dense(merge))
@@ -512,8 +512,6 @@ class TransformerEncoder(FairseqEncoder):
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
-
-
         return videos
 
     def forward(

@@ -33,7 +33,7 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
-DEFAULT_VIDEO_LENGTH = 40
+DEFAULT_VIDEO_LENGTH = 32
 
 
 @register_model("vatex_fushion_encoder")

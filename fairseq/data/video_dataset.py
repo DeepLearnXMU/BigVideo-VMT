@@ -2,6 +2,9 @@ import os
 import torch
 import numpy as np
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class VideoDataset(torch.utils.data.Dataset):
@@ -35,13 +38,23 @@ class VideoDataset(torch.utils.data.Dataset):
         self.video_list = []
         self.padding_list = []
         self.video_pad = np.random.RandomState(0).normal(loc=0.0, scale=1, size=(video_feat_dim), )
-
+        self.v_len_list = []
         for sent_id in self.sent_id_list:
-            vid = sent_id[:-2]
-            video, padding = self.load_video_features(os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
-                                                      self.max_vid_len)
+            if video_feat_type =="I3D":
+                vid = sent_id[:-2]
+            else:
+                vid = sent_id[:-2].replace("-","")
+            video, padding, v_length = self.load_video_features(
+                os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
+                self.max_vid_len)
+            assert v_length>0
             self.video_list.append(video)
             self.padding_list.append(padding)
+            self.v_len_list.append(v_length)
+        logger.info(f"dataset analysis,{split}")
+        logger.info(f"max_len,{max(self.v_len_list)}")
+        logger.info(f"min_len, {max(self.v_len_list)}")
+        logger.info(f"mean_len, {sum(self.v_len_list) / len(self.v_len_list)}")
 
         assert (len(self.video_list) == len(self.sent_id_list))
         self.size = len(self.sent_id_list)
@@ -52,12 +65,15 @@ class VideoDataset(torch.utils.data.Dataset):
         if not os.path.exists(fpath):
             feats = np.zeros((1, 768))
             empty_flag = True
+            v_length = 0
         elif self.video_feat_type == "I3D":
             feats = np.load(fpath, encoding='latin1')[
                 0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
         elif self.video_feat_type in ["VIT_cls", "VIT_patch_avg"]:
             feats = np.load(fpath, encoding='latin1')
         padding = np.ones(max_length)
+        if not empty_flag:
+            v_length = feats.shape[0]
         if feats.shape[0] < max_length:
             dis = max_length - feats.shape[0]
             padding[feats.shape[0]:] = 0
@@ -71,7 +87,7 @@ class VideoDataset(torch.utils.data.Dataset):
             padding[1:] = 0
         assert feats.shape[0] == max_length
         # mask = np.array(padding, dtype=bool)
-        return np.float32(feats), padding
+        return np.float32(feats), padding, v_length
 
     def __getitem__(self, idx):
 
