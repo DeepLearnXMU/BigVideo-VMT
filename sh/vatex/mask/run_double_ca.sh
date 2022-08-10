@@ -22,12 +22,10 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
-mask=mask_verb_3    #mask1,2,3,4,c,p
-if [ $mask == "mask0" ]; then
-        local_data_dir=~/data/en_zh.char
-else
-        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
-fi
+mask=mask0    #mask1,2,3,4,c,p
+local_data_dir=~/data/fairseq_bin_filter/vatex.en-zh.${mask}
+
+
 fp16=1 #0
 lr=0.001
 warmup=2000
@@ -43,7 +41,7 @@ clip_norm=0.0
 arch=vatex_double_crossatt_pewln
 
 video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
-video_ids_path=~/data/raw_texts/ids
+video_ids_path=~/data/vatex/raw_texts/filter_ids/
 video_feat_type="I3D"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
@@ -65,9 +63,9 @@ gpu_num=1
 
 name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vlen${max_vid_len}
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/${mask}/doubleCA/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/${mask}/doubleCA
-local_logs_dir=~/fairseq_logs/vatex_0731/${mask}/doubleCA
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0809/${mask}/doubleCA/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0809/${mask}/doubleCA
+local_logs_dir=~/fairseq_logs/vatex_0809/${mask}/doubleCA
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
@@ -89,7 +87,6 @@ fairseq-train $local_data_dir \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
-  --log-interval 1 \
   --find-unused-parameters \
   --seed $seed \
   --no-progress-bar  \

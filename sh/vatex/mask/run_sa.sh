@@ -1,11 +1,11 @@
 #!/bin/bash
 
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=4
 src_lang=en
 tgt_lang=zh
 
-criterion=cross_modal_criterion
+criterion=label_smoothed_cross_entropy
 if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=LSCE
     elif [ $criterion == "cross_modal_criterion" ]; then
@@ -15,13 +15,8 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
 fi
 
 
-mask=mask0    #mask1,2,3,4,c,p
-if [ $mask == "mask0" ]; then
-        local_data_dir=~/data/en_zh.char
-else
-        local_data_dir=~/data/vatex/fairseq_bin/vatex.en-zh.${mask}
-fi
-
+mask=mask_verb_35565    #mask1,2,3,4,c,p
+local_data_dir=~/data/fairseq_bin_filter/vatex.en-zh.${mask}
 
 #data=/home/sata/kly/videoNMT/data/raw_texts/data-bin/en_zh
 
@@ -41,8 +36,8 @@ arch=vatex_multimodal_transformer_att_vatex_top_pe
 
 
 video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
-video_ids_path=~/data/raw_texts/ids
-video_feat_type="VIT_cls"
+video_ids_path=~/data/vatex/raw_texts/filter_ids/
+video_feat_type="I3D"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
@@ -65,9 +60,9 @@ gpu_num=1
 
 
 name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}_avdp${SA_video_dropout}_aadp${SA_attention_dropout}_vtype${video_feat_type}_vlen${max_vid_len}
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0731/${mask}/sa/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0731/${mask}/sa
-local_logs_dir=~/fairseq_logs/vatex_0731/${mask}/sa
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0809/${mask}/sa/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0809/${mask}/sa
+local_logs_dir=~/fairseq_logs/vatex_0809/${mask}/sa
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
