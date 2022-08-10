@@ -34,7 +34,7 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
-DEFAULT_VIDEO_LENGTH = 40
+DEFAULT_VIDEO_LENGTH = 32
 
 
 @register_model("vatex_double_crossatt")
@@ -709,7 +709,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         self.video_embed_positions = (
             PositionalEmbedding(
-                args.max_video_positions,
+                args.max_vid_len,
                 embed_dim,
                 self.padding_idx,
                 learned=args.video_learned_pos,
@@ -1051,8 +1051,8 @@ def base_architecture(args):
     args.no_cross_attention = getattr(args, 'no_cross_attention', False)
     args.cross_self_attention = getattr(args, 'cross_self_attention', False)
     args.layer_wise_attention = getattr(args, 'layer_wise_attention', False)
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     args.decoder_output_dim = getattr(args, 'decoder_output_dim', args.decoder_embed_dim)
     args.decoder_input_dim = getattr(args, 'decoder_input_dim', args.decoder_embed_dim)

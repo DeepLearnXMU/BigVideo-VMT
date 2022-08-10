@@ -196,8 +196,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='fuse img feat after text encoding')
         parser.add_argument('--pe-for-video', type=bool,
                            help='video for position ')
-        parser.add_argument('--max-video-positions', type=int,default=40,
-                            help='max vid len')
         parser.add_argument('--SA-video-dropout', type=float,
                             help='video feat dropout before SA')
         parser.add_argument('--SA-text-dropout', type=float,
@@ -422,7 +420,7 @@ class TransformerEncoder(FairseqEncoder):
 
         self.video_embed_positions = (
             PositionalEmbedding(
-                args.max_video_positions,
+                args.max_vid_len,
                 args.video_feat_dim,
                 self.padding_idx,
                 learned=args.encoder_learned_pos,
@@ -691,7 +689,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         args (argparse.Namespace): parsed command-line arguments
         dictionary (~fairseq.data.Dictionary): decoding dictionary
         embed_tokens (torch.nn.Embedding): output embedding
-        no_encoder_attn (bool, optional): whether to attend to encoder outputs
         no_encoder_attn (bool, optional): whether to attend to encoder outputs
             (default: False).
     """
@@ -1144,8 +1141,8 @@ def vatex_multimodal_transformer_att_vatex_top_pe(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
@@ -1167,8 +1164,8 @@ def vatex_multimodal_transformer_att_vatex_top_nope(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
@@ -1191,8 +1188,8 @@ def vatex_multimodal_transformer_att_vatex_top_pe_prenorm(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
 
 
@@ -1215,8 +1212,8 @@ def vatex_multimodal_transformer_att_vatex_top_nope_prenorm(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
 
 
@@ -1238,8 +1235,8 @@ def vatex_multimodal_transformer_att_vatex_top_pewln(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
 
@@ -1264,8 +1261,8 @@ def vatex_multimodal_transformer_att_vatex_top_pewoln(args):
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
 

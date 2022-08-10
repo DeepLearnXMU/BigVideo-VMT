@@ -33,7 +33,7 @@ from torch import Tensor
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
-DEFAULT_VIDEO_LENGTH = 40
+DEFAULT_VIDEO_LENGTH = 32
 
 
 @register_model("vatex_transformer_sa")
@@ -441,6 +441,9 @@ class TransformerEncoder(FairseqEncoder):
         return TransformerEncoderLayer(args)
 
     def fuse_video_feat(self, text, video, video_padding_mask):
+
+        video = self.video_dropout_module(video)
+        text = self.text_dropout_module(text)
 
         video = video.transpose(0, 1)
         text = text.transpose(0, 1)
