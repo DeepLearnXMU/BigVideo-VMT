@@ -33,7 +33,7 @@ class VideoDataset(torch.utils.data.Dataset):
             self.video_dir = "cls/" + split
 
         elif video_feat_type == "VIT_patch_avg":
-            self.video_dir = "patch_avg/" + split
+            self.video_dir = "patch/" + split
 
         self.video_list = []
         self.padding_list = []

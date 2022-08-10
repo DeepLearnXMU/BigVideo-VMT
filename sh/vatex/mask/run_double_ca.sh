@@ -40,16 +40,16 @@ weight_decay=0.1
 clip_norm=0.0
 arch=vatex_double_crossatt_pewln
 
-video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
+video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 video_ids_path=~/data/vatex/raw_texts/filter_ids/
 video_feat_type="I3D"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
-        video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
+        video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
         max_vid_len=15
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
-        video_feat_path=~/data/vatex/video/images_resized/vit_base_patch16_224
+        video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
         max_vid_len=200
   elif [ $video_feat_type == "I3D" ]; then
         video_feat_dim=1024

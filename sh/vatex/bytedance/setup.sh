@@ -7,13 +7,13 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 mkdir ~/data
 mkdir -p ~/data/vatex/
-mkdir -p ~/data/vatex/video/images_resized/vit_base_patch16_224
+mkdir -p ~/data/vatex/video/images_resized_r3/vit_base_patch16_224/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.tar.gz ~/data/en_zh.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/vatex_features.tar.gz ~/data/vatex_features.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/raw_texts.tar.gz ~/data/vatex/raw_texts.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized/vit_base_patch16_224/cls.tar.gz ~/data/vatex/video/images_resized/vit_base_patch16_224
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized/vit_base_patch16_224/patch_avg.tar.gz ~/data/vatex/video/images_resized/vit_base_patch16_224
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/cls.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/patch.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/fairseq_bin_filter.tar.gz ~/data/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/masking ~/data/vatex/
@@ -26,9 +26,9 @@ cd ~/data/vatex/
 tar -zxvf raw_texts.tar.gz
 mv ~/data/vatex/raw_texts/filter_ids/dev.ids ~/data/vatex/raw_texts/filter_ids/valid.ids
 
-cd ~/data/vatex/video/images_resized/vit_base_patch16_224
+cd ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 tar -zxvf cls.tar.gz
-tar -zxvf patch_avg.tar.gz
+tar -zxvf patch.tar.gz
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
