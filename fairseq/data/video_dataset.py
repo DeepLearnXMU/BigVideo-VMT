@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import random
 import logging
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -39,22 +40,25 @@ class VideoDataset(torch.utils.data.Dataset):
         self.padding_list = []
         self.video_pad = np.random.RandomState(0).normal(loc=0.0, scale=1, size=(video_feat_dim), )
         self.v_len_list = []
+        empty_count = 0
         for sent_id in self.sent_id_list:
-            if video_feat_type =="I3D":
+
+            if video_feat_type == "I3D":
                 vid = sent_id[:-2]
             else:
-                vid = sent_id[:-2].replace("-","")
+                vid = sent_id[:-2].replace("-", "")
             video, padding, v_length = self.load_video_features(
                 os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
                 self.max_vid_len)
-            assert v_length>0
+            if v_length == 0:
+                empty_count += 1
             self.video_list.append(video)
             self.padding_list.append(padding)
             self.v_len_list.append(v_length)
         logger.info(f"dataset analysis,{split}")
         logger.info(f"max_len,{max(self.v_len_list)}")
         logger.info(f"min_len, {max(self.v_len_list)}")
-        logger.info(f"mean_len, {sum(self.v_len_list) / len(self.v_len_list)}")
+        logger.info(f"empty, {empty_count}")
 
         assert (len(self.video_list) == len(self.sent_id_list))
         self.size = len(self.sent_id_list)

@@ -466,7 +466,7 @@ class TransformerEncoder(FairseqEncoder):
         text = self.text_dropout_module(text)
         video = video.transpose(0, 1)
         text = text.transpose(0, 1)
-        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mvask=video_padding_mask)  # t, b, c
+        output, _map = self.video_atts(query=text, key=video, value=video,key_padding_mask=video_padding_mask)  # t, b, c
 
         merge = torch.cat([output, text], dim=-1)
         gate = torch.sigmoid(self.gate_dense(merge))
