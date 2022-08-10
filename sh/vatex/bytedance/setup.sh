@@ -24,6 +24,7 @@ tar -zxvf vatex_features.tar.gz
 tar -zxvf fairseq_bin_filter.tar.gz
 cd ~/data/vatex/
 tar -zxvf raw_texts.tar.gz
+mv ~/data/vatex/raw_texts/filter_ids/dev.ids ~/data/vatex/raw_texts/filter_ids/valid.ids
 
 cd ~/data/vatex/video/images_resized/vit_base_patch16_224
 tar -zxvf cls.tar.gz

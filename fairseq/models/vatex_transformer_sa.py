@@ -196,10 +196,13 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='fuse img feat after text encoding')
         parser.add_argument('--pe-for-video', type=bool,
                             help='video for position ')
-        parser.add_argument('--max-video-positions', type=int, default=40,
-                            help='max vid len')
+
         parser.add_argument('--SA-attention-dropout', type=float,
                             help='selective attn\'s dropout')
+        parser.add_argument('--SA-video-dropout', type=float,
+                            help='video feat dropout before SA')
+        parser.add_argument('--SA-text-dropout', type=float,
+                            help='text feat dropout before SA')
 
     @classmethod
     def build_model(cls, args, task):
@@ -400,9 +403,16 @@ class TransformerEncoder(FairseqEncoder):
 
         self.is_fusion_top = args.is_fusion_top
 
+        self.video_dropout_module = FairseqDropout(
+            args.SA_video_dropout, module_name=self.__class__.__name__
+        )
+        self.text_dropout_module = FairseqDropout(
+            args.SA_text_dropout, module_name=self.__class__.__name__
+        )
+
         self.video_embed_positions = (
             PositionalEmbedding(
-                args.max_video_positions,
+                args.max_vid_len,
                 embed_dim,
                 self.padding_idx,
                 learned=args.encoder_learned_pos,
@@ -1122,8 +1132,8 @@ def vatex_transformer_sa_vatex_top_pe(args):
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
@@ -1144,8 +1154,8 @@ def vatex_transformer_sa_vatex_top_nope(args):
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     base_architecture(args)
 
@@ -1166,8 +1176,8 @@ def vatex_transformer_sa_vatex_top_pe_prenorm(args):
     args.video_pre_norm = getattr(args, 'video_pre_norm', True)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
 
 
@@ -1189,8 +1199,8 @@ def vatex_transformer_sa_vatex_top_nope_prenorm(args):
 
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
     base_architecture(args)
 
 
@@ -1207,10 +1217,12 @@ def vatex_transformer_sa_top_pewln(args):
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
 
@@ -1231,10 +1243,12 @@ def vatex_transformer_sa_top_pewoln(args):
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_pre_norm = getattr(args, 'video_pre_norm', False)
+    args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
+    args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
 
-    if getattr(args, "max_video_positions", None) is None:
-        args.max_video_positions = DEFAULT_VIDEO_LENGTH
+    if getattr(args, "max_vid_len", None) is None:
+        args.max_vid_len = DEFAULT_VIDEO_LENGTH
 
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
 

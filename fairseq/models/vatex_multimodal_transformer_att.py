@@ -411,9 +411,7 @@ class TransformerEncoder(FairseqEncoder):
         self.text_dropout_module = FairseqDropout(
             args.SA_text_dropout, module_name=self.__class__.__name__
         )
-        self.video_pre_norm_module = nn.Identity()
-        if args.video_pre_norm:
-            self.video_pre_norm_module = nn.LayerNorm(args.video_feat_dim, 1e-5, True)
+
 
         self.is_fusion_top = args.is_fusion_top
 
