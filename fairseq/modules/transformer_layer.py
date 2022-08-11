@@ -501,6 +501,18 @@ class TransformerDecoderFushionLayer(nn.Module):
         self.video_attn_layer_norm = LayerNorm(self.embed_dim, export=export)
         self.video_att_before = video_att_before
 
+        self.residual_policy = args.residual_policy
+        self.video_alpha = 1.0
+        if not args.residual_policy:
+            if args.residual_policy == "learning_alpha":
+                self.video_alpha = torch.nn.Parameter(torch.FloatTensor(1), requires_grad=True)
+                self.video_alpha.data.fill_(args.ini_alpha)
+            elif args.residual_policy == "input_wise":
+                self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
+
+
+
+
     def build_fc1(self, input_dim, output_dim, q_noise, qn_block_size):
         return quant_noise(nn.Linear(input_dim, output_dim), q_noise, qn_block_size)
 
@@ -654,7 +666,16 @@ class TransformerDecoderFushionLayer(nn.Module):
                 need_head_weights=need_head_weights,
             )
             x = self.dropout_module(x)
-            x = self.controlled_residual_connection(x, residual)
+            if self.residual_policy:
+                if self.residual_policy == "learning_alpha":
+                    video_alpha = torch.tanh(self.video_alpha)
+                    x = self.controlled_residual_connection(x, residual, alpha=video_alpha)
+                elif self.residual_policy == "input_wise":
+                    merge = torch.cat([x, residual], dim=-1)
+                    gate = torch.sigmoid(self.gate_dense(merge))
+                    x = (1 - gate) * residual + gate * x
+            else:
+                x = self.controlled_residual_connection(x, residual, alpha=1.0)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 
@@ -722,7 +743,16 @@ class TransformerDecoderFushionLayer(nn.Module):
                 need_head_weights=need_head_weights,
             )
             x = self.dropout_module(x)
-            x = self.controlled_residual_connection(x, residual)
+            if self.residual_policy:
+                if self.residual_policy == "learning_alpha":
+                    video_alpha = torch.tanh(self.video_alpha)
+                    x = self.controlled_residual_connection(x, residual, alpha=video_alpha)
+                elif self.residual_policy == "input_wise":
+                    merge = torch.cat([x, residual], dim=-1)
+                    gate = torch.sigmoid(self.gate_dense(merge))
+                    x = (1 - gate) * residual + gate * x
+            else:
+                x = self.controlled_residual_connection(x, residual, alpha=1.0)
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 

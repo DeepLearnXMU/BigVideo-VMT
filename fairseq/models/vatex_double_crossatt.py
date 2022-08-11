@@ -195,6 +195,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
         parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
+        parser.add_argument('--residual-policy', type=str,help="")
+        parser.add_argument('--ini-alpha', type=float,help="" )
+        residual_policy
+        args.ini_alpha
 
     @classmethod
     def build_model(cls, args, task):
@@ -1060,7 +1064,7 @@ def base_architecture(args):
     args.no_scale_embedding = getattr(args, 'no_scale_embedding', False)
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
-    # fushion_encoder
+    # video
 
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
