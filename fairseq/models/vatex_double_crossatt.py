@@ -197,8 +197,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
         parser.add_argument('--residual-policy', type=str,help="")
         parser.add_argument('--ini-alpha', type=float,help="" )
-        residual_policy
-        args.ini_alpha
+
 
     @classmethod
     def build_model(cls, args, task):
@@ -892,13 +891,14 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
+        layer_alphas={}
         for idx, layer in enumerate(self.layers):
             if incremental_state is None and not full_context_alignment:
                 self_attn_mask = self.buffered_future_mask(x)
             else:
                 self_attn_mask = None
 
-            x, layer_attn, _ = layer(
+            x, layer_attn, _, layer_alpha  = layer(
                 x,
                 encoder_out.encoder_out if encoder_out is not None else None,
                 encoder_out.encoder_padding_mask if encoder_out is not None else None,
@@ -911,6 +911,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 video_padding_mask=video_padding_mask
             )
             inner_states.append(x)
+            layer_alphas[idx]=layer_alpha
             if layer_attn is not None and idx == alignment_layer:
                 attn = layer_attn.float().to(x)
 
@@ -933,7 +934,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.encoder_out.transpose(0, 1),
                    "video_h": video_h,
                    "text_padding_mask": encoder_out.encoder_padding_mask,
-                   "video_padding_mask": video_padding_mask}
+                   "video_padding_mask": video_padding_mask,
+                   "layer_video_alphas":layer_alphas}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
@@ -1162,6 +1164,10 @@ def vatex_double_crossatt_be_pewoln(args):
 
 
     base_architecture(args)
+
+
+
+
 
 
 

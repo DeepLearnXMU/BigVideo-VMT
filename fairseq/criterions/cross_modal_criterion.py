@@ -10,6 +10,10 @@ import torch
 from fairseq import metrics, utils
 from fairseq.criterions import FairseqCriterion, register_criterion
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=True):
     if target.dim() == lprobs.dim() - 1:
@@ -40,7 +44,8 @@ class CrossModalCriterion(FairseqCriterion):
             label_smoothing,
             ignore_prefix_size=0,
             report_accuracy=False,
-            report_modal_similarity=False
+            report_modal_similarity=False,
+            report_layer_alpha=False
     ):
         super().__init__(task)
         self.sentence_avg = sentence_avg
@@ -48,6 +53,7 @@ class CrossModalCriterion(FairseqCriterion):
         self.ignore_prefix_size = ignore_prefix_size
         self.report_accuracy = report_accuracy
         self.report_modal_similarity = report_modal_similarity
+        self.report_layer_alpha = report_layer_alpha
 
     @staticmethod
     def add_args(parser):
@@ -62,6 +68,8 @@ class CrossModalCriterion(FairseqCriterion):
         parser.add_argument('--report-modal-similarity', action='store_true',
                             help='report accuracy metric')
         # fmt: on
+        parser.add_argument('--report-layer-alpha', action='store_true',
+                            help='report layer alphas')
 
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
@@ -90,18 +98,25 @@ class CrossModalCriterion(FairseqCriterion):
             logging_output["total"] = utils.item(total.data)
 
         if self.report_modal_similarity:
-            text_h = net_output[1]['text_h'].detach()   # B, t_len , C
+            text_h = net_output[1]['text_h'].detach()  # B, t_len , C
             video_h = net_output[1]['video_h'].detach()
 
-            text_padding_mask=net_output[1]["text_padding_mask"].detach()  # B, t_len
+            text_padding_mask = net_output[1]["text_padding_mask"].detach()  # B, t_len
             video_padding_mask = net_output[1]["video_padding_mask"].detach()
-            text_h= text_h * (~text_padding_mask).float().unsqueeze(-1)
+            text_h = text_h * (~text_padding_mask).float().unsqueeze(-1)
             text_mean = torch.mean(text_h, dim=1)
             video_h = video_h * (~video_padding_mask).float().unsqueeze(-1)
             video_mean = torch.mean(video_h, dim=1)
 
             sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
+
+        if self.report_layer_alpha:
+            if model.training:
+                layer_alphas = net_output[1]['layer_video_alphas']
+                logging_output["layer_alphas"] = layer_alphas
+
+                logger.info(layer_alphas)
 
         return loss, sample_size, logging_output
 

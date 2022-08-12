@@ -503,12 +503,12 @@ class TransformerDecoderFushionLayer(nn.Module):
 
         self.residual_policy = args.residual_policy
         self.video_alpha = 1.0
-        if not args.residual_policy:
+        if args.residual_policy:
             if args.residual_policy == "learning_alpha":
-                self.video_alpha = torch.nn.Parameter(torch.FloatTensor(1), requires_grad=True)
+                self.video_alpha = torch.nn.Parameter(torch.Tensor(1), requires_grad=True)
                 self.video_alpha.data.fill_(args.ini_alpha)
             elif args.residual_policy == "input_wise":
-                self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
+                self.gate_dense = nn.Linear(2 * self.embed_dim, self.embed_dim)
 
 
 
@@ -743,6 +743,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 need_head_weights=need_head_weights,
             )
             x = self.dropout_module(x)
+
             if self.residual_policy:
                 if self.residual_policy == "learning_alpha":
                     video_alpha = torch.tanh(self.video_alpha)
@@ -751,8 +752,10 @@ class TransformerDecoderFushionLayer(nn.Module):
                     merge = torch.cat([x, residual], dim=-1)
                     gate = torch.sigmoid(self.gate_dense(merge))
                     x = (1 - gate) * residual + gate * x
+                    video_alpha= gate.detach().mean().data
             else:
                 x = self.controlled_residual_connection(x, residual, alpha=1.0)
+                video_alpha=1.0
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 
@@ -775,7 +778,7 @@ class TransformerDecoderFushionLayer(nn.Module):
             else:
                 self_attn_state = [saved_state["prev_key"], saved_state["prev_value"]]
             return x, attn, self_attn_state
-        return x, attn, None
+        return x, attn, None , video_alpha
 
     def make_generation_fast_(self, need_attn: bool = False, **kwargs):
         self.need_attn = need_attn

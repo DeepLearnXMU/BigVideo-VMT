@@ -38,6 +38,8 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
+residual_policy="learning_alpha"
+ini_alpha=0.0
 arch=vatex_double_crossatt_pewln
 
 video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
@@ -61,7 +63,7 @@ fi
 gpu_num=1
 
 
-name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vlen${max_vid_len}
+name=vatex_${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_vlen${max_vid_len}_rp${residual_policy}_ia${ini_alpha}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_0809/${mask}/doubleCA/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_0809/${mask}/doubleCA
@@ -102,6 +104,7 @@ fairseq-train $local_data_dir \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
   --max-vid-len $max_vid_len   \
+  --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $output_dir/log.${name}---"
