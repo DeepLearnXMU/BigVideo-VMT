@@ -29,6 +29,8 @@ mv ~/data/vatex/raw_texts/filter_ids/dev.ids ~/data/vatex/raw_texts/filter_ids/v
 cd ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 tar -zxvf cls.tar.gz
 tar -zxvf patch.tar.gz
+mv cls/dev cls/valid
+mv patch/dev patch/valid
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
