@@ -84,7 +84,7 @@ fairseq-train $local_data_dir \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
-  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity \
+  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity --report-layer-alpha \
   --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
@@ -108,7 +108,7 @@ fairseq-train $local_data_dir \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $output_dir/log.${name}---"
-hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
+hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
 put_result=$?
 if [ $put_result == 1  ]; then

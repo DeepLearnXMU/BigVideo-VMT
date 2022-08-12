@@ -753,6 +753,8 @@ class TransformerDecoderFushionLayer(nn.Module):
                     gate = torch.sigmoid(self.gate_dense(merge))
                     x = (1 - gate) * residual + gate * x
                     video_alpha= gate.detach().mean().data
+                else:
+                    x = self.controlled_residual_connection(x, residual, alpha=self.video_alpha)
             else:
                 x = self.controlled_residual_connection(x, residual, alpha=1.0)
                 video_alpha=1.0

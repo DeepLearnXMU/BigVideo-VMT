@@ -105,7 +105,7 @@ fairseq-train $local_data_dir \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $output_dir/log.${name}---"
-hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/log.${name}
+hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 put_result=$?
 if [ $put_result == 1  ]; then
         hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
