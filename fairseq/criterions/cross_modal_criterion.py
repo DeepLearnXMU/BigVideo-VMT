@@ -54,6 +54,7 @@ class CrossModalCriterion(FairseqCriterion):
         self.report_accuracy = report_accuracy
         self.report_modal_similarity = report_modal_similarity
         self.report_layer_alpha = report_layer_alpha
+        self.decoder_layers = task.args.decoder_layers
 
     @staticmethod
     def add_args(parser):
@@ -112,11 +113,13 @@ class CrossModalCriterion(FairseqCriterion):
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
 
         if self.report_layer_alpha:
-            if model.training:
-                layer_alphas = net_output[1]['layer_video_alphas']
-                logging_output["layer_alphas"] = layer_alphas
 
-                logger.info(layer_alphas)
+            layer_alphas = net_output[1]['layer_video_alphas']
+            for key in layer_alphas:
+                logging_output[f"layer{key}_alpha"] = layer_alphas[key]
+            logging_output["decoder_layers"] = self.decoder_layers
+            # logging_output["layer_alphas"] = layer_alphas
+            # logger.info(layer_alphas)
 
         return loss, sample_size, logging_output
 
@@ -190,6 +193,13 @@ class CrossModalCriterion(FairseqCriterion):
         metrics.log_scalar(
             "modal_similarity", modal_similarity_sum / len(logging_outputs), round=5
         )
+
+        decoder_layers = sum(log.get("decoder_layers", 0) for log in logging_outputs) / len(logging_outputs)
+        for layer in range(int(decoder_layers)):
+            layer_alpha_sum = sum(log.get(f"layer{layer}_alpha", 0) for log in logging_outputs)
+            metrics.log_scalar(
+                f"layer{layer}_alpha", layer_alpha_sum / len(logging_outputs), round=5
+            )
 
     @staticmethod
     def logging_outputs_can_be_summed() -> bool:
