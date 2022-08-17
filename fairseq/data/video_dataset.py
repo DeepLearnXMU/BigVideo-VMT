@@ -47,9 +47,14 @@ class VideoDataset(torch.utils.data.Dataset):
                 vid = sent_id[:-2]
             else:
                 vid = sent_id[:-2].replace("-", "")
-            video, padding, v_length = self.load_video_features(
-                os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
-                self.max_vid_len)
+            if self.video_feat_type in ["slowfast","slowfast13"]:
+                video, padding, v_length = self.load_video_features(
+                    os.path.join(self.video_feat_path, self.video_dir, vid + '.npz'),
+                    self.max_vid_len)
+            else:
+                video, padding, v_length = self.load_video_features(
+                    os.path.join(self.video_feat_path, self.video_dir, vid + '.npy'),
+                    self.max_vid_len)
             if v_length == 0:
                 empty_count += 1
             self.video_list.append(video)
@@ -57,7 +62,8 @@ class VideoDataset(torch.utils.data.Dataset):
             self.v_len_list.append(v_length)
         logger.info(f"dataset analysis,{split}")
         logger.info(f"max_len,{max(self.v_len_list)}")
-        logger.info(f"min_len, {max(self.v_len_list)}")
+        logger.info(f"min_len, {min(self.v_len_list)}")
+        logger.info(f"avg_len, {sum(self.v_len_list)/len(self.v_len_list)}")
         logger.info(f"empty, {empty_count}")
 
         assert (len(self.video_list) == len(self.sent_id_list))
@@ -75,6 +81,8 @@ class VideoDataset(torch.utils.data.Dataset):
                 0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
         elif self.video_feat_type in ["VIT_cls", "VIT_patch_avg"]:
             feats = np.load(fpath, encoding='latin1')
+        elif self.video_feat_type in ["slowfast","slowfast13"]:
+            feats = np.load(fpath, encoding='latin1')["feature"]
         padding = np.ones(max_length)
         if not empty_flag:
             v_length = feats.shape[0]
