@@ -755,9 +755,10 @@ class TransformerDecoderFushionLayer(nn.Module):
                     video_alpha= gate.detach().mean().data
                 else:
                     x = self.controlled_residual_connection(x, residual, alpha=self.video_alpha)
+                    video_alpha=self.video_alpha
             else:
                 x = self.controlled_residual_connection(x, residual, alpha=1.0)
-                video_alpha=1.0
+                video_alpha=self.video_alpha
             if not self.normalize_before:
                 x = self.video_attn_layer_norm(x)
 
