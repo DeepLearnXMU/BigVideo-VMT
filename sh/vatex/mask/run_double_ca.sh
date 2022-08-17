@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=2
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
@@ -22,7 +22,7 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
-mask=mask0    #mask1,2,3,4,c,p
+mask=mask_verb_35565    #mask1,2,3,4,c,p
 local_data_dir=~/data/fairseq_bin_filter/vatex.en-zh.${mask}
 
 
@@ -38,13 +38,13 @@ dropout=0.3
 seed=1207
 weight_decay=0.1
 clip_norm=0.0
-residual_policy="learning_alpha"
+residual_policy="None"
 ini_alpha=0.0
 arch=vatex_double_crossatt_pewln
 
 video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 video_ids_path=~/data/vatex/raw_texts/filter_ids/
-video_feat_type="I3D"
+video_feat_type="slowfast13"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=~/data/vatex/video/images_resized_r3/vit_base_patch16_224
@@ -57,6 +57,18 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=1024
         video_feat_path=~/data/vatex_features/
         max_vid_len=32
+  elif [ $video_feat_type == "slowfast" ]; then
+        video_feat_dim=2304
+        video_feat_path=~/data/vatex/video/slowfast/
+        max_vid_len=36
+  elif [ $video_feat_type == "slowfast13" ]; then
+        video_feat_dim=2304
+        video_feat_path=~/data/vatex/video/slowfast13/
+        max_vid_len=54
+  elif [ $video_feat_type == "clip" ]; then
+        video_feat_dim=512
+        video_feat_path=~/data/vatex/video/clip/
+        max_vid_len=54
 fi
 
 

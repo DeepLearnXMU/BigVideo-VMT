@@ -35,7 +35,7 @@ class VideoDataset(torch.utils.data.Dataset):
 
         elif video_feat_type == "VIT_patch_avg":
             self.video_dir = "patch/" + split
-        elif video_feat_type in ["slowfast","slowfast13"]:
+        elif video_feat_type in ["slowfast","slowfast13","clip"]:
             self.video_dir = split
 
         self.video_list = []
@@ -75,7 +75,7 @@ class VideoDataset(torch.utils.data.Dataset):
         feats = np.array([])
         empty_flag = False
         if not os.path.exists(fpath):
-            feats = np.zeros((1, 768))
+            feats = np.zeros((1, self.video_feat_dim))
             empty_flag = True
             v_length = 0
         elif self.video_feat_type == "I3D":
@@ -83,7 +83,7 @@ class VideoDataset(torch.utils.data.Dataset):
                 0]  # encoding='latin1' to handle the inconsistency between python 2 and 3
         elif self.video_feat_type in ["VIT_cls", "VIT_patch_avg"]:
             feats = np.load(fpath, encoding='latin1')
-        elif self.video_feat_type in ["slowfast","slowfast13"]:
+        elif self.video_feat_type in ["slowfast","slowfast13","clip"]:
             feats = np.load(fpath, encoding='latin1')["features"]
         padding = np.ones(max_length)
         if not empty_flag:
