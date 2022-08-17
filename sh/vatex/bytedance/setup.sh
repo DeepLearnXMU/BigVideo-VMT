@@ -15,6 +15,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/cls.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/patch.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast.tar.gz ~/data/vatex/video/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast13.tar.gz ~/data/vatex/video/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/fairseq_bin_filter.tar.gz ~/data/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/masking ~/data/vatex/
@@ -34,6 +35,7 @@ mv cls/dev cls/valid
 mv patch/dev patch/valid
 cd ~/data/vatex/video/
 tar -zxvf slowfast.tar.gz
+tar -zxvf slowfast13.tar.gz
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
