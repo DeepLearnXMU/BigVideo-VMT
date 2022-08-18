@@ -49,7 +49,7 @@ class VideoDataset(torch.utils.data.Dataset):
                 vid = sent_id[:-2]
             else:
                 vid = sent_id[:-2].replace("-", "")
-            if self.video_feat_type in ["slowfast","slowfast13"]:
+            if self.video_feat_type in ["slowfast","slowfast13","clip"]:
                 video, padding, v_length = self.load_video_features(
                     os.path.join(self.video_feat_path, self.video_dir, vid + '.npz'),
                     self.max_vid_len)
