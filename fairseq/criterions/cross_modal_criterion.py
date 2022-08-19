@@ -104,11 +104,13 @@ class CrossModalCriterion(FairseqCriterion):
 
             text_padding_mask = net_output[1]["text_padding_mask"].detach()  # B, t_len
             video_padding_mask = net_output[1]["video_padding_mask"].detach()
-            text_h = text_h * (~text_padding_mask).float().unsqueeze(-1)
-            text_mean = torch.mean(text_h, dim=1)
-            video_h = video_h * (~video_padding_mask).float().unsqueeze(-1)
-            video_mean = torch.mean(video_h, dim=1)
+            text_padding_mask = (~text_padding_mask).float()
+            video_padding_mask = (~video_padding_mask).float()
 
+            text_mean = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(dim=1).unsqueeze(
+                -1)
+            video_mean = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                dim=1).unsqueeze(-1)
             sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
 
