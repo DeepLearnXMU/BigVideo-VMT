@@ -1072,7 +1072,7 @@ def base_architecture(args):
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
     args.video_att_before = getattr(args, 'video_att_before', False)
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
-
+    args.residual_policy = getattr(args, 'residual_policy', None)
 
 @register_model_architecture('vatex_double_crossatt', 'vatex_double_crossatt_pewln')
 def vatex_double_crossatt_pewln(args):
