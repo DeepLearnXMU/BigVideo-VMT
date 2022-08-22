@@ -736,7 +736,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
             video_position_ids = video_position_ids + self.padding_idx +1
-            video_position_ids.masked_fill_(video_padding_mask, 1)
+            video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
