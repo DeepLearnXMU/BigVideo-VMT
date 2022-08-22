@@ -69,6 +69,10 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=512
         video_feat_path=~/data/vatex/video/clip/
         max_vid_len=54
+  elif [ $video_feat_type == "videoswin" ]; then
+        video_feat_dim=1024
+        video_feat_path=~/data/vatex/video/videoswin/
+        max_vid_len=12
 fi
 
 
