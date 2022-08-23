@@ -42,7 +42,7 @@ def load_Videolangpair_dataset(
         max_source_positions,
         max_target_positions,
         video_feat_path_list,  # extra video mmt parameter
-        video_ids_path,    # extra video id
+        video_ids_path,  # extra video id
         video_feat_type_list,
         max_vid_len_list,
         video_feat_dim_list,
@@ -144,12 +144,14 @@ def load_Videolangpair_dataset(
                 align_path, None, dataset_impl
             )
 
-    video_dataset_list=[]
-    for (video_feat_path,max_vid_len,video_feat_type,video_feat_dim) in zip(video_feat_path_list,max_vid_len_list,video_feat_type_list,video_feat_dim_list):
-        video_dataset = VideoDataset(video_feat_path, video_ids_path,max_vid_len,split,video_feat_type,video_feat_dim)
+    video_dataset_list = []
+    for (video_feat_path, max_vid_len, video_feat_type, video_feat_dim) in zip(video_feat_path_list, max_vid_len_list,
+                                                                               video_feat_type_list,
+                                                                               video_feat_dim_list):
+        video_dataset = VideoDataset(video_feat_path, video_ids_path, max_vid_len, split, video_feat_type,
+                                     video_feat_dim)
         assert len(video_dataset) == len(src_dataset)
         video_dataset_list.append(video_dataset)
-
 
     tgt_dataset_sizes = tgt_dataset.sizes if tgt_dataset is not None else None
 
@@ -245,16 +247,15 @@ class VatexTranslationMultiFeatsTask(LegacyFairseqTask):
                             help='print sample generations during validation')
         # fmt: on
         # video multimodal translation
-        parser.add_argument('--video-feat-path', nargs='+',type=str,
+        parser.add_argument('--video-feat-path', nargs='+', type=str,
                             help='image features path')
-        parser.add_argument('--video-ids-path',type=str)
-        parser.add_argument('--video-feat-dim',nargs='+', type=int,
+        parser.add_argument('--video-ids-path', type=str)
+        parser.add_argument('--video-feat-dim', nargs='+', type=int,
                             help='video features dimension')
-        parser.add_argument('--max-vid-len',nargs='+',type=int,
-                           help='video features len')
-        parser.add_argument('--video-feat-type', nargs='+',type=str,
+        parser.add_argument('--max-vid-len', nargs='+', type=int,
+                            help='video features len')
+        parser.add_argument('--video-feat-type', nargs='+', type=str,
                             help='video features type')
-
 
     def __init__(self, args, src_dict, tgt_dict):
         super().__init__(args)
@@ -270,6 +271,11 @@ class VatexTranslationMultiFeatsTask(LegacyFairseqTask):
         """
         args.left_pad_source = utils.eval_bool(args.left_pad_source)
         args.left_pad_target = utils.eval_bool(args.left_pad_target)
+
+        print(args.video_feat_path)
+        print(args.video_feat_dim)
+        print(args.max_vid_len)
+        print(args.video_feat_type)
 
         paths = utils.split_paths(args.data)
         assert len(paths) > 0
@@ -333,11 +339,11 @@ class VatexTranslationMultiFeatsTask(LegacyFairseqTask):
             num_buckets=self.args.num_batch_buckets,
             shuffle=(split != "test"),
             pad_to_multiple=self.args.required_seq_len_multiple,
-            video_feat_path=self.args.video_feat_path,
+            video_feat_path_list=self.args.video_feat_path,
             video_ids_path=self.args.video_ids_path,
-            video_feat_type=self.args.video_feat_type,
-            max_vid_len=self.args.max_vid_len,
-            video_feat_dim=self.args.video_feat_dim
+            video_feat_type_list=self.args.video_feat_type,
+            max_vid_len_list=self.args.max_vid_len,
+            video_feat_dim_list=self.args.video_feat_dim
         )
 
     '''
