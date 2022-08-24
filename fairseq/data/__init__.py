@@ -43,7 +43,7 @@ from .prepend_dataset import PrependDataset
 from .prepend_token_dataset import PrependTokenDataset
 from .raw_label_dataset import RawLabelDataset
 from .raw_video_dataset import RawVideoDataset
-from .raw_video_language_dataset import RawVideoLanguageDataset
+from .raw_video_language_pair_dataset import RawVideoLanguageDataset
 from .replace_dataset import ReplaceDataset
 from .resampling_dataset import ResamplingDataset
 from .roll_dataset import RollDataset
