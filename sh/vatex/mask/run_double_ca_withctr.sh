@@ -98,7 +98,7 @@ fairseq-train $local_data_dir \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
-  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity --report-layer-alpha \
+  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity  \
   --contrastive-weight ${contrastive_weight}  --contrastive-temperature ${contrastive_temperature} \
   --task vatex_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
@@ -122,7 +122,7 @@ fairseq-train $local_data_dir \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
-echo "---put log to $output_dir/log.${name}---"
+echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
 put_result=$?

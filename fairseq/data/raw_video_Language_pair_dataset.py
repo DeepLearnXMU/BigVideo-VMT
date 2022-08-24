@@ -69,32 +69,20 @@ def collate(
         left_pad=left_pad_source,
         pad_to_length=pad_to_length["source"] if pad_to_length is not None else None,
     )
-    # sort by descending source length
+
     src_lengths = torch.LongTensor(
         [s["source"].ne(pad_idx).long().sum() for s in samples]
     )
+
+    videos = torch.Tensor(np.array([s['video'] for s in samples]))
+    video_paddings = torch.Tensor(np.array([s['video_padding'] for s in samples]))
+
+    # sort by descending source length
     src_lengths, sort_order = src_lengths.sort(descending=True)
     id = id.index_select(0, sort_order)
     src_tokens = src_tokens.index_select(0, sort_order)
-
-    #videos
-    videos_list = [[] for i in range(len(samples[0]["video_list"]))]
-    for s in samples:
-        for idx, video in enumerate(s["video_list"]):
-            videos_list[idx].append(video)
-    for idx, v_tensor in enumerate(videos_list):
-        v_tensor = torch.tensor(np.array(v_tensor))
-        v_tensor = v_tensor.index_select(0, sort_order)
-        videos_list[idx] = v_tensor
-
-    video_padding_list = [[] for i in range(len(samples[0]["video_padding_list"]))]
-    for s in samples:
-        for idx, video_padding in enumerate(s["video_padding_list"]):
-             video_padding_list[idx].append(video_padding)
-    for idx, vp_tensor in enumerate(video_padding_list):
-        vp_tensor= torch.tensor(np.array(vp_tensor))
-        vp_tensor = vp_tensor.index_select(0, sort_order)
-        video_padding_list[idx] = vp_tensor
+    videos = videos.index_select(0, sort_order)
+    video_paddings = video_paddings.index_select(0, sort_order)
 
 
     prev_output_tokens = None
@@ -136,8 +124,8 @@ def collate(
         "net_input": {
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
-            "videos": videos_list,  #
-            "video_padding":video_padding_list
+            "videos": videos,  #
+            "video_padding":video_paddings
         },
         "target": target,
     }
@@ -186,7 +174,7 @@ def collate(
     return batch
 
 
-class VideoLanguagePairMultiDataset(FairseqDataset):
+class RawVideoLanguagePairDataset(FairseqDataset):
     """
     A pair of torch.utils.data.Datasets.
 
@@ -231,7 +219,7 @@ class VideoLanguagePairMultiDataset(FairseqDataset):
             src,
             src_sizes,
             src_dict,
-            video_dataset_list,
+            video_dataset,
             tgt=None,
             tgt_sizes=None,
             tgt_dict=None,
@@ -320,7 +308,7 @@ class VideoLanguagePairMultiDataset(FairseqDataset):
         else:
             self.buckets = None
         self.pad_to_multiple = pad_to_multiple
-        self.video_datasets = video_dataset_list  # extra code
+        self.video_dataset = video_dataset  # extra code
 
 
     def get_batch_shapes(self):
@@ -330,9 +318,7 @@ class VideoLanguagePairMultiDataset(FairseqDataset):
         tgt_item = self.tgt[index] if self.tgt is not None else None
         src_item = self.src[index]
 
-        # video_item,video_padding_item = self.video_dataset[index]  # list for video data
-        video_items = [i[index][0] for i in self.video_datasets]  # list for video data
-        video_padding_items = [i[index][1] for i in self.video_datasets]  # list for video mask data
+        video_item,video_padding_item = self.video_dataset[index]  # list for video data
 
         # Append EOS to end of tgt sentence if it does not have an EOS and remove
         # EOS from end of src sentence if it exists. This is useful when we use
@@ -361,8 +347,8 @@ class VideoLanguagePairMultiDataset(FairseqDataset):
             "id": index,
             "source": src_item,
             "target": tgt_item,
-            "video_list": video_items,
-            "video_padding_list":video_padding_items
+            "video": video_item,
+            "video_padding":video_padding_item
         }
         if self.align_dataset is not None:
             example["alignment"] = self.align_dataset[index]

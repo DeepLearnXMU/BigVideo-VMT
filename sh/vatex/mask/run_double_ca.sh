@@ -123,7 +123,7 @@ fairseq-train $local_data_dir \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
-echo "---put log to $output_dir/log.${name}---"
+echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
 put_result=$?
