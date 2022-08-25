@@ -18,7 +18,7 @@ from fairseq.data import (
     encoders,
     indexed_dataset,
     RawVideoDataset,
-    RawVideoLanguageDataset,
+    RawVideoLanguagePairDataset,
 )
 from fairseq.tasks import LegacyFairseqTask, register_task
 
