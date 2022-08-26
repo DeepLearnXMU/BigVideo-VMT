@@ -8,6 +8,7 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 mkdir ~/data
 mkdir -p ~/data/vatex/
 mkdir -p ~/data/vatex/video/images_resized_r3/vit_base_patch16_224/
+mkdir -p ~/data/xigua/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.tar.gz ~/data/en_zh.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/vatex_features.tar.gz ~/data/vatex_features.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/raw_texts.tar.gz ~/data/vatex/raw_texts.tar.gz
@@ -19,6 +20,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/clip.tar.gz ~/data/vatex/video/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/fairseq_bin_filter.tar.gz ~/data/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/xigua/fairseq_bin/text ~/data/xigua/fairseq_bin/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/masking ~/data/vatex/
 
 cd ~/data
@@ -55,3 +57,5 @@ pip install timm==0.4.12
 pip install vizseq==0.1.15
 pip install nltk==3.6.4
 pip install sacrebleu==1.5.1
+
+pip install -r requirment.txt
