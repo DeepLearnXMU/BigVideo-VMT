@@ -153,7 +153,7 @@ def load_RawVideolangpair_dataset(
 
     tgt_dataset_sizes = tgt_dataset.sizes if tgt_dataset is not None else None
 
-    return VideoLanguagePairDataset(
+    return RawVideoLanguagePairDataset(
         src_dataset,
         src_dataset.sizes,
         src_dict,

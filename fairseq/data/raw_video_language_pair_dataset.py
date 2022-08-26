@@ -219,7 +219,7 @@ class RawVideoLanguagePairDataset(FairseqDataset):
             src,
             src_sizes,
             src_dict,
-            video_dataset,
+            raw_video_dataset,
             tgt=None,
             tgt_sizes=None,
             tgt_dict=None,
@@ -318,7 +318,7 @@ class RawVideoLanguagePairDataset(FairseqDataset):
         tgt_item = self.tgt[index] if self.tgt is not None else None
         src_item = self.src[index]
 
-        video_item,video_padding_item = self.video_dataset[index]  # list for video data
+        video_item = self.raw_video_dataset[index]  # list for video data
 
         # Append EOS to end of tgt sentence if it does not have an EOS and remove
         # EOS from end of src sentence if it exists. This is useful when we use
@@ -348,7 +348,7 @@ class RawVideoLanguagePairDataset(FairseqDataset):
             "source": src_item,
             "target": tgt_item,
             "video": video_item,
-            "video_padding":video_padding_item
+            "video_padding":None
         }
         if self.align_dataset is not None:
             example["alignment"] = self.align_dataset[index]
