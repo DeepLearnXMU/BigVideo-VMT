@@ -3,7 +3,7 @@ import io
 import av
 import torch
 import numpy as np
-from .video_decoder import video_decoder as decoder
+from . import video_decoder as decoder
 import code
 
 def get_video_decoding_kwargs(container, num_frames, target_fps,
