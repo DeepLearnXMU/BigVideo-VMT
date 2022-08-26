@@ -4,6 +4,7 @@ import logging
 import os
 from argparse import Namespace
 
+import torch
 import numpy as np
 from fairseq import metrics, options, utils
 from fairseq.data import (
@@ -395,7 +396,10 @@ class RawVideoTranslationTask(LegacyFairseqTask):
         if self.args.eval_bleu:
 
             def sum_logs(key):
-                return sum(log.get(key, 0) for log in logging_outputs)
+                result = sum(log.get(key, 0) for log in logging_outputs)
+                if torch.is_tensor(result):
+                    result = result.cpu()
+                return result
 
             counts, totals = [], []
             for i in range(EVAL_BLEU_ORDER):

@@ -55,7 +55,6 @@ fairseq-train $local_data_dir \
   --clip-norm ${clip_norm}   \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $acc  \
-  --find-unused-parameters \
   --seed $seed \
   --no-progress-bar  \
   --eval-zh-bleu  \
