@@ -43,11 +43,6 @@ def load_RawVideolangpair_dataset(
         left_pad_target,
         max_source_positions,
         max_target_positions,
-        video_feat_path,  # extra video mmt parameter
-        video_ids_path,    # extra video id
-        video_feat_type,
-        max_vid_len,
-        video_feat_dim,
         prepend_bos=False,
         load_alignments=False,
         truncate_source=False,
@@ -148,7 +143,7 @@ def load_RawVideolangpair_dataset(
 
 
 
-    video_dataset = RawVideoDataset(args)
+    video_dataset = RawVideoDataset(args,split)
     assert len(video_dataset) == len(src_dataset)
 
 
@@ -246,15 +241,14 @@ class RawVideoTranslationTask(LegacyFairseqTask):
                             help='print sample generations during validation')
         # fmt: on
         # video multimodal translation
-        parser.add_argument('--video-feat-path', type=str,
-                            help='image features path')
-        parser.add_argument('--video-ids-path', type=str)
-        parser.add_argument('--video-feat-dim', type=int,
-                            help='video features dimension')
-        parser.add_argument('--max-vid-len',type=int,
-                           help='video features len')
-        parser.add_argument('--video-feat-type', type=str,
-                            help='video features type')
+        parser.add_argument('--visiual-dir', type=str)
+        parser.add_argument('--video-feat-type', type=str)
+        parser.add_argument('--max-num-frames', type=int, default=32)
+        parser.add_argument('--img-res', type=int, default=224)
+        parser.add_argument('--patch-size', type=int, default=32)
+        parser.add_argument("--grid-feat", type=str_to_bool, nargs='?', const=True, default=True)
+        parser.add_argument('--freeze-backbone', type=str_to_bool, nargs='?', const=True, default=False)
+
 
 
     def __init__(self, args, src_dict, tgt_dict):
@@ -338,11 +332,6 @@ class RawVideoTranslationTask(LegacyFairseqTask):
             num_buckets=self.args.num_batch_buckets,
             shuffle=(split != "test"),
             pad_to_multiple=self.args.required_seq_len_multiple,
-            video_feat_path=self.args.video_feat_path,
-            video_ids_path=self.args.video_ids_path,
-            video_feat_type=self.args.video_feat_type,
-            max_vid_len=self.args.max_vid_len,
-            video_feat_dim=self.args.video_feat_dim
         )
 
     '''

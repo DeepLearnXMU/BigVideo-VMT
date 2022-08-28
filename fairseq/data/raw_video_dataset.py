@@ -14,19 +14,19 @@ from .video.volume_transforms import ClipToTensor
 
 logger = logging.getLogger(__name__)
 
+tsv_file="{}.video.tsv"
 
 class RawVideoDataset(torch.utils.data.Dataset):
     """
     For loading image datasets
     """
 
-    def __init__(self, args):
+    def __init__(self, args , split):
 
-        self.visual_file = getattr(args, 'visual_file', None)
-        assert  self.visual_file is not None
-        self.visual_tsv = self.get_tsv_file(self.visual_file)
 
-        self.video_line_list = [i for i in range(self.label_tsv.num_rows())]
+        self.visual_dir = getattr(args, 'visual_dir', None)
+        assert os.exists(self.visual_dir)
+        self.visual_tsv =  os.path.join(self.visual_dir + tsv_file.format(split))
 
         self.is_train = (split=="Train")
         self.patch_size = getattr(args, 'patch_size', 16)
@@ -37,9 +37,7 @@ class RawVideoDataset(torch.utils.data.Dataset):
         self.decoder_multi_thread_decode = False
 
         self.decoder_safeguard_duration = False
-        self.add_od_labels = getattr(args, 'add_od_labels', False)
         self.use_asr = getattr(args, 'use_asr', False)
-
         self.decoder_sampling_strategy = getattr(args, 'decoder_sampling_strategy', 'uniform')
         logger.info(f'isTrainData: {self.is_train}\n[video parameters] '
                     f'Num of Frame: {self.decoder_num_frames}, '
@@ -98,9 +96,9 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
     def get_tsv_file(self, tsv_file):
         if tsv_file:
-            if self.is_composite:
-                return CompositeTSVFile(tsv_file, self.cap_linelist_file, root=self.root)
-            tsv_path = find_file_path_in_yaml(tsv_file, self.root)
+            # if self.is_composite:
+            #     return CompositeTSVFile(tsv_file, self.cap_linelist_file, root=self.root)
+            # tsv_path = find_file_path_in_yaml(tsv_file, self.root)
             return TSVFile(tsv_path)
 
     def decode_and_get_frames(self, clip_path_name, start=None, end=None):
