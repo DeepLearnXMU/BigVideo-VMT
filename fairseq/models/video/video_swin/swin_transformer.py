@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 import numpy as np
-from fairseq.models.timm.models.layers import DropPath, trunc_normal_
+from timm.models.layers import DropPath, trunc_normal_
 
 # from mmcv.runner import load_checkpoint
 
