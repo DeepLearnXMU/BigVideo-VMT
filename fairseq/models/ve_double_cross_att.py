@@ -393,7 +393,10 @@ class TransformerEncoder(FairseqEncoder):
         else:
             self.layer_norm = None
 
-        self.video_encoder = build_video_encoder(args)
+        self.video_encoder = self.build_video_encoder(args)
+        if self.args.video_feat_type=="video_swin":
+            self.latent_feat_size = self.video_encoder.backbone.norm.normalized_shape[0]
+            self.video_fc = torch.nn.Linear(self.latent_feat_size, self.embed_dim)
 
     def build_video_encoder(self, args):
         visual_model = getattr(args, 'video_feat_type', None)
@@ -404,7 +407,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if args.freeze_backbone:
             for _, p in visual_backbone.named_parameters():
-                p.requires_grad = not freeze
+                p.requires_grad = not args.freeze_backbone
 
         return visual_backbone
 
@@ -479,7 +482,17 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        videos = videos.transpose(0, 1)
+        B, S, C, H, W = videos.shape
+        videos = videos.permute(0, 2, 1, 3, 4)
+        vid_feats = self.video_encoder(images)
+        print(vid_feats.shape)
+        print(self.latent_feat_size)
+        vid_feats = vid_feats.view(B, -1, self.latent_feat_size)
+        print(vid_feats.shape)
+        vid_feats = self.fc(vid_feats)
+        print(vid_feats.shape)
+        print(asdfsdasda)
+
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
