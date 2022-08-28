@@ -49,7 +49,7 @@ if [ $video_feat_type == "clip" ]; then
         visual_dir=/mnt/bn/luyang/data/xigua/processed_videos_en2zh/raw_videos_resized/
   elif [ $video_feat_type == "videoswin" ]; then
         video_feat_dim=1024
-        vidsual_dir=/mnt/bn/luyang/data/xigua/processed_videos_en2zh/raw_videos_resized/
+        visual_dir=/mnt/bn/luyang/data/xigua/processed_videos_en2zh/raw_videos_resized/
 fi
 max_num_frames=32
 img_res=224
@@ -80,7 +80,7 @@ fairseq-train $local_data_dir \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 --report-modal-similarity --report-layer-alpha \
-  --task vatex_translation \
+  --task raw_video_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
@@ -94,7 +94,7 @@ fairseq-train $local_data_dir \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
-  --visual_dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --freeze-backbone $freeze_backbone --video-feat-type $video_feat_type \
+  --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type --grid-feat --freeze-backbone \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 

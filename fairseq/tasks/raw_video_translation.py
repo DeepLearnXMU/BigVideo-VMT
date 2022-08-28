@@ -144,6 +144,7 @@ def load_RawVideolangpair_dataset(
 
 
     video_dataset = RawVideoDataset(args,split)
+
     assert len(video_dataset) == len(src_dataset)
 
 
@@ -241,13 +242,14 @@ class RawVideoTranslationTask(LegacyFairseqTask):
                             help='print sample generations during validation')
         # fmt: on
         # video multimodal translation
-        parser.add_argument('--visiual-dir', type=str)
+        parser.add_argument('--visual-dir', type=str)
         parser.add_argument('--video-feat-type', type=str)
+        parser.add_argument('--video-feat-dim', type=int)
         parser.add_argument('--max-num-frames', type=int, default=32)
         parser.add_argument('--img-res', type=int, default=224)
         parser.add_argument('--patch-size', type=int, default=32)
-        parser.add_argument("--grid-feat", type=str_to_bool, nargs='?', const=True, default=True)
-        parser.add_argument('--freeze-backbone', type=str_to_bool, nargs='?', const=True, default=False)
+        parser.add_argument("--grid-feat",  action='store_true')
+        parser.add_argument('--freeze-backbone',  action='store_true')
 
 
 

@@ -110,4 +110,4 @@ def normalize(clip, mean, std, inplace=False):
     std = torch.as_tensor(std, dtype=dtype, device=clip.device)
     clip.sub_(mean[:, None, None, None]).div_(std[:, None, None, None])
 
-    return
+    return clip
