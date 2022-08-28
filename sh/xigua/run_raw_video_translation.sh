@@ -48,7 +48,10 @@ if [ $video_feat_type == "clip" ]; then
         video_feat_dim=512
         visual_dir=/mnt/bn/luyang/data/xigua/processed_videos_en2zh/raw_videos_resized/
   elif [ $video_feat_type == "videoswin" ]; then
+        vidswin_size=base
+        kinetics=600
         video_feat_dim=1024
+        videoswin_path=/root/models/swin_base_patch244_window877_kinetics600_22k.pth
         visual_dir=/mnt/bn/luyang/data/xigua/processed_videos_en2zh/raw_videos_resized/
 fi
 max_num_frames=32
@@ -94,7 +97,8 @@ fairseq-train $local_data_dir \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
-  --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type --grid-feat --freeze-backbone \
+  --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type  \
+  --vidswin-size $video_vidswin_size --kinetics $kinetics --videoswin-path ${videoswin_path} --grid-feat --freeze-backbone \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 

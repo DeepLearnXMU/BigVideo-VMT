@@ -32,6 +32,8 @@ from fairseq.modules import (
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
+from fairseq.models.video.load_swin import get_swin_model, reload_pretrained_swin
+
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 32
@@ -244,6 +246,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                 args, tgt_dict, args.decoder_embed_dim, args.decoder_embed_path
             )
 
+
         encoder = cls.build_encoder(args, src_dict, encoder_embed_tokens)
         decoder = cls.build_decoder(args, tgt_dict, decoder_embed_tokens)
         return cls(args, encoder, decoder)
@@ -389,6 +392,21 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = LayerNorm(embed_dim)
         else:
             self.layer_norm = None
+
+        self.video_encoder = build_video_encoder(args)
+
+    def build_video_encoder(self, args):
+        visual_model = getattr(args, 'video_feat_type', None)
+        assert visual_model is not None
+
+        if visual_model=="videoswin":
+            visual_backbone = get_swin_model(args)
+
+        if args.freeze_backbone:
+            for _, p in visual_backbone.named_parameters():
+                p.requires_grad = not freeze
+
+        return visual_backbone
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
