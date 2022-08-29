@@ -191,11 +191,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for video MMT
         # args for fushion encoder
 
-        parser.add_argument('--video-layernorm-embedding', action='store_true',
-                            help='add layernorm to video - embedding')
-        parser.add_argument('--video-learned-pos', action='store_true',
-                            help='use learned positional embeddings in the video encoder')
-        parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
         parser.add_argument('--video-att-before', type=bool, help='cross attention which before ')
         parser.add_argument('--residual-policy', type=str, help="")
         parser.add_argument('--ini-alpha', type=float, help="")
@@ -1116,11 +1111,6 @@ def ve_double_cross_att_pewln(args):
     args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
-    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
-    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
-    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
-    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
-
 
     base_architecture(args)
 

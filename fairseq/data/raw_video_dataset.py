@@ -15,10 +15,12 @@ from .video.video_transforms import Compose, Resize, RandomCrop, ColorJitter, No
 from .video.volume_transforms import ClipToTensor
 
 from PIL import Image
+import time
 
 logger = logging.getLogger(__name__)
 
 tsv_file = "{}.video.tsv"
+imgs_tsv_file = "{}_32frames_img_size384.img.tsv"
 
 
 class RawVideoDataset(torch.utils.data.Dataset):
@@ -30,10 +32,10 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
         self.visual_dir = getattr(args, 'visual_dir', None)
         assert os.path.exists(self.visual_dir)
-        self.visual_tsv = self.get_tsv_file(os.path.join(self.visual_dir + tsv_file.format(split)))
+        self.visual_tsv = self.get_tsv_file(os.path.join(self.visual_dir + imgs_tsv_file.format(split)))
         self.size = self.visual_tsv.num_rows()
 
-        self.is_train = (split == "Train")
+        self.is_train = (split == "train")
         self.img_res = getattr(args, 'img_res', 224)
         self.patch_size = getattr(args, 'patch_size', 16)
 
@@ -128,9 +130,46 @@ class RawVideoDataset(torch.utils.data.Dataset):
                                                                start, end)
         return frames
 
+
+    def get_image(self, bytestring):
+        # output numpy array (T, C, H, W), channel is RGB, T = 1
+        cv2_im = img_from_base64(bytestring)
+        cv2_im = cv2_im[:,:,::-1] # COLOR_BGR2RGB
+        # cv2_im = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
+        output = np.transpose(cv2_im[np.newaxis, ...], (0, 3, 1, 2))
+        return output
+
+
     def get_row_from_tsv(self, tsv, img_idx):
         row = tsv[img_idx]
         return row
+
+    def get_frames_from_tsv(self, binary_frms):
+        # get pre-extracted video frames from tsv files
+        frames = []
+        _C, _H, _W = 3, 224, 224
+        if self.decoder_num_frames > len(binary_frms):
+            print(f"Corrupt videos, requested {self.decoder_num_frames} frames, "
+                  f"but got only {len(binary_frms)} frames, will return all zeros instead")
+            return np.zeros((self.decoder_num_frames, _C, _H, _W), dtype=np.int64)
+
+        def sampling(start, end, n):
+            if n == 1:
+                return [int(round((start + end) / 2.))]
+            if n < 1:
+                raise Exception("behaviour not defined for n<2")
+            step = (end - start) / float(n - 1)
+            return [int(round(start + x * step)) for x in range(n)]
+
+        for i in sampling(0, len(binary_frms) - 1, self.decoder_num_frames):
+            try:
+                image = self.get_image(binary_frms[i])
+            except Exception as e:
+                print(f"Corrupt frame at {i}")
+                image = np.zeros((1, _C, _H, _W), dtype=np.int64)
+            _, _C, _H, _W = image.shape
+            frames.append(image)
+        return np.vstack(frames)
 
     def get_visual_data(self, idx, start=None, end=None):
 
@@ -156,6 +195,7 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
         # get image or video frames
         # frames: (T, C, H, W),  is_video: binary tag
+
         raw_frames, is_video = self.get_visual_data(idx)
 
         # apply augmentation. frozen-in-time if the input is an image

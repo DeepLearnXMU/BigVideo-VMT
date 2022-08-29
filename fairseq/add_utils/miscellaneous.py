@@ -13,9 +13,10 @@ import yaml
 import json
 from .basic_utils import save_json
 from easydict import EasyDict as edic
-from .logger import LOGGER as logger
-from pprint import pformat
+import logging
 
+from pprint import pformat
+logger = logging.getLogger(__name__)
 
 def ensure_directory(path):
     if path == '' or path == '.':
