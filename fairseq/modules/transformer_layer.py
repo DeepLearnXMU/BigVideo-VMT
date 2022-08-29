@@ -731,7 +731,7 @@ class TransformerDecoderFushionLayer(nn.Module):
                 assert incremental_state is not None
                 self.video_attn._set_input_buffer(incremental_state, saved_state)
 
-            videos = videos.transpose(0, 1)
+
             x, attn = self.video_attn(
                 query=x,
                 key=videos,

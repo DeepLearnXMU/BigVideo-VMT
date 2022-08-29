@@ -469,7 +469,7 @@ class TransformerEncoder(FairseqEncoder):
             video_out=videos,  # B, v_len , C
             text_padding_mask=None,  # B,  t_len
             video_padding_mask=video_padding,  # B, v_len
-            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
+            encoder_padding_mask=encoder_padding_mask,  # B x T
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[(T + v_len) x B x C]
             src_tokens=None,
@@ -887,6 +887,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         video_padding_mask = ~encoder_out.video_padding_mask.bool()
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
+
+        video_h = video_h.transpose(0,1)  # -> T B C
 
         # decoder layers
         attn: Optional[Tensor] = None

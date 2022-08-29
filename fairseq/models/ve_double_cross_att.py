@@ -196,10 +196,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--video-learned-pos', action='store_true',
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
-        parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
-        parser.add_argument('--residual-policy', type=str,help="")
-        parser.add_argument('--ini-alpha', type=float,help="" )
-
+        parser.add_argument('--video-att-before', type=bool, help='cross attention which before ')
+        parser.add_argument('--residual-policy', type=str, help="")
+        parser.add_argument('--ini-alpha', type=float, help="")
+        parser.add_argument('--feature-choice', type=str, default="grid_features", help="")
 
     @classmethod
     def build_model(cls, args, task):
@@ -245,7 +245,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
             decoder_embed_tokens = cls.build_embedding(
                 args, tgt_dict, args.decoder_embed_dim, args.decoder_embed_path
             )
-
 
         encoder = cls.build_encoder(args, src_dict, encoder_embed_tokens)
         decoder = cls.build_decoder(args, tgt_dict, decoder_embed_tokens)
@@ -394,15 +393,17 @@ class TransformerEncoder(FairseqEncoder):
             self.layer_norm = None
 
         self.video_encoder = self.build_video_encoder(args)
-        if self.args.video_feat_type=="video_swin":
+        if args.video_feat_type == "videoswin":
             self.latent_feat_size = self.video_encoder.backbone.norm.normalized_shape[0]
-            self.video_fc = torch.nn.Linear(self.latent_feat_size, self.embed_dim)
+            self.video_fc = torch.nn.Linear(self.latent_feat_size, embed_dim)
+            # self.use_grid_feature = args.use_grid_feature
+        self.feature_choice = args.feature_choice
 
     def build_video_encoder(self, args):
         visual_model = getattr(args, 'video_feat_type', None)
         assert visual_model is not None
 
-        if visual_model=="videoswin":
+        if visual_model == "videoswin":
             visual_backbone = get_swin_model(args)
 
         if args.freeze_backbone:
@@ -454,6 +455,7 @@ class TransformerEncoder(FairseqEncoder):
             namedtuple:
                 - **encoder_out** (Tensor): the last encoder layer's output of
                   shape `(src_len, batch, embed_dim)`
+
                 - **encoder_padding_mask** (ByteTensor): the positions of
                   padding elements of shape `(batch, src_len)`
                 - **encoder_embedding** (Tensor): the (scaled) embedding lookup
@@ -482,25 +484,23 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        B, S, C, H, W = videos.shape
+        B, S, C, H, W = videos.shape  # 40, 32, 3, 224, 224
         videos = videos.permute(0, 2, 1, 3, 4)
-        vid_feats = self.video_encoder(images)
-        print(vid_feats.shape)
-        print(self.latent_feat_size)
-        vid_feats = vid_feats.view(B, -1, self.latent_feat_size)
-        print(vid_feats.shape)
-        vid_feats = self.fc(vid_feats)
-        print(vid_feats.shape)
-        print(asdfsdasda)
+        vid_feats = self.video_encoder(videos)  # 40, 1024, 16, 7, 7
+        if self.feature_choice == "grid_features":
+            vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
+        vid_feats = vid_feats.contiguous().view(B, -1, self.latent_feat_size)  # 40, 784, 1024
+        vid_feats = self.video_fc(vid_feats)  # 40, 784, 512
 
+        vid_feats = vid_feats.transpose(0, 1)  # B x T x C -> T x B x C
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
             text_out=None,  # B, t_len , C
-            video_out=videos,  # B, v_len , C
+            video_out=vid_feats,  # B, v_len , C
             text_padding_mask=None,  # B,  t_len
-            video_padding_mask=video_padding,  # B, v_len
-            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
+            video_padding_mask=None,  # B, v_len
+            encoder_padding_mask=encoder_padding_mask,
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[(T + v_len) x B x C]
             src_tokens=None,
@@ -766,7 +766,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx +1
+            video_position_ids = video_position_ids + self.padding_idx + 1
             video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
@@ -913,23 +913,22 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # videos process
-        videos = encoder_out.video_out
+        video_h = encoder_out.video_out
 
-        video_padding_mask = ~encoder_out.video_padding_mask.bool()
-
-        video_h = self.video_forward_embedding(videos, video_padding_mask)
+        # video_padding_mask = ~encoder_out.video_padding_mask.bool()
+        # video_h = self.video_forward_embedding(videos, video_padding_mask)
 
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
-        layer_alphas={}
+        layer_alphas = {}
         for idx, layer in enumerate(self.layers):
             if incremental_state is None and not full_context_alignment:
                 self_attn_mask = self.buffered_future_mask(x)
             else:
                 self_attn_mask = None
 
-            x, layer_attn, _, layer_alpha  = layer(
+            x, layer_attn, _, layer_alpha = layer(
                 x,
                 encoder_out.encoder_out if encoder_out is not None else None,
                 encoder_out.encoder_padding_mask if encoder_out is not None else None,
@@ -939,10 +938,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 need_attn=bool((idx == alignment_layer)),
                 need_head_weights=bool((idx == alignment_layer)),
                 videos=video_h,
-                video_padding_mask=video_padding_mask
+                video_padding_mask=None
             )
             inner_states.append(x)
-            layer_alphas[idx]=layer_alpha
+            layer_alphas[idx] = layer_alpha
             if layer_attn is not None and idx == alignment_layer:
                 attn = layer_attn.float().to(x)
 
@@ -965,8 +964,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.encoder_out.transpose(0, 1),
                    "video_h": video_h,
                    "text_padding_mask": encoder_out.encoder_padding_mask,
-                   "video_padding_mask": video_padding_mask,
-                   "layer_video_alphas":layer_alphas}
+                   "video_padding_mask": None,
+                   "layer_video_alphas": layer_alphas}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""
@@ -1105,7 +1104,8 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
-@register_model_architecture('ve_double_cross_att', 've_double_cross_att_pewln')
+
+@register_model_architecture('ve_double_cross_att', 've_double_cross_att_small')
 def ve_double_cross_att_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
@@ -1121,8 +1121,6 @@ def ve_double_cross_att_pewln(args):
     args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
     args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
 
-    args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
 
     base_architecture(args)
 
@@ -1172,6 +1170,7 @@ def ve_double_cross_att_be_pewln(args):
 
     base_architecture(args)
 
+
 @register_model_architecture('ve_double_cross_att', 've_double_cross_att_be_pewoln')
 def ve_double_cross_att_be_pewoln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
@@ -1192,7 +1191,6 @@ def ve_double_cross_att_be_pewoln(args):
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
 
     args.video_att_before = getattr(args, 'video_att_before', True)
-
 
     base_architecture(args)
 
