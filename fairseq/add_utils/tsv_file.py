@@ -90,7 +90,7 @@ class TSVFile(object):
 
     def _ensure_lineidx_loaded(self):
         if self._lineidx is None:
-            logger.info('loading lineidx: {}'.format(self.lineidx))
+            # logger.info('loading lineidx: {}'.format(self.lineidx))
             with exclusive_open_to_read(self.lineidx, 'r') as fp:
                 self._lineidx = [int(i.strip()) for i in fp.readlines()]
 

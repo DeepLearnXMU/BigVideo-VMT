@@ -250,6 +250,10 @@ class RawVideoTranslationTask(LegacyFairseqTask):
         parser.add_argument('--patch-size', type=int, default=32)
         parser.add_argument("--grid-feat",  action='store_true')
         parser.add_argument('--freeze-backbone',  action='store_true')
+        parser.add_argument('--videoswin-path',type=str)
+        parser.add_argument("--kinetics", type=str, default='400', help="400 or 600")
+        parser.add_argument("--pretrained-2d", type=bool, nargs='?', const=True, default=False)
+        parser.add_argument("--vidswin-size", type=str, default='base')
 
 
 

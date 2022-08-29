@@ -5,6 +5,9 @@ export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 
+sudo apt-get update
+sudo apt-get install ffmpeg libsm6 libxext6
+
 mkdir ~/data
 mkdir -p ~/data/vatex/
 mkdir -p ~/data/vatex/video/images_resized_r3/vit_base_patch16_224/
@@ -46,6 +49,8 @@ tar -zxvf common.tar.gz
 sudo cp -r /usr/local/bin/pip /usr/bin/pip
 sudo cp -r /usr/local/bin/pip3 /usr/bin/pip3
 sudo cp -r /usr/local/bin/pip3.7 /usr/bin/pip3.7
+/usr/bin/python3 -m pip install --upgrade pip
+
 pip config set global.index-url https://bytedpypi.byted.org/simple/
 cd /opt/tiger/common
 pip install --editable ./

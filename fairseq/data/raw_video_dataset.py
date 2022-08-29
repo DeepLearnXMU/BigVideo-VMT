@@ -30,7 +30,8 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
     def __init__(self, args, split):
 
-        visual_dir = getattr(self.args, 'visual_dir', None)
+        self.split = split
+        visual_dir = getattr(args, 'visual_dir', None)
         assert os.path.exists(visual_dir)
         visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
         self.size = visual_tsv.num_rows()
@@ -38,7 +39,7 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
         self.args = args
 
-        self.split = split
+
 
         self.is_train = (split == "train")
         self.img_res = getattr(args, 'img_res', 224)
@@ -69,7 +70,7 @@ class RawVideoDataset(torch.utils.data.Dataset):
                 Resize(self.img_res),
                 CenterCrop((self.img_res, self.img_res)),
                 ClipToTensor(channel_nb=3),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225] )
             ]
 
         self.raw_video_process = Compose(self.raw_video_crop_list)
