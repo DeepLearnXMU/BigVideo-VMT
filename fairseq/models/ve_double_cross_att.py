@@ -33,6 +33,7 @@ from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
 from fairseq.models.video.load_swin import get_swin_model, reload_pretrained_swin
+import time
 
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
@@ -191,6 +192,11 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for video MMT
         # args for fushion encoder
 
+        parser.add_argument('--video-layernorm-embedding', action='store_true',
+                            help='add layernorm to video - embedding')
+        parser.add_argument('--video-learned-pos', action='store_true',
+                            help='use learned positional embeddings in the video encoder')
+        parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
         parser.add_argument('--video-att-before', type=bool, help='cross attention which before ')
         parser.add_argument('--residual-policy', type=str, help="")
         parser.add_argument('--ini-alpha', type=float, help="")
@@ -304,6 +310,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_lengths=src_lengths,
             return_all_hiddens=return_all_hiddens,
         )
+        etime = time.time()
+
         return decoder_out
 
     # Since get_normalized_probs is in the Fairseq Model which is not scriptable,
@@ -800,7 +808,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 - the decoder's output of shape `(batch, tgt_len, vocab)`
                 - a dictionary with any model-specific outputs
         """
-
         x, extra = self.extract_features(
             prev_output_tokens,
             encoder_out=encoder_out,
@@ -811,6 +818,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         )
         if not features_only:
             x = self.output_layer(x)
+
         return x, extra
 
     def extract_features(
@@ -1111,6 +1119,10 @@ def ve_double_cross_att_pewln(args):
     args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 256)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 512)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 2)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 4)
 
     base_architecture(args)
 
