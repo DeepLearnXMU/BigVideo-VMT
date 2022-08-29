@@ -310,7 +310,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_lengths=src_lengths,
             return_all_hiddens=return_all_hiddens,
         )
-        etime = time.time()
 
         return decoder_out
 
@@ -399,6 +398,8 @@ class TransformerEncoder(FairseqEncoder):
         if args.video_feat_type == "videoswin":
             self.latent_feat_size = self.video_encoder.backbone.norm.normalized_shape[0]
             self.video_fc = torch.nn.Linear(self.latent_feat_size, embed_dim)
+            # from mmcv.parallel import MMDataParallel
+            # self.video_encoder.backbone = MMDataParallel(self.video_encoder.backbone, device_ids=[args.device_id])
             # self.use_grid_feature = args.use_grid_feature
         self.feature_choice = args.feature_choice
 
@@ -488,11 +489,19 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         B, S, C, H, W = videos.shape  # 40, 32, 3, 224, 224
-        videos = videos.permute(0, 2, 1, 3, 4)
+        videos = videos.permute(0, 2, 1, 3, 4)  # (B x S x C x H x W) --> (B x C x S x H x W)
         vid_feats = self.video_encoder(videos)  # 40, 1024, 16, 7, 7
+
         if self.feature_choice == "grid_features":
             vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
-        vid_feats = vid_feats.contiguous().view(B, -1, self.latent_feat_size)  # 40, 784, 1024
+            vid_feats = vid_feats.contiguous().view(B, -1, self.latent_feat_size)  # 40, 784, 1024
+        elif self.feature_choice == "frame_level":
+            avg_pool = nn.AdaptiveAvgPool3d(1)
+            vid_feats = avg_pool(vid_feats)
+            print(vid_feats.shape)
+            # squeeze dimensions
+            vid_feats = vid_feats.reshape((B, S, -1))
+
         vid_feats = self.video_fc(vid_feats)  # 40, 784, 512
 
         vid_feats = vid_feats.transpose(0, 1)  # B x T x C -> T x B x C

@@ -30,10 +30,15 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
     def __init__(self, args, split):
 
-        self.visual_dir = getattr(args, 'visual_dir', None)
-        assert os.path.exists(self.visual_dir)
-        self.visual_tsv = self.get_tsv_file(os.path.join(self.visual_dir + imgs_tsv_file.format(split)))
-        self.size = self.visual_tsv.num_rows()
+        visual_dir = getattr(self.args, 'visual_dir', None)
+        assert os.path.exists(visual_dir)
+        visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
+        self.size = visual_tsv.num_rows()
+        visual_tsv.__del__()
+
+        self.args = args
+
+        self.split = split
 
         self.is_train = (split == "train")
         self.img_res = getattr(args, 'img_res', 224)
@@ -130,15 +135,13 @@ class RawVideoDataset(torch.utils.data.Dataset):
                                                                start, end)
         return frames
 
-
     def get_image(self, bytestring):
         # output numpy array (T, C, H, W), channel is RGB, T = 1
         cv2_im = img_from_base64(bytestring)
-        cv2_im = cv2_im[:,:,::-1] # COLOR_BGR2RGB
+        cv2_im = cv2_im[:, :, ::-1]  # COLOR_BGR2RGB
         # cv2_im = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
         output = np.transpose(cv2_im[np.newaxis, ...], (0, 3, 1, 2))
         return output
-
 
     def get_row_from_tsv(self, tsv, img_idx):
         row = tsv[img_idx]
@@ -196,7 +199,13 @@ class RawVideoDataset(torch.utils.data.Dataset):
         # get image or video frames
         # frames: (T, C, H, W),  is_video: binary tag
 
-        raw_frames, is_video = self.get_visual_data(idx)
+        visual_dir = getattr(self.args, 'visual_dir', None)
+        assert os.path.exists(visual_dir)
+        visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
+        row = self.get_row_from_tsv(visual_tsv, idx)
+        raw_frames = self.get_frames_from_tsv(row[2:])
+
+        # raw_frames, is_video = self.get_visual_data(idx)
 
         # apply augmentation. frozen-in-time if the input is an image
         # preproc_frames: (T, C, H, W), C = 3, H = W = self.img_res, channel is RGB
