@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-device=0,1,2,3
+device=0,1,2,3,4,5,6,7
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
@@ -24,13 +24,13 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
 fi
 
 mask=mask0    #mask1,2,3,4,c,p
-local_data_dir=~/data/fairseq_bin_filter/vatex.en-zh.${mask}
+local_data_dir=/mnt/bd/kangliyan/data/vatex/fairseq_bin/fairseq_bin_filter/vatex.en-zh.${mask}
 
 
 fp16=1 #0
 lr=0.001
 warmup=4000
-max_tokens=1024
+max_tokens=512
 update_freq=1
 keep_last_epochs=10
 patience=10
@@ -47,13 +47,13 @@ arch=ve_double_cross_att_small
 video_feat_type="videoswin"
 if [ $video_feat_type == "clip" ]; then
         video_feat_dim=512
-        visual_dir=/mnt/bn/luyang/data/vatex/images_resized_r3/
+        visual_dir=/mnt/bd/kangliyan/data/vatex/images_tsv/
   elif [ $video_feat_type == "videoswin" ]; then
         videoswin_size=base
         kinetics=600
         video_feat_dim=1024
-        videoswin_path=/root/models/swin_base_patch244_window877_kinetics600_22k.pth
-        visual_dir=/mnt/bn/luyang/data/vatex/images_resized_r3/
+        videoswin_path=/mnt/bd/kangliyan/models/swin_base_patch244_window877_kinetics600_22k.pth
+        visual_dir=/mnt/bd/kangliyan/data/vatex/images_tsv/
 fi
 max_num_frames=32
 img_res=224
@@ -87,7 +87,7 @@ fairseq-train $local_data_dir \
   --task raw_video_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
-  --max-tokens $max_tokens --update-freq $update_freq --max-epoch $max_epoches \
+  --max-tokens $max_tokens --max-tokens-valid 256 --update-freq $update_freq --max-epoch $max_epoches \
   --seed $seed \
   --no-progress-bar  \
   --find-unused-parameters \
@@ -98,6 +98,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
+  --save-interval 1 \
   --keep-last-epochs $keep_last_epochs  \
   --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
   --vidswin-size $videoswin_size --kinetics $kinetics --videoswin-path ${videoswin_path} --grid-feat --freeze-backbone \
