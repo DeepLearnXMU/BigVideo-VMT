@@ -55,6 +55,9 @@ pip config set global.index-url https://bytedpypi.byted.org/simple/
 cd /opt/tiger/common
 pip install --editable ./
 cd /opt/tiger/fairseq_mmt
+
+pip install -r requirment.txt
+
 sudo pip install --editable ./
 pip install sacremoses
 pip install sacrebleu==1.5.1
@@ -63,4 +66,3 @@ pip install vizseq==0.1.15
 pip install nltk==3.6.4
 pip install sacrebleu==1.5.1
 
-pip install -r requirment.txt

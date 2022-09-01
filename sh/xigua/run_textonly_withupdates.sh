@@ -18,7 +18,7 @@ warmup=4000
 max_tokens=4096
 update_freq=2
 keep_last_epochs=10
-patience=-1
+patience=10
 max_updates=100000
 dropout=0.1
 seed=1207
@@ -28,7 +28,7 @@ arch=transformer
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-name=arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mu${max_updates}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
+name=arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua
@@ -54,10 +54,10 @@ fairseq-train $local_data_dir \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --clip-norm ${clip_norm}   \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
-  --max-tokens $max_tokens --update-freq $acc  \
+  --max-tokens $max_tokens --update-freq $update_freq  \
   --seed $seed \
+  --patience $patience \
   --no-progress-bar  \
-  --eval-zh-bleu  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \

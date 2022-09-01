@@ -398,9 +398,13 @@ class TransformerEncoder(FairseqEncoder):
         self.video_encoder = self.build_video_encoder(args)
         if args.video_feat_type == "videoswin":
             self.latent_feat_size = self.video_encoder.backbone.norm.normalized_shape[0]
-            self.video_fc = torch.nn.Linear(self.latent_feat_size, embed_dim)
+            self.video_fc = nn.Linear(self.latent_feat_size, embed_dim)
             # self.use_grid_feature = args.use_grid_feature
+        elif args.video_feat_type == "VIT":
+            self.video_fc = nn.Linear(args.video_feat_dim, embed_dim)
         self.feature_choice = args.feature_choice
+
+        self.args = args
 
     def build_video_encoder(self, args):
         visual_model = getattr(args, 'video_feat_type', None)
@@ -408,8 +412,12 @@ class TransformerEncoder(FairseqEncoder):
 
         if visual_model == "videoswin":
             visual_backbone = get_swin_model(args)
-        elif visual_model =="clip":
-            visual_backbone, _ = clip.load("VIT-B/16", device="cuda")
+        elif visual_model == "clip":
+            import clip
+            visual_backbone, _ = clip.load("ViT-B/16", device="cuda")
+        elif visual_model == "VIT":
+            import timm
+            visual_backbone = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=0).to("cuda")
         if args.freeze_backbone:
             for _, p in visual_backbone.named_parameters():
                 p.requires_grad = not args.freeze_backbone
@@ -489,12 +497,29 @@ class TransformerEncoder(FairseqEncoder):
             x = self.layer_norm(x)
 
         B, S, C, H, W = videos.shape  # 40, 32, 3, 224, 224
-        videos = videos.permute(0, 2, 1, 3, 4)
-        vid_feats = self.video_encoder.encode_image(videos)  # 40, 1024, 16, 7, 7
-        if self.feature_choice == "grid_features":
-            vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
-        vid_feats = vid_feats.contiguous().view(B, -1, self.latent_feat_size)  # 40, 784, 1024
-        vid_feats = self.video_fc(vid_feats)  # 40, 784, 512
+
+        features = torch.zeros([B, S, self.args.video_feat_dim], dtype=torch.float16).cuda()
+
+        for i in range(B):
+            min_ind = i
+            max_ind = (i + 1)
+            video_batch = videos[min_ind:max_ind].squeeze(dim=0)
+
+            batch_features = self.video_encoder.forward_features(video_batch)
+
+            # if args.l2_normalize:
+            #     batch_features = F.normalize(batch_features, dim=1)
+            features[min_ind:max_ind] = batch_features
+
+        vid_feats = features
+        vid_feats = self.video_fc(vid_feats)
+
+        # videos = videos.permute(0, 2, 1, 3, 4)
+        # vid_feats = self.video_encoder.encode_image(videos)  # 40, 1024, 16, 7, 7
+        # if self.feature_choice == "grid_features":
+        #     vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
+        # vid_feats = vid_feats.contiguous().view(B, -1, self.latent_feat_size)  # 40, 784, 1024
+        # vid_feats = self.video_fc(vid_feats)  # 40, 784, 512
 
         vid_feats = vid_feats.transpose(0, 1)  # B x T x C -> T x B x C
 
