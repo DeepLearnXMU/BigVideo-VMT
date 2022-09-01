@@ -10,20 +10,20 @@ sudo apt-get install ffmpeg libsm6 libxext6
 
 mkdir ~/data
 mkdir -p ~/data/vatex/
-mkdir -p ~/data/vatex/video/images_resized_r3/vit_base_patch16_224/
-mkdir -p ~/data/xigua/fairseq_bin/
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.tar.gz ~/data/en_zh.tar.gz
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/vatex_features.tar.gz ~/data/vatex_features.tar.gz
+#mkdir -p ~/data/vatex/video/images_resized_r3/vit_base_patch16_224/
+#mkdir -p ~/data/xigua/fairseq_bin/
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/en_zh.char.tar.gz ~/data/en_zh.tar.gz
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/vatex_features.tar.gz ~/data/vatex_features.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/raw_texts.tar.gz ~/data/vatex/raw_texts.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/cls.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/patch.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast.tar.gz ~/data/vatex/video/
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast13.tar.gz ~/data/vatex/video/
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/clip.tar.gz ~/data/vatex/video/
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/cls.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/images_resized_r3/patch.tar.gz ~/data/vatex/video/images_resized_r3/vit_base_patch16_224
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast.tar.gz ~/data/vatex/video/
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/slowfast13.tar.gz ~/data/vatex/video/
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/video/clip.tar.gz ~/data/vatex/video/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/how2/fairseq_bin/how2_en_pt ~/data/how2/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/fairseq_bin_filter.tar.gz ~/data/
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/xigua/fairseq_bin/text ~/data/xigua/fairseq_bin/
+#hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/xigua/fairseq_bin/text ~/data/xigua/fairseq_bin/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/masking ~/data/vatex/
 
 cd ~/data
