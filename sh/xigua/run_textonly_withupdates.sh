@@ -3,7 +3,7 @@
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
-device=0
+device=4,5,6,7
 export CUDA_VISIBLE_DEVICES=$device
 
 src_lang=en
@@ -16,15 +16,14 @@ fp16=1 #0
 lr=7e-4
 warmup=4000
 max_tokens=4096
-update_freq=2
-keep_last_epochs=10
+update_freq=1
 patience=10
-max_updates=100000
+max_updates=300000
 dropout=0.1
 seed=1207
 weight_decay=0.0
 clip_norm=0.0
-arch=transformer
+arch=transformer_vaswani_wmt_en_de_big
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
@@ -56,8 +55,8 @@ fairseq-train $local_data_dir \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq  \
   --seed $seed \
-  --patience $patience \
   --no-progress-bar  \
+  --patience $patience \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \

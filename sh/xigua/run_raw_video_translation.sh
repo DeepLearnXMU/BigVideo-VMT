@@ -1,11 +1,8 @@
-
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=2
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
-
-
 
 
 src_lang=en
