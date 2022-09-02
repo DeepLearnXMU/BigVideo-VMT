@@ -22,7 +22,7 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
-mask=mask0    #mask1,2,3,4,c,p
+mask=$1    #mask1,2,3,4,c,p
 local_data_dir=/mnt/bd/kangliyan/data/vatex/fairseq_bin/fairseq_bin_filter/vatex.en-zh.${mask}
 
 
