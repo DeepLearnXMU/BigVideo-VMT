@@ -724,7 +724,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def build_decoder_layer(self, args, no_encoder_attn=False, video_att_before=False):
         return TransformerDecoderFushionLayer(args, no_encoder_attn, video_att_before=video_att_before)
 
-    def video_forward_embedding(self, videos, video_padding_mask):
+    def video_forward_embedding(self, videos, video_padding_mask=None):
 
         videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
@@ -887,7 +887,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         # video_padding_mask = ~encoder_out.video_padding_mask.bool()
 
-        video_h = self.video_forward_embedding(videos, video_padding_mask)
+        video_h = self.video_forward_embedding(videos)
 
         video_h = video_h.transpose(0,1)  # -> T B C
 
@@ -911,7 +911,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 need_attn=bool((idx == alignment_layer)),
                 need_head_weights=bool((idx == alignment_layer)),
                 videos=video_h,
-                video_padding_mask=video_padding_mask
+                video_padding_mask=None
             )
             inner_states.append(x)
             layer_alphas[idx]=layer_alpha
@@ -937,7 +937,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.encoder_out.transpose(0, 1),
                    "video_h": video_h,
                    "text_padding_mask": encoder_out.encoder_padding_mask,
-                   "video_padding_mask": video_padding_mask,
+                   "video_padding_mask": None,
                    "layer_video_alphas":layer_alphas}
 
     def output_layer(self, features):

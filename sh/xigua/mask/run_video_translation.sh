@@ -7,7 +7,7 @@ export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 
-
+bash set_environment.sh
 
 src_lang=en
 tgt_lang=zh
@@ -25,7 +25,7 @@ fi
 
 mask=$1   #mask1,2,3,4,c,p
 
-local_data_dir=/mnt/bn/luyang/kangliyan/data/xigua/fairseq_bin/xigua.en-zh.$mask.withtest
+local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 
 
 
@@ -46,15 +46,15 @@ ini_alpha=0.0
 arch=video_double_cross_att_base_pewln
 
 
-video_ids_path=/mnt/bn/luyang/kangliyan/data/xigua/text/preprocessd_v1
+video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
 video_feat_type="VIT_cls"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls/
+        video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
         max_vid_len=32
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_patch/
+        video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
         max_vid_len=197
 fi
 
@@ -67,7 +67,8 @@ name=${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_ep
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/
-local_logs_dir=/mnt/bn/luyang/kangliyan/data/xigua/fairseq_bin/xigua.en-zh.${mask}.withtest
+local_logs_dir=~/fairseq_logs/xigua/${mask}/
+
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
