@@ -97,6 +97,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
+  --valid-interval -1 \
   --max-update ${max_updates} --save-interval-updates  2500 --keep-interval-updates 10 \
   --patience $patience \
   --keep-last-epochs $keep_last_epochs  \
