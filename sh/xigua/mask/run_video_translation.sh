@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 device=0,1,2,3
@@ -34,8 +33,7 @@ lr=7e-4
 warmup=4000
 max_tokens=4096
 update_freq=1
-keep_last_epochs=10
-max_updates=300000
+max_epoches=100
 patience=10
 dropout=0.1
 seed=1207
@@ -97,10 +95,8 @@ fairseq-train $local_data_dir \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-  --valid-interval -1 \
-  --max-update ${max_updates} --save-interval-updates  2500 --keep-interval-updates 10 \
+  --max-epoch ${max_epoches} --keep-interval-updates 10 \
   --patience $patience \
-  --keep-last-epochs $keep_last_epochs  \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
