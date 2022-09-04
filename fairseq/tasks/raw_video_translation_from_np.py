@@ -143,7 +143,7 @@ def load_VideoLanguageDatasetFromNp(
 
 
 
-    video_dataset = VideoDatasetFromNp(args)
+    video_dataset = VideoDatasetFromNp(args,split)
 
     assert len(video_dataset) == len(src_dataset)
 
@@ -168,8 +168,8 @@ def load_VideoLanguageDatasetFromNp(
     )
 
 
-@register_task("raw_video_translation")
-class RawVideoTranslationTask(LegacyFairseqTask):
+@register_task("raw_video_translation_from_np")
+class RawVideoTranslationFromNpTask(LegacyFairseqTask):
     """
     Translate from one (source) language and the image to another (target) language.
 

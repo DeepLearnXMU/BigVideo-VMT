@@ -13,7 +13,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
     For loading image datasets
     """
 
-    def __init__(self, args):
+    def __init__(self, args,split):
         self.split=args.split
         self.video_feat_type=args.video_feat_type
         self.video_feat_path = args.video_feat_path

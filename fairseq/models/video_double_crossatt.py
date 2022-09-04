@@ -1077,6 +1077,18 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
+@register_model_architecture('video_double_cross_att', 'video_double_cross_att_base_pewln')
+def video_double_cross_att_base_pewln(args):
+
+    # video
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.video_att_before = getattr(args, 'video_att_before', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
+    args.residual_policy = getattr(args, 'residual_policy', None)
+    base_architecture(args)
+
+
 @register_model_architecture('video_double_cross_att', 'video_double_cross_att_pewln')
 def video_double_cross_att_pewln(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
