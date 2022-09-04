@@ -22,7 +22,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         self.video_path = os.path.join(self.video_feat_path,self.video_feat_type,self.split)
 
         self.video_id_list = []
-        with open(self.video_ids_path + "/" + split + ".ids", encoding='utf-8') as file:
+        with open(self.video_ids_path + "/" + split + ".id", encoding='utf-8') as file:
             self.video_id_list = [x.rstrip() for x in file.readlines()]
 
         self.video_feat_type = args.video_feat_type
