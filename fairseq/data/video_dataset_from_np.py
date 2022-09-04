@@ -14,12 +14,12 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
     """
 
     def __init__(self, args,split):
-        self.split=args.split
+        self.split=split
         self.video_feat_type=args.video_feat_type
         self.video_feat_path = args.video_feat_path
         self.video_ids_path = args.video_ids_path
         self.max_vid_len = args.max_vid_len
-        self.video_path = os.path.join(self.video_feat_path,self.video_feat_type,self.split)
+        self.video_path = os.path.join(self.video_feat_path,self.split)
 
         self.video_id_list = []
         with open(self.video_ids_path + "/" + split + ".id", encoding='utf-8') as file:
@@ -33,7 +33,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
     def __getitem__(self, idx):
 
         video_name = self.video_id_list[idx]
-        fpath = os.path.join(self.video_path ,video_name)
+        fpath = os.path.join(self.video_path ,video_name+".npz")
         features = np.load(fpath, encoding='latin1')["features"]
         return features
 
