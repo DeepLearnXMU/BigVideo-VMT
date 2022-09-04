@@ -63,6 +63,8 @@ from .image_language_pair_dataset import ImageLanguagePairDataset
 from .video_dataset import VideoDataset
 from .video_language_dataset import VideoLanguagePairDataset
 from .video_language_multi_dataset import VideoLanguagePairMultiDataset
+from .video_dataset_from_np import VideoDatasetFromNp
+from .video_language_dataset_from_np import VideoLanguageDatasetFromNp
 
 from .iterators import (
     CountingIterator,
@@ -134,5 +136,7 @@ __all__ = [
     "TruncatedDictionary",
     "VideoDataset",
     "VideoLanguagePairDataset",
-    "VideoLanguagePairMultiDataset"
+    "VideoLanguagePairMultiDataset",
+    'VideoDatasetFromNp',
+    'VideoLanguageDatasetFromNp'
 ]
