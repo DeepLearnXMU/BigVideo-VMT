@@ -5,6 +5,7 @@ export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
+cd /opt/tiger/fairseq_mmt
 bash set_environment.sh
 
 
