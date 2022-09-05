@@ -171,23 +171,6 @@ def _main(args, output_file):
 
     scorer = scoring.build_scorer(args, tgt_dict)
 
-    # random image translation code
-    fw = open(args.output, 'w', encoding="utf-8")
-    who = args.gen_subset
-    if who == 'test':
-        filename = 'test2016'
-    elif who == 'test1':
-        filename = 'test2017'
-    elif who == 'test2':
-        filename = 'testcoco'
-
-    if args.random_image_translation:
-        new_image_order = {}
-        f = open(filename+'_random_img_order.txt', 'r')
-        for idx, line in enumerate(f):
-            new_image_order[int(line.strip())] = idx
-        f.close()
-
     num_sentences = 0
     has_target = True
     wps_meter = TimeMeter()
@@ -275,10 +258,10 @@ def _main(args, output_file):
                     extra_symbols_to_ignore=get_symbols_to_strip_from_output(generator),
                 )
                 detok_hypo_str = decode_fn(hypo_str)
-                if args.random_image_translation:
-                    fw.write(str(new_image_order[sample_id]) + '\t' + hypo_str + '\n')
-                else:
-                    fw.write(str(sample_id) + '\t' + hypo_str + '\n')
+                # if args.random_image_translation:
+                #     fw.write(str(new_image_order[sample_id]) + '\t' + hypo_str + '\n')
+                # else:
+                #     fw.write(str(sample_id) + '\t' + hypo_str + '\n')
 
                 if not args.quiet:
                     score = hypo["score"] / math.log(2)  # convert to base 2
