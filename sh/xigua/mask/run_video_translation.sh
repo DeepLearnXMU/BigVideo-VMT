@@ -24,6 +24,8 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
 fi
 
 mask=$1   #mask1,2,3,4,c,p
+seed=$2
+arch=$3
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 
@@ -37,12 +39,12 @@ update_freq=1
 max_epoches=100
 patience=10
 dropout=0.1
-seed=$2
+
 weight_decay=0.1
 clip_norm=0.0
 residual_policy="None"
 ini_alpha=0.0
-arch=video_double_cross_att_base_pewln
+
 
 
 video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1

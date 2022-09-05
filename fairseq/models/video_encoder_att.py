@@ -187,11 +187,6 @@ class TransformerModel(FairseqEncoderDecoderModel):
         # args for video MMT
         parser.add_argument('--video-layernorm-embedding', action='store_true',
                             help='add layernorm to video - embedding')
-        parser.add_argument('--video-embedding-dropout', type=float, metavar='D',
-                            help='video embedding dropout probability')
-
-        parser.add_argument('--video-pre-norm', action='store_true',
-                            help='normlization on video feature before fusing')
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
         parser.add_argument('--pe-for-video', type=bool,
@@ -202,6 +197,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='text feat dropout before SA')
         parser.add_argument('--SA-attention-dropout', type=float,
                             help='selective attn\'s dropout')
+        parser.add_argument('--video-learned-pos', action='store_true',
+            help='use learned positional embeddings in the video encoder')
+        parser.add_argument('--residual-policy', type=str,help="")
+        parser.add_argument('--ini-alpha', type=float,help="" )
 
 
 
@@ -400,7 +399,7 @@ class TransformerEncoder(FairseqEncoder):
         self.args = args
         # code for video MMT
 
-        self.dense = nn.Linear(self.args.video_feat_dim, embed_dim)
+        self.video_dense = nn.Linear(self.args.video_feat_dim, embed_dim)
         self.sigmoid = nn.Sigmoid()
         self.gate_dense = nn.Linear(2 * embed_dim, embed_dim)
 
@@ -419,9 +418,9 @@ class TransformerEncoder(FairseqEncoder):
         self.video_embed_positions = (
             PositionalEmbedding(
                 args.max_vid_len,
-                args.video_feat_dim,
+                embed_dim,
                 self.padding_idx,
-                learned=args.encoder_learned_pos,
+                learned=args.video_learned_pos,
             )
             if args.pe_for_video
             else None
@@ -429,13 +428,13 @@ class TransformerEncoder(FairseqEncoder):
 
 
 
-        self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=args.video_feat_dim,
-                                                        vdim=args.video_feat_dim, attn_dim=embed_dim,
+        self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=embed_dim,
+                                                        vdim=embed_dim, attn_dim=embed_dim,
                                                         intermediate_dim=embed_dim, output_dim=embed_dim,
                                                         num_heads=1, attn_drop=args.SA_attention_dropout)
 
         if getattr(args, "video_layernorm_embedding", False):
-            self.video_layernorm_embedding = LayerNorm(args.video_feat_dim)
+            self.video_layernorm_embedding = LayerNorm(embed_dim)
         else:
             self.video_layernorm_embedding = None
 
@@ -563,11 +562,10 @@ class TransformerEncoder(FairseqEncoder):
         encoder_states = [] if return_all_hiddens else None
 
         if not self.is_fusion_top:
-            video_padding_mask = ~video_padding.bool()
+            video_padding_mask = video_padding
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
-
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask)
@@ -580,7 +578,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
-            video_padding_mask = video_padding_mask
+            video_padding_mask = video_padding
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
@@ -1110,12 +1108,21 @@ def base_architecture(args):
     args.no_scale_embedding = getattr(args, 'no_scale_embedding', False)
     args.layernorm_embedding = getattr(args, 'layernorm_embedding', False)
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_base_top_pe')
-def video_encoder_att_vatex_top_pe(args):
+        # video
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', False)
+    args.video_att_before = getattr(args, 'video_att_before', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
+    args.residual_policy = getattr(args, 'residual_policy', None)
+
+@register_model_architecture('video_encoder_att', 'video_encoder_att_base_top_pewln')
+def video_encoder_att_base_top_pewln(args):
 
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
     args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
