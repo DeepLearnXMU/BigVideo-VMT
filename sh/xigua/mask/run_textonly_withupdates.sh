@@ -67,7 +67,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --max-update ${max_updates} --save-interval-updates  2500 --keep-interval-updates 10 \
-  --validate_interval -1 \
+  --validate-interval -1 \
   --no-epoch-checkpoints  \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
