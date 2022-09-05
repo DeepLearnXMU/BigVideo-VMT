@@ -1,6 +1,6 @@
 #!/bin/bash
 
-device=0,1,2,3,4,5,6,7
+device=0,1
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
@@ -30,7 +30,7 @@ local_data_dir=/mnt/bd/kangliyan/data/vatex/fairseq_bin/fairseq_bin_filter/vatex
 fp16=1 #0
 lr=0.001
 warmup=4000
-max_tokens=512
+max_tokens=2048
 update_freq=1
 keep_last_epochs=10
 patience=10
