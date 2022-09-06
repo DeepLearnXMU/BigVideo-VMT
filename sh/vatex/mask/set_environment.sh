@@ -12,7 +12,11 @@ mkdir ~/data
 mkdir -p ~/data/vatex/
 
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
-
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/vatex/fairseq_bin_filter.tar.gz ~/data/
+cd ~/data
+tar -zxvf en_zh.tar.gz
+tar -zxvf vatex_features.tar.gz
+tar -zxvf fairseq_bin_filter.tar.gz
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
