@@ -498,7 +498,7 @@ class TransformerEncoder(FairseqEncoder):
         elif self.feature_choice == "frame_level":
             avg_pool = nn.AdaptiveAvgPool3d(1)
             vid_feats = avg_pool(vid_feats)
-            print(vid_feats.shape)
+
             # squeeze dimensions
             vid_feats = vid_feats.reshape((B, S, -1))
 
