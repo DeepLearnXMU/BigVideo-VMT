@@ -8,14 +8,14 @@ logger = logging.getLogger(__name__)
 def get_swin_model(args):
     if int(args.img_res) == 384:
         assert args.vidswin_size == "large"
-        config_path = '/opt/tiger/fairseq_mmt/fairse/models/video/video_swin/swin_%s_384_patch244_window81212_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
+        config_path = '/opt/tiger/fairseq_mmt/fairseq/models/video/video_swin/swin_%s_384_patch244_window81212_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
         model_path = args.videoswin_path
     else:
         # in the case that args.img_res == '224'
-        config_path = '/opt/tiger/fairseq_mmt/fairse/models/video/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
+        config_path = '/opt/tiger/fairseq_mmt/fairseq/models/video/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
         model_path = args.videoswin_path
     if args.pretrained_2d:
-        config_path = '/opt/tiger/fairseq_mmt/fairse/models/video/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
+        config_path = '/opt/tiger/fairseq_mmt/fairseq/models/video/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
         model_path = args.videoswin_path
 
     logger.info(f'video swin (config path): {config_path}')
