@@ -1147,6 +1147,8 @@ def base_architecture(args):
 @register_model_architecture('ve_clip_double_cross_att', 've_clip_double_cross_att_base_pewln')
 def ve_clip_double_cross_att_base_pewln(args):
 
+
+
     # args for video MMT
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
