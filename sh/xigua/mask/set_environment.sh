@@ -17,9 +17,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/codes/timm.
 
 cd /opt/tiger
 tar -zxvf common.tar.gz
-cd ~/codes
-tar -zxvf timm.tar.gz
-cp -r timm /home/tiger/.local/lib/python3.7/site-packages
+
 
 sudo cp -r /usr/local/bin/pip /usr/bin/pip
 sudo cp -r /usr/local/bin/pip3 /usr/bin/pip3
@@ -42,3 +40,6 @@ pip install vizseq==0.1.15
 pip install nltk==3.6.4
 pip install sacrebleu==1.5.1
 
+cd ~/codes
+tar -zxvf timm.tar.gz
+cp -r timm /home/tiger/.local/lib/python3.7/site-packages
