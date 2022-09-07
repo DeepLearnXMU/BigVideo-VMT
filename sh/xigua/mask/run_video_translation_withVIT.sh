@@ -33,9 +33,9 @@ local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 fp16=1 #0
 lr=7e-4
 warmup=4000
-max_tokens=4096
+max_tokens=2048
 update_freq=1
-max_updates=1500000
+max_epoches=100
 patience=10
 dropout=0.1
 
