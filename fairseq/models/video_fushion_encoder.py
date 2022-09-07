@@ -304,7 +304,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_lengths,
             prev_output_tokens,
             videos,
-            video_padding,
+            video_paddings,
             return_all_hiddens: bool = True,
             features_only: bool = False,
             alignment_layer: Optional[int] = None,
@@ -318,7 +318,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         """
 
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths, videos=videos, video_padding=video_padding,
+            src_tokens, src_lengths=src_lengths, videos=videos, video_paddings=video_paddings,
             return_all_hiddens=return_all_hiddens,
 
         )
@@ -532,7 +532,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             src_tokens,
             src_lengths,
             videos,
-            video_padding,
+            video_paddings,
             return_all_hiddens: bool = False,
             token_embeddings: Optional[torch.Tensor] = None,
     ):
@@ -594,14 +594,10 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         text_padding_mask = encoder_padding_mask
 
-        video_padding_mask = video_padding
+        video_padding_mask = video_paddings.bool()
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 
-        bsz, video_length = video_h.size()[0], video_h.size()[1]
-
-        video_padding_mask = torch.Tensor([0])
-        video_padding_mask = video_padding_mask.expand(bsz, video_length).bool().cuda()
 
         if self.args.merge_before:
             merge = torch.cat([video_h, text_h], dim=1)

@@ -30,12 +30,35 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
         self.size = len(self.video_id_list)
 
+        # for no video , pad one
+        self.video_pad = np.random.RandomState(0).normal(loc=0.0, scale=1, size=(video_feat_dim), )
+
+
     def __getitem__(self, idx):
 
         video_name = self.video_id_list[idx]
         fpath = os.path.join(self.video_path ,video_name+".npz")
-        features = np.load(fpath, encoding='latin1')["features"]
-        return features
+        empty_flag = False
+        if not os.path.exists(fpath):
+            features = np.zeros((1, self.video_feat_dim))
+            empty_flag = True
+        else:
+            features = np.load(fpath, encoding='latin1')["features"]
+
+        padding = np.zeros(self.max_vid_len)
+        if empty_flag:
+            features[0] = self.video_pad
+            padding[0] = 0
+            padding[1:] = 1
+        else:
+            if features.shape[0] < self.max_vid_len:
+                dis = self.max_vid_len - features.shape[0]
+                padding[features.shape[0]:] = 1
+                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+            elif features.shape[0] > max_length:
+                inds = sorted(random.sample(range(features.shape[0]), max_length))
+                features = features[inds]
+        return features,padding
 
     def __len__(self):
         return self.size

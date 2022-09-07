@@ -286,7 +286,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
             src_lengths,
             prev_output_tokens,
             videos,
-            video_padding,
+            video_paddings,
             return_all_hiddens: bool = True,
             features_only: bool = False,
             alignment_layer: Optional[int] = None,
@@ -299,7 +299,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
         which are not supported by TorchScript.
         """
         encoder_out = self.encoder(
-            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,video_padding=video_padding,
+            src_tokens, src_lengths=src_lengths, return_all_hiddens=return_all_hiddens,video_paddings=video_paddings,
             videos=videos
         )
         decoder_out = self.decoder(
@@ -519,7 +519,7 @@ class TransformerEncoder(FairseqEncoder):
             src_tokens,
             src_lengths,
             videos,
-            video_padding,
+            video_paddings,
             return_all_hiddens: bool = False,
             token_embeddings: Optional[torch.Tensor] = None,
     ):
@@ -562,7 +562,7 @@ class TransformerEncoder(FairseqEncoder):
         encoder_states = [] if return_all_hiddens else None
 
         if not self.is_fusion_top:
-            video_padding_mask = video_padding
+            video_padding_mask = video_paddings.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
@@ -578,7 +578,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
-            video_padding_mask = video_padding
+            video_padding_mask = video_paddings.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
