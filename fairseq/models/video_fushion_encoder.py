@@ -1181,6 +1181,7 @@ def base_architecture(args):
 
 @register_model_architecture('video_fushion_encoder', 'video_fushion_encoder_merge_before_pewln')
 def video_fushion_encoder_merge_before_pewln(args):
+
     # args for video MMT
     args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 512)
     args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 2048)
@@ -1201,6 +1202,22 @@ def video_fushion_encoder_small_merge_before_pewln(args):
     args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 512)
     args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 2048)
     args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 3)
+    args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 8)
+
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+
+    args.merge_before = getattr(args, 'merge_before', True)
+
+    base_architecture(args)
+
+@register_model_architecture('video_fushion_encoder', 'video_fushion_encoder_one_merge_before_pewln')
+def video_fushion_encoder_one_merge_before_pewln(args):
+    args.encoder_layers = getattr(args, 'encoder_layers', 0)
+    # args for video MMT
+    args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 512)
+    args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 2048)
+    args.fushion_encoder_layers = getattr(args, 'fushion_encoder_layers', 6)
     args.fushion_encoder_attention_heads = getattr(args, 'fushion_encoder_attention_heads', 8)
 
     args.pe_for_video = getattr(args, 'pe_for_video', True)
