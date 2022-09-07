@@ -49,12 +49,12 @@ ini_alpha=0.0
 video_feat_type="VIT_cls"
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
+        video_feat_path=/mnt/bd/xigua-data/tsv/
         max_vid_len=32
         feature_choice=cls
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
+        video_feat_path=/mnt/bd/xigua-data/tsv/
         max_vid_len=197
         feature_choice=patch
 fi
