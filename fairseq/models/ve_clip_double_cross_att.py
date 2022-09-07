@@ -403,7 +403,7 @@ class TransformerEncoder(FairseqEncoder):
         elif args.video_feat_type == "VIT":
             self.video_fc = nn.Linear(args.video_feat_dim, embed_dim)
         self.feature_choice = args.feature_choice
-
+        self.video_feat_dim=args.video_feat_dim
         self.args = args
 
     def build_video_encoder(self, args):
@@ -498,18 +498,24 @@ class TransformerEncoder(FairseqEncoder):
 
         B, S, C, H, W = videos.shape  # 40, 32, 3, 224, 224
 
-        features = torch.zeros([B, S, self.args.video_feat_dim], dtype=torch.float16).cuda()
+        if len(videos.shape) > 4:
+            videos = videos.view(-1, 3, 224, 224)
 
-        for i in range(B):
-            min_ind = i
-            max_ind = (i + 1)
-            video_batch = videos[min_ind:max_ind].squeeze(dim=0)
+        batch_features = self.video_encoder.forward_features(videos, choice=args.feature_choice)
 
-            batch_features = self.video_encoder.forward_features(video_batch)
+        features = batch_features.view(B, S, self.video_feat_dim)
 
-            # if args.l2_normalize:
-            #     batch_features = F.normalize(batch_features, dim=1)
-            features[min_ind:max_ind] = batch_features
+        # features = torch.zeros([B, S, self.args.video_feat_dim], dtype=torch.float16).cuda()
+        #
+        # for i in range(B):
+        #     min_ind = i
+        #     max_ind = (i + 1)
+        #     video_batch = videos[min_ind:max_ind].squeeze(dim=0)
+        #
+        #     batch_features = self.video_encoder.forward_features(video_batch)
+        #     # if args.l2_normalize:
+        #     #     batch_features = F.normalize(batch_features, dim=1)
+        #     features[min_ind:max_ind] = batch_features
 
         vid_feats = features
         vid_feats = self.video_fc(vid_feats)
@@ -784,19 +790,20 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def build_decoder_layer(self, args, no_encoder_attn=False, video_att_before=False):
         return TransformerDecoderFushionLayer(args, no_encoder_attn, video_att_before=video_att_before)
 
-    def video_forward_embedding(self, videos, video_padding_mask):
+    def video_forward_embedding(self, videos, video_padding_mask=None):
 
         videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
         videos = self.video_dense(videos)  # B T_v  C
 
-        if self.args.pe_for_video and video_shapes > 2:
+        if self.args.pe_for_video:
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx + 1
-            video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
+            video_position_ids = video_position_ids + self.padding_idx +1
+            if video_padding_mask is not None:
+                video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
             videos = videos + self.video_embed_positions(video_position_ids)
         if self.video_layernorm_embedding:
             videos = self.video_layernorm_embedding(videos)
@@ -942,10 +949,14 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # videos process
-        video_h = encoder_out.video_out
+        videos = encoder_out.video_out
 
         # video_padding_mask = ~encoder_out.video_padding_mask.bool()
-        # video_h = self.video_forward_embedding(videos, video_padding_mask)
+
+        video_h = self.video_forward_embedding(videos)
+
+        video_h = video_h.transpose(0,1)  # -> T B C
+
 
         # decoder layers
         attn: Optional[Tensor] = None

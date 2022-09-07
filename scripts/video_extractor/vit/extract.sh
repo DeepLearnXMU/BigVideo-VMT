@@ -3,7 +3,7 @@
 device=$1
 export CUDA_VISIBLE_DEVICES=$device
 
-choice=cls
+choice=$2
 visual_dir=/mnt/bd/xigua-data/tsv/
 output_dir=/mnt/bd/xigua-data/features/VIT_${choice}/
 mkdir -p $output_dir
