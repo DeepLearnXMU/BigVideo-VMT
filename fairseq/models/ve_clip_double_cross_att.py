@@ -1144,7 +1144,7 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
-@register_model_architecture('ve_clip_double_cross_att_base', 've_clip_double_cross_att_base_pewln')
+@register_model_architecture('ve_clip_double_cross_att', 've_clip_double_cross_att_base_pewln')
 def ve_clip_double_cross_att_base_pewln(args):
 
     # args for video MMT
