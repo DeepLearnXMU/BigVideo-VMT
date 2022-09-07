@@ -5,8 +5,8 @@ export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
-cd /opt/tiger/fairseq_mmt
-bash sh/xigua/mask/set_environment.sh
+# cd /opt/tiger/fairseq_mmt
+# bash sh/xigua/mask/set_environment.sh
 
 src_lang=en
 tgt_lang=zh
@@ -33,8 +33,8 @@ local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 fp16=1 #0
 lr=7e-4
 warmup=4000
-max_tokens=2048
-update_freq=1
+max_tokens=1024
+update_freq=2
 max_epoches=100
 patience=10
 dropout=0.1
@@ -46,7 +46,7 @@ ini_alpha=0.0
 
 
 
-video_feat_type="VIT_cls"
+
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/tsv/
@@ -61,7 +61,7 @@ fi
 
 max_num_frames=32
 img_res=224
-freeze_backbone=False
+freeze_backbone=True
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
@@ -88,22 +88,24 @@ fairseq-train $local_data_dir \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 \
-  --task raw_video_translation \
+  --task raw_video_translation --max-source-positions 256 --max-target-positions 256 \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq  \
   --seed $seed \
   --no-progress-bar  \
-  --find-unused-parameters \
   --eval-bleu \
   --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
+  --save-interval-updates 10 \
+  --log-interval 1 \
+  --skip-invalid-size-inputs-valid-test  \
   --max-epoch ${max_epoches} --keep-interval-updates 10 \
   --visual-dir $video_feat_path --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
-  --feature-choice ${feature_choice}  \
+  --feature-choice ${feature_choice} --freeze-backbone  \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --num-workers 8 \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}

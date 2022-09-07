@@ -400,10 +400,10 @@ class TransformerEncoder(FairseqEncoder):
             self.latent_feat_size = self.video_encoder.backbone.norm.normalized_shape[0]
             self.video_fc = nn.Linear(self.latent_feat_size, embed_dim)
             # self.use_grid_feature = args.use_grid_feature
-        elif args.video_feat_type == "VIT":
+        elif args.video_feat_type == "VIT_cls" or "VIT_patch":
             self.video_fc = nn.Linear(args.video_feat_dim, embed_dim)
         self.feature_choice = args.feature_choice
-        self.video_feat_dim=args.video_feat_dim
+        self.video_feat_dim = args.video_feat_dim
         self.args = args
 
     def build_video_encoder(self, args):
@@ -415,7 +415,7 @@ class TransformerEncoder(FairseqEncoder):
         elif visual_model == "clip":
             import clip
             visual_backbone, _ = clip.load("ViT-B/16", device="cuda")
-        elif visual_model == "VIT":
+        elif visual_model == "VIT_cls" or "VIT_patch":
             import timm
             visual_backbone = timm.create_model("vit_base_patch16_224", pretrained=True, num_classes=0).to("cuda")
         if args.freeze_backbone:
@@ -501,17 +501,21 @@ class TransformerEncoder(FairseqEncoder):
         if len(videos.shape) > 4:
             videos = videos.view(-1, 3, 224, 224)
 
-        batch_features = self.video_encoder.forward_features(videos, choice=args.feature_choice)
+        batch_features = self.video_encoder.forward_features(videos, choice=self.feature_choice)
 
-        features = batch_features.view(B, S, self.video_feat_dim)
+        if self.feature_choice == "patch":
+            batch_features = batch_features.view(B, S, 197, self.video_feat_dim)
+            features = batch_features.mean(dim=1)
+        else:
+            features = batch_features.view(B, S, self.video_feat_dim)
 
         # features = torch.zeros([B, S, self.args.video_feat_dim], dtype=torch.float16).cuda()
-        #
+
         # for i in range(B):
         #     min_ind = i
         #     max_ind = (i + 1)
         #     video_batch = videos[min_ind:max_ind].squeeze(dim=0)
-        #
+
         #     batch_features = self.video_encoder.forward_features(video_batch)
         #     # if args.l2_normalize:
         #     #     batch_features = F.normalize(batch_features, dim=1)
@@ -769,7 +773,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         # code for video MMT  fushion
 
-        self.video_dense = nn.Linear(self.args.video_feat_dim, embed_dim)
+        # self.video_dense = nn.Linear(embed_dim, embed_dim)
 
         if getattr(args, "video_layernorm_embedding", False):
             self.video_layernorm_embedding = LayerNorm(embed_dim)
@@ -795,13 +799,13 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
-        videos = self.video_dense(videos)  # B T_v  C
+        # videos = self.video_dense(videos)  # B T_v  C
 
         if self.args.pe_for_video:
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx +1
+            video_position_ids = video_position_ids + self.padding_idx + 1
             if video_padding_mask is not None:
                 video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
             videos = videos + self.video_embed_positions(video_position_ids)
@@ -955,8 +959,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         video_h = self.video_forward_embedding(videos)
 
-        video_h = video_h.transpose(0,1)  # -> T B C
-
+        video_h = video_h.transpose(0, 1)  # -> T B C
 
         # decoder layers
         attn: Optional[Tensor] = None
@@ -1144,11 +1147,9 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
+
 @register_model_architecture('ve_clip_double_cross_att', 've_clip_double_cross_att_base_pewln')
 def ve_clip_double_cross_att_base_pewln(args):
-
-
-
     # args for video MMT
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
