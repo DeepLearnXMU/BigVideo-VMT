@@ -26,6 +26,7 @@ fi
 mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
+video_feat_type=$4
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 
@@ -48,7 +49,7 @@ ini_alpha=0.0
 
 
 video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
-video_feat_type="VIT_cls"
+
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
@@ -57,6 +58,10 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
         max_vid_len=197
+  elif [ $video_feat_type == "slowfast" ]; then
+        video_feat_dim=2304
+        video_feat_path=/mnt/bd/xigua-slowfast/slowfast/features/slowfast/
+        max_vid_len=12
 fi
 
 
@@ -64,7 +69,7 @@ fi
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_rp${residual_policy}_ia${ini_alpha}_patience${patience}
+name=${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mvlen${max_vid_len}_rp${residual_policy}_ia${ini_alpha}_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/
