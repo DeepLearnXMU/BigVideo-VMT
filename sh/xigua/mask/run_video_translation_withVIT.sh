@@ -5,8 +5,8 @@ export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
-# cd /opt/tiger/fairseq_mmt
-# bash sh/xigua/mask/set_environment.sh
+ cd /opt/tiger/fairseq_mmt
+ bash sh/xigua/mask/set_environment.sh
 
 src_lang=en
 tgt_lang=zh
@@ -79,8 +79,6 @@ hdfs dfs -mkdir -p $output_dir
 mkdir -p $local_logs_dir
 
 hdfs dfs -put -f ${BASH_SOURCE[0]} $output_dir/train.sh
-
-
 
 fairseq-train $local_data_dir \
   --save-dir $output_dir \
