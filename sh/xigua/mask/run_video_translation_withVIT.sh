@@ -60,12 +60,12 @@ fi
 
 max_num_frames=32
 img_res=224
-freeze_backbone=True
+freeze_backbone=False
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mf${max_num_frames}_rp${residual_policy}_ia${ini_alpha}
+name=${mask}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mf${max_num_frames}_rp${residual_policy}_ia${ini_alpha}_patience${patience}_fr{freeze_backbone}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/ve_clip_double_cross_att/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/ve_clip_double_cross_att
