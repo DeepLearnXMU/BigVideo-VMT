@@ -103,7 +103,7 @@ fairseq-train $local_data_dir \
   --patience $patience \
   --max-epoch ${max_epoches} --keep-interval-updates 10 \
   --visual-dir $video_feat_path --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
-  --features-choice ${feature_choice} --freeze-backbone \
+  --feature-choice ${feature_choice}  \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --num-workers 8 \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
