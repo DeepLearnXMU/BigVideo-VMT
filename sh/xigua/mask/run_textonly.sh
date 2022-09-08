@@ -15,6 +15,7 @@ tgt_lang=zh
 mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
+weight_decay=$4
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 
 criterion=label_smoothed_cross_entropy
@@ -27,7 +28,7 @@ patience=10
 max_epoches=100
 dropout=0.1
 
-weight_decay=0.1
+
 clip_norm=0.0
 
 
