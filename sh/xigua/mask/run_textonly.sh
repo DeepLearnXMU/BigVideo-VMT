@@ -27,7 +27,7 @@ patience=10
 max_epoches=100
 dropout=0.1
 
-weight_decay=0.0
+weight_decay=0.1
 clip_norm=0.0
 
 
