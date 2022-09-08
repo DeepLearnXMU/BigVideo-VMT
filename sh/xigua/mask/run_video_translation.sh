@@ -27,6 +27,7 @@ mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
 video_feat_type=$4
+weight_decay=$5
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
 
@@ -41,7 +42,7 @@ max_epoches=100
 patience=10
 dropout=0.1
 
-weight_decay=0.1
+
 clip_norm=0.0
 residual_policy="None"
 ini_alpha=0.0
