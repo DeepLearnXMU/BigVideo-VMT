@@ -16,7 +16,7 @@ import time
 import torch
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import Sampler
-from fairseq.models.video.load_swin import get_swin_model, reload_pretrained_swin
+from config import get_swin_model, reload_pretrained_swin
 
 parser = argparse.ArgumentParser(description='Easy video feature extractor')
 
@@ -63,6 +63,7 @@ parser.add_argument('--videoswin-path', type=str)
 parser.add_argument("--kinetics", type=str, default='600', help="400 or 600")
 parser.add_argument("--pretrained-2d", type=bool, nargs='?', const=True, default=False)
 parser.add_argument("--vidswin-size", type=str, default='base')
+parser.add_argument("--grid-feat", action='store_true')
 
 args = parser.parse_args()
 
@@ -116,7 +117,9 @@ loader = DataLoader(
 )
 
 model = get_swin_model(args)
-
+device = torch.device("cuda")
+model = model.to(device)
+latent_feat_size = model.backbone.norm.normalized_shape[0]
 
 # if torch.cuda.device_count() > 1:
 #     print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -142,24 +145,24 @@ with th.no_grad():
             assert data["name"][0] == dataset[start_index]["name"]
 
         video, name = data["video"][0], data["name"][0]
-        video = video.cuda()
-        # print(video.shape)
+        video = video.cuda().unsqueeze(dim=0)
+        B, S, C, H, W = video.shape  # 40, 32, 3, 224, 224
 
-        # if len(video.shape) > 4:
-        #     video = video.view(-1,3,224,224)
-
-        batch_features = model.forward_features(video, choice=args.choice)
-        # print(batch_features.shape)
-
-        if args.choice == "patch":
-            out = th.mean(batch_features, dim=0)
+        videos = video.permute(0, 2, 1, 3, 4)  # (B x S x C x H x W) --> (B x C x S x H x W)
+        vid_feats = model(videos)  # 40, 1024, 16, 7, 7
+        vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
+        # vid_feats = vid_feats.reshape(B, -1, latent_feat_size)
+        # print(vid_feats.shape)
+        # pint(dsads)
+        # vid_feats = vid_feats.permute(0,2,1,3,4)
+        avg_pool = torch.nn.AdaptiveAvgPool3d((1, 1, latent_feat_size))
+        vid_feats = avg_pool(vid_feats)
+        # squeeze dimensions
+        vid_feats = vid_feats.squeeze(dim=2).squeeze(dim=2)
 
         output_file = os.path.join(output_dir, name + ".npz")
-        now_feature = batch_features.cpu().numpy()
-        if args.half_precision:
-            now_feature = now_feature.astype('float16')
+        now_feature = vid_feats.cpu().numpy()
+        now_feature = now_feature.astype('float16')
         np.savez(output_file, features=now_feature)
-
-
 
 print(f"Total number of frames: {totatl_num_frames}")
