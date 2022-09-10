@@ -43,6 +43,8 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
             empty_flag = True
         else:
             features = np.load(fpath, encoding='latin1')["features"]
+            if len(features.shape) == 3:
+                features = features[0]
 
         padding = np.zeros(self.max_vid_len)
 
