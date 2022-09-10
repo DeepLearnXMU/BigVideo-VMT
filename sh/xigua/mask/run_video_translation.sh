@@ -23,6 +23,7 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMCCTR
 fi
 
+
 mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
