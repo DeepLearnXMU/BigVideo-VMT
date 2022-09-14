@@ -195,8 +195,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
         parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
-        parser.add_argument('--residual-policy', type=str,help="")
-        parser.add_argument('--ini-alpha', type=float,help="" )
+        parser.add_argument('--residual-policy', type=str,default=None,help="")
+        parser.add_argument('--ini-alpha', type=float,default=1.0,help="" )
 
 
     @classmethod
