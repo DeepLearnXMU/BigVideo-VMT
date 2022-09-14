@@ -16,7 +16,7 @@ mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
 weight_decay=$4
-local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
+local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 
 criterion=label_smoothed_cross_entropy
 fp16=1 #0

@@ -32,7 +32,7 @@ weight_decay=$5
 residual_policy=$6
 ini_alpha=$7
 
-local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest
+local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 
 
 
