@@ -677,6 +677,8 @@ class TransformerDecoderFushionLayer(nn.Module):
                 else:
                     x = self.controlled_residual_connection(x, residual, alpha=1.0)
 
+
+
             else:
                 x = self.controlled_residual_connection(x, residual, alpha=1.0)
             if not self.normalize_before:
