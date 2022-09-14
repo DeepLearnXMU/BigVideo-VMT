@@ -29,8 +29,7 @@ seed=$2
 arch=$3
 video_feat_type=$4
 weight_decay=$5
-residual_policy=$6
-ini_alpha=$7
+
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 
@@ -117,7 +116,6 @@ fairseq-train $local_data_dir \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
   --max-vid-len $max_vid_len   \
-  --residual-policy $residual_policy --ini-alpha $ini_alpha \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
