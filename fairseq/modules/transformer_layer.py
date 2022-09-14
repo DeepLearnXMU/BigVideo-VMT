@@ -674,6 +674,9 @@ class TransformerDecoderFushionLayer(nn.Module):
                     merge = torch.cat([x, residual], dim=-1)
                     gate = torch.sigmoid(self.gate_dense(merge))
                     x = (1 - gate) * residual + gate * x
+                else:
+                    x = self.controlled_residual_connection(x, residual, alpha=1.0)
+
             else:
                 x = self.controlled_residual_connection(x, residual, alpha=1.0)
             if not self.normalize_before:
