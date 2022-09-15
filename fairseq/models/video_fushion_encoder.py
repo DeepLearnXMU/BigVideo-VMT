@@ -866,6 +866,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 self.output_projection.weight, mean=0, std=self.output_embed_dim ** -0.5
             )
 
+
+
+
     def build_decoder_layer(self, args, no_encoder_attn=False):
         return TransformerDecoderLayer(args, no_encoder_attn)
 
@@ -1043,6 +1046,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
+
+
 
         return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.text_out,
                    "video_h": encoder_out.video_out,

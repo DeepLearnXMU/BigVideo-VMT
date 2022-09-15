@@ -6,9 +6,11 @@
 from logging import log
 import math
 import torch.nn.functional as F
+import torch.nn as nn
 import torch
 from fairseq import metrics, utils
 from fairseq.criterions import FairseqCriterion, register_criterion
+from collections import OrderedDict
 
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=True):
@@ -29,6 +31,7 @@ def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=T
     eps_i = epsilon / lprobs.size(-1)
     loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
     return loss, nll_loss
+
 
 class BatchNorm1dNoBias(nn.BatchNorm1d):
     def __init__(self, *args, **kwargs):
@@ -69,24 +72,34 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
 
         if self.ctr_strategy == "mean+mlp":
             self.proj_dim = 128
-            self.feature_dim = task.encoder_embed_dim
-            video_projection_layers = [
-                ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
-                ('bn1', nn.BatchNorm1d(self.feature_dim)),
-                ('relu1', nn.ReLU()),
-                ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
-                ('bn2', BatchNorm1dNoBias(self.proj_dim)),
-            ]
-            text_projection_layers = [
-                ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
-                ('bn1', nn.BatchNorm1d(self.feature_dim)),
-                ('relu1', nn.ReLU()),
-                ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
-                ('bn2', BatchNorm1dNoBias(self.proj_dim)),
-            ]
+            self.feature_dim = task.args.encoder_embed_dim
+            # video_projection_layers = [
+            #     ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
+            #     ('bn1', nn.BatchNorm1d(self.feature_dim)),
+            #     ('relu1', nn.ReLU()),
+            #     ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
+            #     ('bn2', BatchNorm1dNoBias(self.proj_dim)),
+            # ]
 
-            self.video_projection = nn.Sequential(OrderedDict(video_projection_layers))
-            self.text_projection = nn.Sequential(OrderedDict(text_projection_layers))
+            # text_projection_layers = [
+            #     ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
+            #     ('bn1', nn.BatchNorm1d(self.feature_dim)),
+            #     ('relu1', nn.ReLU()),
+            #     ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
+            #     ('bn2', BatchNorm1dNoBias(self.proj_dim)),
+            # ]
+
+            # self.video_projection = nn.Sequential(OrderedDict(video_projection_layers))
+            # self.text_projection = nn.Sequential(OrderedDict(text_projection_layers))
+
+            self.video_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
+                                                  nn.BatchNorm1d(self.feature_dim),
+                                                  nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                  BatchNorm1dNoBias(self.proj_dim))
+            self.text_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
+                                                 nn.BatchNorm1d(self.feature_dim),
+                                                 nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                 BatchNorm1dNoBias(self.proj_dim))
 
     @staticmethod
     def add_args(parser):
@@ -213,10 +226,11 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         text_padding_mask = extra["text_padding_mask"]  # B, t_len
         video_padding_mask = extra["video_padding_mask"]
 
-        text_padding_mask = (~text_padding_mask).float()
-        video_padding_mask = (~video_padding_mask).float()
+        text_padding_mask = (~text_padding_mask).int()
+        video_padding_mask = (~video_padding_mask).int()
 
         if self.ctr_strategy == "mean":
+
             text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
                 dim=1).unsqueeze(
                 -1)  # Bx H
@@ -241,7 +255,9 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                 loss = -torch.nn.LogSoftmax(0)(logits).diag()
             if reduce:
                 loss = loss.sum()
+
         elif self.ctr_strategy == "mean+mlp":
+
             text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
                 dim=1).unsqueeze(
                 -1)  # Bx H
@@ -249,7 +265,6 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
             video_hidden = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
                 dim=1).unsqueeze(-1)
 
-            # from simclr
             text_hidden = self.text_projection(text_hidden)
             video_hidden = self.video_projection(video_hidden)
 
@@ -270,7 +285,6 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                 loss = -torch.nn.LogSoftmax(0)(logits).diag()
             if reduce:
                 loss = loss.sum()
-
 
         return loss
 
