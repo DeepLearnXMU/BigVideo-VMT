@@ -30,6 +30,11 @@ def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=T
     loss = (1.0 - epsilon) * nll_loss + eps_i * smooth_loss
     return loss, nll_loss
 
+class BatchNorm1dNoBias(nn.BatchNorm1d):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bias.requires_grad = False
+
 
 @register_criterion("cross_modal_criterion_with_ctr")
 class CrossModalCriterionWithCTR(FairseqCriterion):
@@ -60,7 +65,28 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         self.use_dual_ctr = use_dual_ctr
         self.use_v2t_ctr = use_v2t_ctr
         self.ctr_dropout_rate = ctr_dropout_rate
-        self.ctr_strategy = self.task.args.contrastive_strategy
+        self.ctr_strategy = task.args.contrastive_strategy
+
+        if self.ctr_strategy == "mean+mlp":
+            self.proj_dim = 128
+            self.feature_dim = task.encoder_embed_dim
+            video_projection_layers = [
+                ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
+                ('bn1', nn.BatchNorm1d(self.feature_dim)),
+                ('relu1', nn.ReLU()),
+                ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
+                ('bn2', BatchNorm1dNoBias(self.proj_dim)),
+            ]
+            text_projection_layers = [
+                ('fc1', nn.Linear(self.feature_dim, self.feature_dim, bias=False)),
+                ('bn1', nn.BatchNorm1d(self.feature_dim)),
+                ('relu1', nn.ReLU()),
+                ('fc2', nn.Linear(self.feature_dim, self.proj_dim, bias=False)),
+                ('bn2', BatchNorm1dNoBias(self.proj_dim)),
+            ]
+
+            self.video_projection = nn.Sequential(OrderedDict(video_projection_layers))
+            self.text_projection = nn.Sequential(OrderedDict(text_projection_layers))
 
     @staticmethod
     def add_args(parser):
@@ -215,6 +241,36 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                 loss = -torch.nn.LogSoftmax(0)(logits).diag()
             if reduce:
                 loss = loss.sum()
+        elif self.ctr_strategy == "mean+mlp":
+            text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
+                dim=1).unsqueeze(
+                -1)  # Bx H
+
+            video_hidden = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                dim=1).unsqueeze(-1)
+
+            # from simclr
+            text_hidden = self.text_projection(text_hidden)
+            video_hidden = self.video_projection(video_hidden)
+
+            batch_size, hidden_size = text_hidden.size()
+            logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
+                                         video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
+                                         dim=-1)
+
+            logits /= self.contrastive_temperature
+
+            if self.use_dual_ctr:
+                loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
+                loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
+                loss = loss_text + loss_video
+            elif self.use_v2t_ctr:
+                loss = -torch.nn.LogSoftmax(1)(logits).diag()
+            else:
+                loss = -torch.nn.LogSoftmax(0)(logits).diag()
+            if reduce:
+                loss = loss.sum()
+
 
         return loss
 
