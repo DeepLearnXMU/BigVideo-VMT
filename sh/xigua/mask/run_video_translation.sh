@@ -97,7 +97,7 @@ fairseq-train $local_data_dir \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \
-  --criterion $criterion --label-smoothing 0.1 \
+  --criterion $criterion --label-smoothing 0.1 --report-modal-similarity \
   --task raw_video_translation_from_np \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
