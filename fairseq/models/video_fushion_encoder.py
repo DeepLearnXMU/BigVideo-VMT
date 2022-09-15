@@ -457,6 +457,13 @@ class TransformerFushionEncoder(FairseqEncoder):
         else:
             self.video_layernorm_embedding = None
 
+        if getattr(args, "enable_cls", False):
+            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, self.args.video_feat_dim))
+        else:
+            self.video_cls_token = None
+        if self.video_cls_token is not None:
+            nn.init.normal_(self.cls_token, std=1e-6)
+
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -508,9 +515,12 @@ class TransformerFushionEncoder(FairseqEncoder):
 
     def video_forward_embedding(self, videos, video_padding_mask=None):
 
+
+
         # videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
+
         videos = self.video_dense(videos)  # B T_v  C
 
         if self.args.pe_for_video:
@@ -595,6 +605,11 @@ class TransformerFushionEncoder(FairseqEncoder):
         text_padding_mask = encoder_padding_mask
 
         video_padding_mask = video_paddings.bool()
+
+        if self.video_cls_token is not None:
+            videos = torch.cat((self.cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
+
+
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 

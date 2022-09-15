@@ -165,6 +165,7 @@ def load_VideoLanguageDatasetFromNp(
         num_buckets=num_buckets,
         shuffle=shuffle,
         pad_to_multiple=pad_to_multiple,
+
     )
 
 
@@ -251,6 +252,8 @@ class RawVideoTranslationFromNpTask(LegacyFairseqTask):
                             help='video features len')
         parser.add_argument('--video-feat-type', type=str,
                             help='video features type')
+        parser.add_argument('--enable-cls', type=int,default=0,
+                            help='whether use cls for ctr')
 
 
 
@@ -290,6 +293,7 @@ class RawVideoTranslationFromNpTask(LegacyFairseqTask):
         tgt_dict = cls.load_dictionary(
             os.path.join(paths[0], "dict.{}.txt".format(args.target_lang))
         )
+        assert src_dict.bos() == tgt_dict.bos()
         assert src_dict.pad() == tgt_dict.pad()
         assert src_dict.eos() == tgt_dict.eos()
         assert src_dict.unk() == tgt_dict.unk()
@@ -336,6 +340,7 @@ class RawVideoTranslationFromNpTask(LegacyFairseqTask):
             num_buckets=self.args.num_batch_buckets,
             shuffle=(split != "test"),
             pad_to_multiple=self.args.required_seq_len_multiple,
+            prepend_bos=self.args.enable_cls
         )
 
     '''
