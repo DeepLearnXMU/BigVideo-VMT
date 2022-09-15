@@ -60,6 +60,7 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         self.use_dual_ctr = use_dual_ctr
         self.use_v2t_ctr = use_v2t_ctr
         self.ctr_dropout_rate = ctr_dropout_rate
+        self.ctr_strategy = self.task.args.contrastive_strategy
 
     @staticmethod
     def add_args(parser):
@@ -84,6 +85,7 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                             help="if we want to use video find text")
         parser.add_argument("--ctr-dropout-rate", default=0., type=float,
                             help='the dropout rate of hidden units')
+        parser.add_argument("--contrastive-strategy", default="mean", type=str, )
 
         # fmt: on
 
@@ -184,30 +186,36 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
         video_h = extra['video_h']
         text_padding_mask = extra["text_padding_mask"]  # B, t_len
         video_padding_mask = extra["video_padding_mask"]
+
         text_padding_mask = (~text_padding_mask).float()
         video_padding_mask = (~video_padding_mask).float()
 
-        text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(dim=1).unsqueeze(
-            -1)  # Bx H
-        video_hidden = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
-            dim=1).unsqueeze(-1)
+        if self.ctr_strategy == "mean":
+            text_hidden = (text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
+                dim=1).unsqueeze(
+                -1)  # Bx H
 
-        batch_size, hidden_size = text_hidden.size()
-        logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
-                                     video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
-                                     dim=-1)
-        logits /= self.contrastive_temperature
+            video_hidden = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                dim=1).unsqueeze(-1)
 
-        if self.use_dual_ctr:
-            loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
-            loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
-            loss = loss_text + loss_video
-        elif self.use_v2t_ctr:
-            loss= -torch.nn.LogSoftmax(1)(logits).diag()
-        else:
-            loss = -torch.nn.LogSoftmax(0)(logits).diag()
-        if reduce:
-            loss = loss.sum()
+            batch_size, hidden_size = text_hidden.size()
+            logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
+                                         video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
+                                         dim=-1)
+
+            logits /= self.contrastive_temperature
+
+            if self.use_dual_ctr:
+                loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
+                loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
+                loss = loss_text + loss_video
+            elif self.use_v2t_ctr:
+                loss = -torch.nn.LogSoftmax(1)(logits).diag()
+            else:
+                loss = -torch.nn.LogSoftmax(0)(logits).diag()
+            if reduce:
+                loss = loss.sum()
+
         return loss
 
     @classmethod
