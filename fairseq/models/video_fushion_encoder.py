@@ -217,6 +217,8 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--residual-policy', type=str, help="")
         parser.add_argument('--ini-alpha', type=float, help="")
+        parser.add_argument('--output-encoder-after', type=int,default=0, help="")
+
 
     @classmethod
     def build_model(cls, args, task):
@@ -464,6 +466,8 @@ class TransformerFushionEncoder(FairseqEncoder):
         if self.video_cls_token is not None:
             nn.init.normal_(self.cls_token, std=1e-6)
 
+        self.output_encoder_after = args.output_encoder_after
+
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -606,8 +610,8 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         video_padding_mask = video_paddings.bool()
 
-        if self.video_cls_token is not None:
-            videos = torch.cat((self.cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
+        # if self.video_cls_token is not None:
+        #     videos = torch.cat((self.cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
 
 
 
@@ -633,10 +637,30 @@ class TransformerFushionEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
+
+
+
+        x = x.transpose(0, 1)
+
+        bsz,video_length = video_padding_mask.size()[0],video_padding_mask.size()[0]
+        bsz,text_length = text_padding_mask.size()[0],text_padding_mask.size()[1]
+        assert video_length + text_length == encoder_padding_mask.size()[1]
+
+        top_video_h = x[:,:video_length,:]
+        top_text_h = x[:, video_length:, :]
+
+        x = x.transpose(0, 1)
+
+
+
+
+
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            text_out=text_h,  # B, t_len , C
-            video_out=video_h,  # B, v_len , C
+            bottom_text_out=text_h,  # B, t_len , C
+            bottom_video_out=video_h,  # B, v_len , C
+            top_text_out=top_text_h,
+            top_video_out=top_video_h,
             text_padding_mask=text_padding_mask,  # B,  t_len
             video_padding_mask=video_padding_mask,  # B, v_len
             encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
@@ -696,8 +720,10 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
-            text_out=encoder_out.text_out,  # B, t_len , C
-            video_out=encoder_out.video_out,  # B, v_len , C
+            bottom_text_out=text_h,  # B, t_len , C
+            bottom_video_out=video_h,  # B, v_len , C
+            top_text_out=top_text_h,
+            top_video_out=top_video_h,
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
             video_padding_mask=encoder_out.video_padding_mask,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T

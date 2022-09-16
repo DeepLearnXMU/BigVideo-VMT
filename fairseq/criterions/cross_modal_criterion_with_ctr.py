@@ -126,6 +126,7 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                             help='the dropout rate of hidden units')
         parser.add_argument("--contrastive-strategy", default="mean", type=str, )
 
+
         # fmt: on
 
     def forward(self, model, sample, reduce=True):
@@ -181,6 +182,9 @@ class CrossModalCriterionWithCTR(FairseqCriterion):
                 -1)
             video_mean = (video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
                 dim=1).unsqueeze(-1)
+
+            if self.ctr_strategy == "mean+mlp":
+                sd
             sim = torch.cosine_similarity(text_mean, video_mean, dim=-1)
             logging_output["modal_similarity"] = utils.item(sim.mean().data)
 
