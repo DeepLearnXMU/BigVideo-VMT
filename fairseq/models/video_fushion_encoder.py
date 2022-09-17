@@ -31,9 +31,14 @@ from fairseq.modules import (
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 from torch import Tensor
 
+import torch.nn.functional as F
+
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 32
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @register_model("video_fushion_encoder")
@@ -217,8 +222,7 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--residual-policy', type=str, help="")
         parser.add_argument('--ini-alpha', type=float, help="")
-        parser.add_argument('--output-encoder-after', type=int,default=0, help="")
-
+        parser.add_argument('--output-encoder-after', type=int, default=0, help="")
 
     @classmethod
     def build_model(cls, args, task):
@@ -464,7 +468,7 @@ class TransformerFushionEncoder(FairseqEncoder):
         else:
             self.video_cls_token = None
         if self.video_cls_token is not None:
-            nn.init.normal_(self.cls_token, std=1e-6)
+            nn.init.normal_(self.video_cls_token, std=1e-6)
 
         self.output_encoder_after = args.output_encoder_after
 
@@ -508,6 +512,7 @@ class TransformerFushionEncoder(FairseqEncoder):
         if token_embedding is None:
             token_embedding = self.embed_tokens(src_tokens)
         x = embed = self.embed_scale * token_embedding
+
         if self.embed_positions is not None:
             x = embed + self.embed_positions(src_tokens)
         if self.layernorm_embedding is not None:
@@ -518,8 +523,6 @@ class TransformerFushionEncoder(FairseqEncoder):
         return x, embed
 
     def video_forward_embedding(self, videos, video_padding_mask=None):
-
-
 
         # videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
@@ -579,7 +582,6 @@ class TransformerFushionEncoder(FairseqEncoder):
         """
         text encoder
         """
-
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
         # B x T x C -> T x B x C
@@ -610,14 +612,17 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         video_padding_mask = video_paddings.bool()
 
-        # if self.video_cls_token is not None:
-        #     videos = torch.cat((self.cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
-
-
+        if self.video_cls_token is not None:
+            videos = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
+            cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
+            video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 
+        def cos(x1, x2):
+            return (x1 * x2).sum(dim=-1) / (torch.norm(x1, dim=-1) * torch.norm(x1, dim=-1))
 
+        # self.args.merge_before=False
         if self.args.merge_before:
             merge = torch.cat([video_h, text_h], dim=1)
             encoder_padding_mask = torch.cat([video_padding_mask, text_padding_mask], dim=-1)
@@ -625,11 +630,15 @@ class TransformerFushionEncoder(FairseqEncoder):
             merge = torch.cat([text_h, video_h], dim=1)
             encoder_padding_mask = torch.cat([text_padding_mask, video_padding_mask], dim=-1)
 
+        bsz, video_length = video_padding_mask.size()[0], video_padding_mask.size()[1]
+        bsz, text_length = text_padding_mask.size()[0], text_padding_mask.size()[1]
+
         x = merge.transpose(0, 1)  # reback to T x B + v len x C
         # encoder layers
 
         for layer in self.fushion_layers:
             x = layer(x, encoder_padding_mask)
+
             if return_all_hiddens:
                 assert encoder_states is not None
                 encoder_states.append(x)
@@ -637,23 +646,20 @@ class TransformerFushionEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-
-
-
         x = x.transpose(0, 1)
 
-        bsz,video_length = video_padding_mask.size()[0],video_padding_mask.size()[0]
-        bsz,text_length = text_padding_mask.size()[0],text_padding_mask.size()[1]
+        bsz, video_length = video_padding_mask.size()[0], video_padding_mask.size()[1]
+        bsz, text_length = text_padding_mask.size()[0], text_padding_mask.size()[1]
         assert video_length + text_length == encoder_padding_mask.size()[1]
 
-        top_video_h = x[:,:video_length,:]
-        top_text_h = x[:, video_length:, :]
+        if self.args.merge_before:
+            top_video_h = x[:, :video_length, :]
+            top_text_h = x[:, video_length:, :]
+        else:
+            top_video_h = x[:, text_length:, :]
+            top_text_h = x[:, :text_length, :]
 
-        x = x.transpose(0, 1)
-
-
-
-
+        x = x.transpose(0, 1)  # TBC
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
@@ -720,10 +726,10 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
-            bottom_text_out=text_h,  # B, t_len , C
-            bottom_video_out=video_h,  # B, v_len , C
-            top_text_out=top_text_h,
-            top_video_out=top_video_h,
+            bottom_text_out=encoder_out.text_h,  # B, t_len , C
+            bottom_video_out=encoder_out.video_h,  # B, v_len , C
+            top_text_out=encoder_out.top_text_h,
+            top_video_out=encoder_out.top_video_h,
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
             video_padding_mask=encoder_out.video_padding_mask,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T
@@ -891,9 +897,6 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             nn.init.normal_(
                 self.output_projection.weight, mean=0, std=self.output_embed_dim ** -0.5
             )
-
-
-
 
     def build_decoder_layer(self, args, no_encoder_attn=False):
         return TransformerDecoderLayer(args, no_encoder_attn)
@@ -1073,10 +1076,10 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-
-
-        return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.text_out,
-                   "video_h": encoder_out.video_out,
+        return x, {"attn": [attn], "inner_states": inner_states, "bottom_text_h": encoder_out.bottom_text_out,
+                   "bottom_video_h": encoder_out.bottom_video_out,
+                   "top_text_h": encoder_out.top_text_out,
+                   "top_video_h": encoder_out.top_video_out,
                    "text_padding_mask": encoder_out.text_padding_mask,
                    "video_padding_mask": encoder_out.video_padding_mask}
 
@@ -1223,7 +1226,6 @@ def base_architecture(args):
 
 @register_model_architecture('video_fushion_encoder', 'video_fushion_encoder_merge_before_pewln')
 def video_fushion_encoder_merge_before_pewln(args):
-
     # args for video MMT
     args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 512)
     args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 2048)
@@ -1237,9 +1239,9 @@ def video_fushion_encoder_merge_before_pewln(args):
 
     base_architecture(args)
 
+
 @register_model_architecture('video_fushion_encoder', 'video_fushion_encoder_merge_after_pewln')
 def video_fushion_encoder_merge_after_pewln(args):
-
     # args for video MMT
     args.fushion_encoder_embed_dim = getattr(args, 'fushion_encoder_embed_dim', 512)
     args.fushion_encoder_ffn_embed_dim = getattr(args, 'fushion_encoder_ffn_embed_dim', 2048)
@@ -1268,6 +1270,7 @@ def video_fushion_encoder_small_merge_before_pewln(args):
     args.merge_before = getattr(args, 'merge_before', True)
 
     base_architecture(args)
+
 
 @register_model_architecture('video_fushion_encoder', 'video_fushion_encoder_one_merge_before_pewln')
 def video_fushion_encoder_one_merge_before_pewln(args):

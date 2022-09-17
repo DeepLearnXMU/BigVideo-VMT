@@ -28,10 +28,12 @@ mask=$1   #mask1,2,3,4,c,p
 seed=$2
 arch=$3
 video_feat_type=$4
-weight_decay=$5
+max_tokens=$5
 contrastive_strategy=$6
-contrastive_weight=$7
-contrastive_temperature=$8
+contrastive_align=$7
+contrastive_weight=$8
+contrastive_temperature=$9
+
 
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
@@ -41,7 +43,6 @@ local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 fp16=1 #0
 lr=7e-4
 warmup=4000
-max_tokens=4096
 update_freq=1
 max_epoches=100
 patience=10
