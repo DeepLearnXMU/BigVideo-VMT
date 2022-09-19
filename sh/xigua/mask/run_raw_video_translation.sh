@@ -87,7 +87,7 @@ fairseq-train $local_data_dir \
   --task raw_video_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
-  --max-tokens $max_tokens --max-tokens-valid 256 --update-freq $update_freq
+  --max-tokens $max_tokens --max-tokens-valid 256 --update-freq $update_freq  \
   --seed $seed \
   --no-progress-bar  \
   --find-unused-parameters \
@@ -103,7 +103,7 @@ fairseq-train $local_data_dir \
   --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
   --vidswin-size $videoswin_size --kinetics $kinetics --videoswin-path ${videoswin_path} --grid-feat --freeze-backbone \
   --residual-policy $residual_policy --ini-alpha $ini_alpha \
-  --num-workers 8 \
+  --num-workers 10 \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
