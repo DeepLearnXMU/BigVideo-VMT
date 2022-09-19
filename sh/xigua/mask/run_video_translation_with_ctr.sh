@@ -80,7 +80,7 @@ fi
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mvlen${max_vid_len}_ctrs${contrastive_strategy}_ctra${contrastive_align}_ctrw${contrastive_weight}_ctrt${contrastive_temperature}_patience${patience}
+name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mat${max_tokens}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mvlen${max_vid_len}_ctrs${contrastive_strategy}_ctra${contrastive_align}_ctrw${contrastive_weight}_ctrt${contrastive_temperature}_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/
@@ -115,7 +115,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-  --max-epoch ${max_epoches} --keep-interval-updates 10 \
+  --max-epoch ${max_epoches} --keep-interval-updates 10 --keep-best-checkpoints 10  \
   --patience $patience \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
