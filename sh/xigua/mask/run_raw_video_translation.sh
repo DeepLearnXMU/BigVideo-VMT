@@ -87,7 +87,7 @@ fairseq-train $local_data_dir \
   --task raw_video_translation \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
-  --max-tokens $max_tokens --max-tokens-valid 512 --update-freq $update_freq  \
+  --max-tokens $max_tokens --max-tokens-valid 256 --update-freq $update_freq  \
   --skip-invalid-size-inputs-valid-test \
   --seed $seed \
   --no-progress-bar  \
