@@ -16,7 +16,7 @@ from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from fairseq.models.fairseq_encoder import EncoderOut, FushionEncoderOut
+from fairseq.models.fairseq_encoder import EncoderOut, CtrEncoderOut
 from fairseq.modules import (
     AdaptiveSoftmax,
     FairseqDropout,
@@ -661,7 +661,7 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         x = x.transpose(0, 1)  # TBC
 
-        return FushionEncoderOut(
+        return CtrEncoderOut(
             encoder_out=x,  # T x B x C
             bottom_text_out=text_h,  # B, t_len , C
             bottom_video_out=video_h,  # B, v_len , C
@@ -677,7 +677,7 @@ class TransformerFushionEncoder(FairseqEncoder):
         )
 
     @torch.jit.export
-    def reorder_encoder_out(self, encoder_out: FushionEncoderOut, new_order):
+    def reorder_encoder_out(self, encoder_out: CtrEncoderOut, new_order):
         """
         Reorder encoder output according to *new_order*.
 
@@ -724,7 +724,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             for idx, state in enumerate(encoder_states):
                 encoder_states[idx] = state.index_select(1, new_order)
 
-        return FushionEncoderOut(
+        return CtrEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
             bottom_text_out=encoder_out.bottom_text_out,  # B, t_len , C
             bottom_video_out=encoder_out.bottom_video_out,  # B, v_len , C
@@ -904,7 +904,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def forward(
             self,
             prev_output_tokens,
-            encoder_out: Optional[FushionEncoderOut] = None,
+            encoder_out: Optional[CtrEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             features_only: bool = False,
             full_context_alignment: bool = False,
@@ -947,7 +947,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features(
             self,
             prev_output_tokens,
-            encoder_out: Optional[FushionEncoderOut] = None,
+            encoder_out: Optional[CtrEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
@@ -971,7 +971,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
     def extract_features_scriptable(
             self,
             prev_output_tokens,
-            encoder_out: Optional[FushionEncoderOut] = None,
+            encoder_out: Optional[CtrEncoderOut] = None,
             incremental_state: Optional[Dict[str, Dict[str, Optional[Tensor]]]] = None,
             full_context_alignment: bool = False,
             alignment_layer: Optional[int] = None,
