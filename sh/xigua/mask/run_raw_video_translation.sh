@@ -99,8 +99,6 @@ fairseq-train $local_data_dir \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
-  --save-interval 1 \
-  --save-interval-updates 7 \
   --max-epoch ${max_epoches} --keep-interval-updates 10  --keep-best-checkpoints 10   \
   --visual-dir $visual_dir --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
   --vidswin-size $videoswin_size --kinetics $kinetics --videoswin-path ${videoswin_path} --grid-feat --freeze-backbone \
