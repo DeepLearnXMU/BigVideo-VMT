@@ -16,7 +16,7 @@ from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from fairseq.models.fairseq_encoder import FushionEncoderOut, F
+from fairseq.models.fairseq_encoder import FushionEncoderOut
 from fairseq.modules import (
     AdaptiveSoftmax,
     FairseqDropout,
@@ -469,12 +469,12 @@ class TransformerEncoder(FairseqEncoder):
 
         # video
         video_padding_mask = video_paddings.bool()
-        video_h = video_h.transpose(0,1)  #-> T B C
+        video_h = videos.transpose(0,1)  #-> T B C
 
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            bottom_text_out=text_h,  # B, t_len , C
+            bottom_text_out=bottom_text_h,  # B, t_len , C
             top_text_out=top_text_h,
             video_out=video_h,
             text_padding_mask=text_padding_mask,  # B,  t_len
