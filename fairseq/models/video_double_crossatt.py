@@ -16,7 +16,7 @@ from fairseq.models import (
     register_model,
     register_model_architecture,
 )
-from fairseq.models.fairseq_encoder import FushionEncoderOut
+from fairseq.models.fairseq_encoder import FushionEncoderOut, F
 from fairseq.modules import (
     AdaptiveSoftmax,
     FairseqDropout,
@@ -443,11 +443,14 @@ class TransformerEncoder(FairseqEncoder):
         """
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
+        bottom_text_h = x
+
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
+
 
         encoder_states = [] if return_all_hiddens else None
 
@@ -461,15 +464,22 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        videos = videos.transpose(0, 1)
+        top_text_h = x.transpose(0,1)
+        text_padding_mask = encoder_padding_mask
+
+        # video
+        video_padding_mask = video_paddings.bool()
+        video_h = video_h.transpose(0,1)  #-> T B C
+
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            text_out=None,  # B, t_len , C
-            video_out=videos,  # B, v_len , C
-            text_padding_mask=None,  # B,  t_len
-            video_padding_mask=video_paddings,  # B, v_len
-            encoder_padding_mask=encoder_padding_mask,  # B x T
+            bottom_text_out=text_h,  # B, t_len , C
+            top_text_out=top_text_h,
+            video_out=video_h,
+            text_padding_mask=text_padding_mask,  # B,  t_len
+            video_padding_mask=video_padding_mask,  # B, v_len
+            encoder_padding_mask=encoder_padding_mask,  # B x (T + v_len)
             encoder_embedding=encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[(T + v_len) x B x C]
             src_tokens=None,
@@ -537,10 +547,11 @@ class TransformerEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
-            text_out=encoder_out.text_out,  # B, t_len , C
-            video_out=new_video_out,  # B, v_len , C
+            bottom_text_out=encoder_out.bottom_text_out,  # B, t_len , C
+            top_text_out=encoder_out.top_text_out,
+            video_out=new_video_out,
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
-            video_padding_mask=new_video_padding_mask,  # B, v_len
+            video_padding_mask=new_video_padding_mask ,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T
             encoder_embedding=new_encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
@@ -726,7 +737,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
     def video_forward_embedding(self, videos, video_padding_mask=None):
 
-        videos = videos.transpose(0, 1)
+        # videos = videos.transpose(0, 1)
         bsz, video_length = videos.size()[0], videos.size()[1]
         video_shapes = len(videos.size())
         videos = self.video_dense(videos)  # B T_v  C
@@ -883,13 +894,16 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # videos process
-        videos = encoder_out.video_out
+        videos = encoder_out.video_out.transpose(0,1) # -> B T C
 
-        video_padding_mask = encoder_out.video_padding_mask.bool()
+        video_padding_mask = encoder_out.video_padding_mask
 
         video_h = self.video_forward_embedding(videos,video_padding_mask=video_padding_mask)
 
         video_h = video_h.transpose(0,1)  # -> T B C
+
+
+
 
         # decoder layers
         attn: Optional[Tensor] = None
@@ -934,11 +948,12 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        return x, {"attn": [attn], "inner_states": inner_states, "text_h": encoder_out.encoder_out.transpose(0, 1),
-                   "video_h": video_h,
-                   "text_padding_mask": encoder_out.encoder_padding_mask,
-                   "video_padding_mask": video_padding_mask,
-                   "layer_video_alphas":layer_alphas}
+        return x, {"attn": [attn], "inner_states": inner_states, "bottom_text_h": encoder_out.bottom_text_out,
+                   "bottom_video_h": video_h.transpose(0,1),
+                   "top_text_h": encoder_out.top_text_out,
+                   "top_video_h": video_h.transpose(0,1),
+                   "text_padding_mask": encoder_out.text_padding_mask,
+                   "video_padding_mask": encoder_out.video_padding_mask}
 
     def output_layer(self, features):
         """Project features to the vocabulary size."""

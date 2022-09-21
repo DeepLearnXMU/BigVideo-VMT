@@ -619,8 +619,6 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 
-        def cos(x1, x2):
-            return (x1 * x2).sum(dim=-1) / (torch.norm(x1, dim=-1) * torch.norm(x1, dim=-1))
 
         # self.args.merge_before=False
         if self.args.merge_before:
