@@ -194,10 +194,9 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument('--video-learned-pos', action='store_true',
                             help='use learned positional embeddings in the video encoder')
         parser.add_argument('--pe-for-videos', type=bool, help='video for position ')
-        parser.add_argument('--video-att-before', type=bool,help='cross attention which before ')
-        parser.add_argument('--residual-policy', type=str,default=None,help="")
-        parser.add_argument('--ini-alpha', type=float,default=1.0,help="" )
-
+        parser.add_argument('--video-att-before', type=bool, help='cross attention which before ')
+        parser.add_argument('--residual-policy', type=str, default=None, help="")
+        parser.add_argument('--ini-alpha', type=float, default=1.0, help="")
 
     @classmethod
     def build_model(cls, args, task):
@@ -443,14 +442,13 @@ class TransformerEncoder(FairseqEncoder):
         """
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
-        bottom_text_h = x
+        bottom_text_h = x.clone()
 
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
         # compute padding mask
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
-
 
         encoder_states = [] if return_all_hiddens else None
 
@@ -464,13 +462,12 @@ class TransformerEncoder(FairseqEncoder):
         if self.layer_norm is not None:
             x = self.layer_norm(x)
 
-        top_text_h = x.transpose(0,1)
+        top_text_h = x.transpose(0, 1).clone()
         text_padding_mask = encoder_padding_mask
 
         # video
         video_padding_mask = video_paddings.bool()
-        video_h = videos.transpose(0,1)  #-> T B C
-
+        video_h = videos.transpose(0, 1)  # -> T B C
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
@@ -551,7 +548,7 @@ class TransformerEncoder(FairseqEncoder):
             top_text_out=encoder_out.top_text_out,
             video_out=new_video_out,
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
-            video_padding_mask=new_video_padding_mask ,  # B, v_len
+            video_padding_mask=new_video_padding_mask,  # B, v_len
             encoder_padding_mask=new_encoder_padding_mask,  # B x T
             encoder_embedding=new_encoder_embedding,  # B x T x C
             encoder_states=encoder_states,  # List[T x B x C]
@@ -746,7 +743,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             video_position_ids = torch.arange(video_length, dtype=torch.long,
                                               device=videos.device)
             video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx +1
+            video_position_ids = video_position_ids + self.padding_idx + 1
             if video_padding_mask is not None:
                 video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
             videos = videos + self.video_embed_positions(video_position_ids)
@@ -894,28 +891,25 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             self_attn_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # videos process
-        videos = encoder_out.video_out.transpose(0,1) # -> B T C
+        videos = encoder_out.video_out.transpose(0, 1)  # -> B T C
 
         video_padding_mask = encoder_out.video_padding_mask
 
-        video_h = self.video_forward_embedding(videos,video_padding_mask=video_padding_mask)
+        video_h = self.video_forward_embedding(videos, video_padding_mask=video_padding_mask)
 
-        video_h = video_h.transpose(0,1)  # -> T B C
-
-
-
+        video_h = video_h.transpose(0, 1)  # -> T B C
 
         # decoder layers
         attn: Optional[Tensor] = None
         inner_states: List[Optional[Tensor]] = [x]
-        layer_alphas={}
+        layer_alphas = {}
         for idx, layer in enumerate(self.layers):
             if incremental_state is None and not full_context_alignment:
                 self_attn_mask = self.buffered_future_mask(x)
             else:
                 self_attn_mask = None
 
-            x, layer_attn, _, layer_alpha  = layer(
+            x, layer_attn, _, layer_alpha = layer(
                 x,
                 encoder_out.encoder_out if encoder_out is not None else None,
                 encoder_out.encoder_padding_mask if encoder_out is not None else None,
@@ -928,7 +922,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                 video_padding_mask=video_padding_mask
             )
             inner_states.append(x)
-            layer_alphas[idx]=layer_alpha
+            layer_alphas[idx] = layer_alpha
             if layer_attn is not None and idx == alignment_layer:
                 attn = layer_attn.float().to(x)
 
@@ -949,9 +943,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             x = self.project_out_dim(x)
 
         return x, {"attn": [attn], "inner_states": inner_states, "bottom_text_h": encoder_out.bottom_text_out,
-                   "bottom_video_h": video_h.transpose(0,1),
+                   "bottom_video_h": video_h.transpose(0, 1),
                    "top_text_h": encoder_out.top_text_out,
-                   "top_video_h": video_h.transpose(0,1),
+                   "top_video_h": video_h.transpose(0, 1),
                    "text_padding_mask": encoder_out.text_padding_mask,
                    "video_padding_mask": encoder_out.video_padding_mask}
 
@@ -1092,9 +1086,9 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
+
 @register_model_architecture('video_double_cross_att', 'video_double_cross_att_base_pewln')
 def video_double_cross_att_base_pewln(args):
-
     # video
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)

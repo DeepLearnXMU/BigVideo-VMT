@@ -619,7 +619,6 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
 
-
         # self.args.merge_before=False
         if self.args.merge_before:
             merge = torch.cat([video_h, text_h], dim=1)
@@ -651,11 +650,11 @@ class TransformerFushionEncoder(FairseqEncoder):
         assert video_length + text_length == encoder_padding_mask.size()[1]
 
         if self.args.merge_before:
-            top_video_h = x[:, :video_length, :]
-            top_text_h = x[:, video_length:, :]
+            top_video_h = x[:, :video_length, :].clone()
+            top_text_h = x[:, video_length:, :].clone()
         else:
-            top_video_h = x[:, text_length:, :]
-            top_text_h = x[:, :text_length, :]
+            top_video_h = x[:, text_length:, :].clone()
+            top_text_h = x[:, :text_length, :].clone()
 
         x = x.transpose(0, 1)  # TBC
 
