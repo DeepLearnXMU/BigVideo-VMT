@@ -35,6 +35,10 @@ from torch import Tensor
 from fairseq.models.video.load_swin import get_swin_model, reload_pretrained_swin
 import time
 
+import logging
+
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
 DEFAULT_MAX_SOURCE_POSITIONS = 1024
 DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 32
@@ -508,7 +512,8 @@ class TransformerEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            text_out=None,  # B, t_len , C
+            bottom_text_out=None,  # B, t_len , C
+            top_text_out=None,
             video_out=vid_feats,  # B, v_len , C
             text_padding_mask=None,  # B,  t_len
             video_padding_mask=None,  # B, v_len
@@ -580,7 +585,8 @@ class TransformerEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
-            text_out=encoder_out.text_out,  # B, t_len , C
+            bottom_text_out=None,  # B, t_len , C
+            top_text_out=None,
             video_out=new_video_out,  # B, v_len , C
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
             video_padding_mask=new_video_padding_mask,  # B, v_len
@@ -1116,9 +1122,9 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
+
 @register_model_architecture('ve_double_cross_att', 've_double_cross_att_base_pewln')
 def ve_double_cross_att_base_pewln(args):
-
     # args for video MMT
     args.pe_for_video = getattr(args, 'pe_for_video', True)
     args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
@@ -1126,6 +1132,7 @@ def ve_double_cross_att_base_pewln(args):
     args.video_att_before = getattr(args, 'video_att_before', False)
 
     base_architecture(args)
+
 
 @register_model_architecture('ve_double_cross_att', 've_double_cross_att_small')
 def ve_double_cross_att_pewln(args):
