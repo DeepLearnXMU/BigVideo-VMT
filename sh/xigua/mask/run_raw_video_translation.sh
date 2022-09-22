@@ -33,14 +33,14 @@ local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 
 
 fp16=1 #0
-lr=0.001
+lr=7e-4
 warmup=4000
 max_tokens=1024
 update_freq=2
 keep_last_epochs=10
 patience=10
 max_epoches=100
-dropout=0.3
+dropout=0.1
 clip_norm=0.0
 residual_policy="None"
 ini_alpha=0.0
@@ -62,7 +62,7 @@ freeze_backbone=True
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mvlen${max_vid_len}_patience${patience}
+name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mt${max_tokens}me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_vtype${video_feat_type}_mvlen${max_vid_len}_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/
@@ -78,7 +78,7 @@ hdfs dfs -put -f ${BASH_SOURCE[0]} $output_dir/train.sh
 
 fairseq-train $local_data_dir \
   --save-dir $output_dir \
-  --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang --max-source-positions 256 --max-target-positions 256 \
+  --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang --max-source-positions 128 --max-target-positions 128 \
   --arch $arch \
   --dropout $dropout \
   --weight-decay $weight_decay  \
