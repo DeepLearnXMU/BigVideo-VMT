@@ -535,7 +535,8 @@ class TransformerEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=x,  # T x B x C
-            text_out=None,  # B, t_len , C
+            bottom_text_out=None,  # B, t_len , C
+            top_text_out=None,
             video_out=vid_feats,  # B, v_len , C
             text_padding_mask=None,  # B,  t_len
             video_padding_mask=None,  # B, v_len
@@ -607,7 +608,8 @@ class TransformerEncoder(FairseqEncoder):
 
         return FushionEncoderOut(
             encoder_out=new_encoder_out,  # T x B x C
-            text_out=encoder_out.text_out,  # B, t_len , C
+            bottom_text_out=None,  # B, t_len , C
+            top_text_out=None,
             video_out=new_video_out,  # B, v_len , C
             text_padding_mask=encoder_out.text_padding_mask,  # B,  t_len
             video_padding_mask=new_video_padding_mask,  # B, v_len
