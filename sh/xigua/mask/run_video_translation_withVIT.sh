@@ -100,8 +100,6 @@ fairseq-train $local_data_dir \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --patience $patience \
-  --save-interval-updates 10 \
-  --log-interval 1 \
   --skip-invalid-size-inputs-valid-test  \
   --max-epoch ${max_epoches} --keep-interval-updates 10 \
   --visual-dir $video_feat_path --video-feat-dim $video_feat_dim --img-res 224 --video-feat-type $video_feat_type   \
