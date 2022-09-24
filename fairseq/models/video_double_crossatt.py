@@ -729,6 +729,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             else None
         )
 
+        self.video_dropout = self.args.video_dropout
+
+
     def build_decoder_layer(self, args, no_encoder_attn=False, video_att_before=False):
         return TransformerDecoderFushionLayer(args, no_encoder_attn, video_att_before=video_att_before)
 
@@ -752,6 +755,17 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         videos = self.dropout_module(videos)
 
         return videos
+
+    def video_dropout_mask(self, videos, video_padding_mask):
+
+        B, S, H = videos.shape
+        randon_prob = torch.rand([B])
+        randon_mask = (randon_prob < self.video_dropout).to("cuda")
+        mask_index = torch.nonzero(randon_mask == True).squeeze()
+        videos.index_fill_(0, mask_index, 0.0)
+        video_padding_mask.index_fill_(0, mask_index, True)
+
+        return videos, video_padding_mask
 
     def forward(
             self,
@@ -896,6 +910,9 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         video_padding_mask = encoder_out.video_padding_mask
 
         video_h = self.video_forward_embedding(videos, video_padding_mask=video_padding_mask)
+        if self.video_dropout > 0:
+            video_h, video_padding_mask = self.video_dropout_mask(video_h, video_padding_mask)
+
 
         video_h = video_h.transpose(0, 1)  # -> T B C
 

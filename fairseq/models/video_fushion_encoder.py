@@ -472,6 +472,8 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         self.output_encoder_after = args.output_encoder_after
 
+        self.video_dropout = self.args.video_dropout
+
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
 
@@ -543,6 +545,17 @@ class TransformerFushionEncoder(FairseqEncoder):
         videos = self.dropout_module(videos)
 
         return videos
+
+    def video_dropout_mask(self, videos, video_padding_mask):
+
+        B, S, H = videos.shape
+        randon_prob = torch.rand([B])
+        randon_mask = (randon_prob < self.video_dropout).to("cuda")
+        mask_index = torch.nonzero(randon_mask == True).squeeze()
+        videos.index_fill_(0, mask_index, 0.0)
+        video_padding_mask.index_fill_(0, mask_index, True)
+
+        return videos, video_padding_mask
 
     def forward(
             self,
@@ -618,6 +631,8 @@ class TransformerFushionEncoder(FairseqEncoder):
             video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
 
         video_h = self.video_forward_embedding(videos, video_padding_mask)
+        if self.video_dropout>0:
+            video_h, video_padding_mask = self.video_dropout_mask(video_h, video_padding_mask)
 
         # self.args.merge_before=False
         if self.args.merge_before:
