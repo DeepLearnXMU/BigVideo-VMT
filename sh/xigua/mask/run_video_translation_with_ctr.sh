@@ -34,7 +34,12 @@ contrastive_align=$7
 contrastive_weight=$8
 contrastive_temperature=$9
 
-
+enable_cls=0
+if [ $contrastive_strategy == "cls" ]; then
+        enable_cls=1
+    elif [ $contrastive_strategy == "cls+mlp" ]; then
+        enable_cls=1
+fi
 
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
@@ -103,7 +108,7 @@ fairseq-train $local_data_dir \
   --weight-decay 0.1  \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1 --report-modal-similarity  \
-  --contrastive-strategy ${contrastive_strategy} --contrastive-align ${contrastive_align} --contrastive-weight ${contrastive_weight}  --contrastive-temperature ${contrastive_temperature} \
+  --contrastive-strategy ${contrastive_strategy} --contrastive-align ${contrastive_align} --contrastive-weight ${contrastive_weight}  --contrastive-temperature ${contrastive_temperature} --enable-cls ${enable_cls} \
   --task raw_video_translation_from_np \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
