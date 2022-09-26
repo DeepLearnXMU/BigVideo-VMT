@@ -24,15 +24,16 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
 fi
 
 
-mask=$1   #mask1,2,3,4,c,p
-seed=$2
-arch=$3
-video_feat_type=$4
-weight_decay=$5
-lr=$6
-warmup=$7
-max_tokens=$8
-video_dropout=$9
+mask=${1}  #mask1,2,3,4,c,p
+seed=${2}
+arch=${3}
+video_feat_type=${4}
+weight_decay=${5}
+lr=${6}
+warmup=${7}
+max_tokens=${8}
+dropout=${9}
+video_dropout=${10}
 
 
 

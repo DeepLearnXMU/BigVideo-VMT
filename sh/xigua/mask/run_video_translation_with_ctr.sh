@@ -24,15 +24,16 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
 fi
 
 
-mask=$1   #mask1,2,3,4,c,p
-seed=$2
-arch=$3
-video_feat_type=$4
-max_tokens=$5
-contrastive_strategy=$6
-contrastive_align=$7
-contrastive_weight=$8
-contrastive_temperature=$9
+mask=${1}   #mask1,2,3,4,c,p
+seed=${2}
+arch=${3}
+video_feat_type=${4}
+max_tokens=${5}
+contrastive_strategy=${6}
+contrastive_align=${7}
+contrastive_weight=${8}
+contrastive_temperature=${9}
+dropout=${10}
 
 enable_cls=0
 if [ $contrastive_strategy == "cls" ]; then
