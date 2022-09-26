@@ -597,6 +597,8 @@ class TransformerFushionEncoder(FairseqEncoder):
         """
         x, encoder_embedding = self.forward_embedding(src_tokens, token_embeddings)
 
+
+
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
@@ -1042,6 +1044,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
         x = self.dropout_module(x)
 
+        tgt_bottom_text_h = x.clone()
+
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
@@ -1092,6 +1096,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                    "bottom_video_h": encoder_out.bottom_video_out,
                    "top_text_h": encoder_out.top_text_out,
                    "top_video_h": encoder_out.top_video_out,
+                   "tgt_bottom_text_h":tgt_bottom_text_h,
+                   "tgt_text_padding_mask":self_attn_padding_mask,
                    "text_padding_mask": encoder_out.text_padding_mask,
                    "video_padding_mask": encoder_out.video_padding_mask}
 
