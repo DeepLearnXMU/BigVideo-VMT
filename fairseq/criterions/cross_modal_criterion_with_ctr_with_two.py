@@ -79,22 +79,21 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
             self.feature_dim = task.args.encoder_embed_dim
 
             self.src_video_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                  nn.BatchNorm1d(self.feature_dim),
-                                                  nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                  BatchNorm1dNoBias(self.proj_dim))
+                                                      nn.BatchNorm1d(self.feature_dim),
+                                                      nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                      BatchNorm1dNoBias(self.proj_dim))
             self.src_text_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                 nn.BatchNorm1d(self.feature_dim),
-                                                 nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                 BatchNorm1dNoBias(self.proj_dim))
+                                                     nn.BatchNorm1d(self.feature_dim),
+                                                     nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                     BatchNorm1dNoBias(self.proj_dim))
             self.tgt_video_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                  nn.BatchNorm1d(self.feature_dim),
-                                                  nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                  BatchNorm1dNoBias(self.proj_dim))
+                                                      nn.BatchNorm1d(self.feature_dim),
+                                                      nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                      BatchNorm1dNoBias(self.proj_dim))
             self.tgt_text_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                 nn.BatchNorm1d(self.feature_dim),
-                                                 nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                 BatchNorm1dNoBias(self.proj_dim))
-
+                                                     nn.BatchNorm1d(self.feature_dim),
+                                                     nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+                                                     BatchNorm1dNoBias(self.proj_dim))
 
     @staticmethod
     def add_args(parser):
@@ -122,7 +121,6 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
         parser.add_argument("--contrastive-strategy", default="mean", type=str, )
         parser.add_argument("--contrastive-align", default="bottom", type=str, )
 
-
         # fmt: on
 
     def forward(self, model, sample, reduce=True):
@@ -136,10 +134,12 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
         net_output = model(**sample["net_input"])
 
         if model.training:
-            src_contrastive_loss,tgt_contrastive_loss, src_text_hidden, src_video_hidden,tgt_src_hidden,tgt_video_hidden = self.compute_contrastive_loss(net_output,
-                                                                                        reduce=reduce)
+            src_contrastive_loss, tgt_contrastive_loss, src_text_hidden, src_video_hidden, tgt_text_hidden, tgt_video_hidden = self.compute_contrastive_loss(
+                net_output,
+                reduce=reduce)
         else:
-            src_contrastive_loss,tgt_contrastive_loss, src_text_hidden, src_video_hidden,tgt_src_hidden,tgt_video_hidden  = torch.tensor(0.0),torch.tensor(0.0), None, None,None, None
+            src_contrastive_loss, tgt_contrastive_loss, src_text_hidden, src_video_hidden, tgt_text_hidden, tgt_video_hidden = torch.tensor(
+                0.0), torch.tensor(0.0), None, None, None, None
 
         label_smoothed_nll_loss, nll_loss = self.compute_loss(model, net_output, sample, reduce=reduce)
 
@@ -235,7 +235,8 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
         bottom_video_h = extra['bottom_video_h']
         top_text_h = extra['top_text_h']  # B, t_len , C
         top_video_h = extra['top_video_h']
-        tgt_bottom_text_h=extra['tgt_bottom_text_h']
+        tgt_bottom_text_h = extra['tgt_bottom_text_h']
+        tgt_top_text_h = extra['tgt_top_text_h']
 
         text_padding_mask = extra["text_padding_mask"]  # B, t_len
         video_padding_mask = extra["video_padding_mask"]
@@ -243,51 +244,11 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
 
         text_padding_mask = (~text_padding_mask).float()
         video_padding_mask = (~video_padding_mask).float()
+        tgt_text_padding_mask = (~tgt_text_padding_mask).float()
 
         if self.ctr_strategy == "mean":
 
-            if self.ctr_align == "bottom":
-                src_text_hidden = (bottom_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
-                    dim=1).unsqueeze(
-                    -1)  # Bx H
-
-                src_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
-                    dim=1).unsqueeze(-1)
-
-            else:
-                src_text_hidden = (top_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
-                    dim=1).unsqueeze(
-                    -1)  # Bx H
-
-                src_video_hidden = (top_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
-                    dim=1).unsqueeze(-1)
-
-            src_batch_size, src_hidden_size = src_text_hidden.size()
-            src_logits = F.cosine_similarity(src_text_hidden.expand((src_batch_size, src_batch_size, src_hidden_size)),
-                                         src_video_hidden.expand((src_batch_size, src_batch_size, src_hidden_size)).transpose(0, 1),
-                                         dim=-1)
-            src_logits /= self.contrastive_temperature
-            src_loss = -torch.nn.LogSoftmax(0)(src_logits).diag()
-
-            tgt_text_hidden = (tgt_bottom_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(dim=1) / tgt_text_padding_mask.sum(
-                dim=1).unsqueeze(-1)
-            tgt_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
-                    dim=1).unsqueeze(-1)
-            tgt_batch_size, tgt_hidden_size = tgt_text_hidden.size()
-            tgt_logits = F.cosine_similarity(tgt_text_hidden.expand((tgt_batch_size,tgt_batch_size, tgt_hidden_size)),
-                                         tgt_video_hidden.expand((tgt_batch_size, tgt_batch_size, tgt_hidden_size)).transpose(0, 1),
-                                         dim=-1)
-            tgt_logits /= self.contrastive_temperature
-            tgt_loss = -torch.nn.LogSoftmax(0)(tgt_logits).diag()
-
-
-            if reduce:
-                src_loss = src_loss.sum()
-                tgt_loss = tgt_loss.sum()
-
-        elif self.ctr_strategy == "mean+mlp":
-
-            if self.ctr_align == "bottom":
+            if self.ctr_align == "bottom2bottom":
                 src_text_hidden = (bottom_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
                     dim=1).unsqueeze(
                     -1)  # Bx H
@@ -296,12 +257,80 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
                     dim=1) / video_padding_mask.sum(
                     dim=1).unsqueeze(-1)
 
-            else:
+                tgt_text_hidden = (tgt_bottom_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / tgt_text_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+                tgt_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+            elif self.ctr_align == "top2top":
                 src_text_hidden = (top_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
                     dim=1).unsqueeze(
                     -1)  # Bx H
 
                 src_video_hidden = (top_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+                tgt_text_hidden = (tgt_top_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / tgt_text_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+                tgt_video_hidden = (top_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+
+            src_batch_size, src_hidden_size = src_text_hidden.size()
+            src_logits = F.cosine_similarity(src_text_hidden.expand((src_batch_size, src_batch_size, src_hidden_size)),
+                                             src_video_hidden.expand(
+                                                 (src_batch_size, src_batch_size, src_hidden_size)).transpose(0, 1),
+                                             dim=-1)
+            src_logits /= self.contrastive_temperature
+            src_loss = -torch.nn.LogSoftmax(0)(src_logits).diag()
+
+
+            tgt_batch_size, tgt_hidden_size = tgt_text_hidden.size()
+
+            tgt_logits = F.cosine_similarity(tgt_text_hidden.expand((tgt_batch_size, tgt_batch_size, tgt_hidden_size)),
+                                             tgt_video_hidden.expand(
+                                                 (tgt_batch_size, tgt_batch_size, tgt_hidden_size)).transpose(0, 1),
+                                             dim=-1)
+            tgt_logits /= self.contrastive_temperature
+            tgt_loss = -torch.nn.LogSoftmax(0)(tgt_logits).diag()
+
+            if reduce:
+                src_loss = src_loss.sum()
+                tgt_loss = tgt_loss.sum()
+
+        elif self.ctr_strategy == "mean+mlp":
+
+            if self.ctr_align == "bottom2bottom":
+                src_text_hidden = (bottom_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
+                    dim=1).unsqueeze(
+                    -1)  # Bx H
+
+                src_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+                tgt_text_hidden = (tgt_bottom_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / tgt_text_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+                tgt_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+            elif self.ctr_align == "top2top":
+                src_text_hidden = (top_text_h * text_padding_mask.unsqueeze(-1)).sum(dim=1) / text_padding_mask.sum(
+                    dim=1).unsqueeze(
+                    -1)  # Bx H
+
+                src_video_hidden = (top_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+
+                tgt_text_hidden = (tgt_top_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(
+                    dim=1) / tgt_text_padding_mask.sum(
+                    dim=1).unsqueeze(-1)
+                tgt_video_hidden = (top_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
                     dim=1).unsqueeze(-1)
 
             src_text_hidden = src_text_hidden.half()
@@ -318,11 +347,7 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
             src_logits /= self.contrastive_temperature
             src_loss = -torch.nn.LogSoftmax(0)(src_logits).diag()
 
-            tgt_text_hidden = (tgt_bottom_text_h * tgt_text_padding_mask.unsqueeze(-1)).sum(
-                dim=1) / tgt_text_padding_mask.sum(
-                dim=1).unsqueeze(-1)
-            tgt_video_hidden = (bottom_video_h * video_padding_mask.unsqueeze(-1)).sum(dim=1) / video_padding_mask.sum(
-                dim=1).unsqueeze(-1)
+
             tgt_text_hidden = tgt_text_hidden.half()
             tgt_video_hidden = tgt_video_hidden.half()
 
@@ -341,57 +366,7 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
                 src_loss = src_loss.sum()
                 tgt_loss = tgt_loss.sum()
 
-        elif self.ctr_strategy == "cls":
-
-            assert self.ctr_align == "top"
-
-            text_hidden = top_text_h[:, 0, :].float()
-            video_hidden = top_video_h[:, 0, :].float()
-
-            batch_size, hidden_size = text_hidden.size()
-
-            logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
-                                         video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
-                                         dim=-1)
-
-            logits /= self.contrastive_temperature
-            if self.use_dual_ctr:
-                loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
-                loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
-                loss = loss_text + loss_video
-            elif self.use_v2t_ctr:
-                loss = -torch.nn.LogSoftmax(1)(logits).diag()
-            else:
-                loss = -torch.nn.LogSoftmax(0)(logits).diag()
-            if reduce:
-                loss = loss.sum()
-
-        elif self.ctr_strategy == "cls+mlp":
-
-            assert self.ctr_align == "top"
-            text_hidden = top_text_h[:, 0, :]
-            video_hidden = top_video_h[:, 0, :]
-
-            text_hidden = self.text_projection(text_hidden).float()
-            video_hidden = self.video_projection(video_hidden).float()
-
-            batch_size, hidden_size = text_hidden.size()
-            logits = F.cosine_similarity(text_hidden.expand((batch_size, batch_size, hidden_size)),
-                                         video_hidden.expand((batch_size, batch_size, hidden_size)).transpose(0, 1),
-                                         dim=-1)
-            logits /= self.contrastive_temperature
-            if self.use_dual_ctr:
-                loss_text = -torch.nn.LogSoftmax(0)(logits).diag()
-                loss_video = -torch.nn.LogSoftmax(1)(logits).diag()
-                loss = loss_text + loss_video
-            elif self.use_v2t_ctr:
-                loss = -torch.nn.LogSoftmax(1)(logits).diag()
-            else:
-                loss = -torch.nn.LogSoftmax(0)(logits).diag()
-            if reduce:
-                loss = loss.sum()
-
-        return src_loss,tgt_loss, src_text_hidden, src_video_hidden, tgt_text_hidden,tgt_video_hidden
+        return src_loss, tgt_loss, src_text_hidden, src_video_hidden, tgt_text_hidden, tgt_video_hidden
 
     @classmethod
     def reduce_metrics(cls, logging_outputs) -> None:
@@ -402,7 +377,8 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
         ntokens = sum(log.get("ntokens", 0) for log in logging_outputs)
         nsentences = sum(log.get("nsentences", 0) for log in logging_outputs)
         sample_size = sum(log.get("sample_size", 0) for log in logging_outputs)
-        contrastive_loss_sum = sum(log.get("contrastive_loss", 0) for log in logging_outputs)
+        src_contrastive_loss_sum = sum(log.get("src_contrastive_loss", 0) for log in logging_outputs)
+        tgt_contrastive_loss_sum = sum(log.get("tgt_contrastive_loss", 0) for log in logging_outputs)
 
         GPU_nums = sum(log.get('gpu_nums', 0) for log in logging_outputs)
 
@@ -416,7 +392,10 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
             "ppl", lambda meters: utils.get_perplexity(meters["nll_loss"].avg)
         )
         metrics.log_scalar(
-            "contrasitve_loss", contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
+            "src_contrasitve_loss", src_contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
+        )
+        metrics.log_scalar(
+            "tgt_src_contrasitve_loss", tgt_contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
         )
 
         total = utils.item(sum(log.get("total", 0) for log in logging_outputs))

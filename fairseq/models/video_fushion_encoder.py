@@ -1090,6 +1090,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         # T x B x C -> B x T x C
         x = x.transpose(0, 1)
 
+        tgt_top_text_h = x.clone()
+
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
@@ -1098,6 +1100,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                    "top_text_h": encoder_out.top_text_out,
                    "top_video_h": encoder_out.top_video_out,
                    "tgt_bottom_text_h":tgt_bottom_text_h,
+                   "tgt_top_text_h": tgt_top_text_h,
                    "tgt_text_padding_mask":tgt_text_padding_mask,
                    "text_padding_mask": encoder_out.text_padding_mask,
                    "video_padding_mask": encoder_out.video_padding_mask}
