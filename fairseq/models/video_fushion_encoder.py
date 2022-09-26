@@ -1045,6 +1045,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         x = self.dropout_module(x)
 
         tgt_bottom_text_h = x.clone()
+        tgt_text_padding_mask = prev_output_tokens.eq(self.padding_idx)
 
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
@@ -1097,7 +1098,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
                    "top_text_h": encoder_out.top_text_out,
                    "top_video_h": encoder_out.top_video_out,
                    "tgt_bottom_text_h":tgt_bottom_text_h,
-                   "tgt_text_padding_mask":self_attn_padding_mask,
+                   "tgt_text_padding_mask":tgt_text_padding_mask,
                    "text_padding_mask": encoder_out.text_padding_mask,
                    "video_padding_mask": encoder_out.video_padding_mask}
 
