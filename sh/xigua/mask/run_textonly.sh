@@ -19,6 +19,7 @@ weight_decay=$4
 lr=$5
 warmup=$6
 max_tokens=$7
+dropout=$8
 
 local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
 
@@ -29,7 +30,7 @@ warmup=4000
 update_freq=1
 patience=10
 max_epoches=100
-dropout=0.1
+
 
 
 clip_norm=0.0
@@ -37,7 +38,7 @@ clip_norm=0.0
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-name=${mask}ed20_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_Realpatience${patience}
+name=${mask}ed20_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_dp${dropout}_Realpatience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}
