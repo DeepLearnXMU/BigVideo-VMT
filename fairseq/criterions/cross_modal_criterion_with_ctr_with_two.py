@@ -157,7 +157,7 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
             "ntokens": sample["ntokens"],
             "nsentences": sample["target"].size(0),
             "src_contrastive_loss": src_contrastive_loss.data,
-            "tgt_contrastive_loss": src_contrastive_loss.data,
+            "tgt_contrastive_loss": tgt_contrastive_loss.data,
             "sample_size": sample_size,
             "gpu_nums": 1,
         }
@@ -395,7 +395,7 @@ class CrossModalCriterionWithCTRWithTwo(FairseqCriterion):
             "src_contrasitve_loss", src_contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
         )
         metrics.log_scalar(
-            "tgt_src_contrasitve_loss", tgt_contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
+            "tgt_contrasitve_loss", tgt_contrastive_loss_sum / nsentences / math.log(2), nsentences, round=3
         )
 
         total = utils.item(sum(log.get("total", 0) for log in logging_outputs))
