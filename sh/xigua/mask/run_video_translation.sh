@@ -58,6 +58,10 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
         max_vid_len=32
+  elif  [ $video_feat_type == "VIT_128" ]; then
+        video_feat_dim=768
+        video_feat_path=/mnt/bd/image-128frames-tsv/VIT_cls_max128frames/
+        max_vid_len=${11}
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
