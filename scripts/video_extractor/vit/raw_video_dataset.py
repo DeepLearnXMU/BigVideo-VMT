@@ -20,7 +20,7 @@ import time
 logger = logging.getLogger(__name__)
 
 tsv_file = "{}.video.tsv"
-imgs_tsv_file = "{}_32frames_img_size384.img.tsv"
+imgs_tsv_file = "{}_128frames_img_size384.img.tsv"
 
 
 class RawVideoDataset(torch.utils.data.Dataset):
@@ -94,8 +94,9 @@ class RawVideoDataset(torch.utils.data.Dataset):
             frames = np.transpose(frames, (0, 2, 3, 1))
         num_of_frames, height, width, channels = frames.shape
 
+        frame_len = len(frames)
         frame_list = []
-        for i in range(self.decoder_num_frames):
+        for i in range(num_of_frames):
             if num_of_frames == 1:
                 # if it is from image-caption dataset, we duplicate the image
                 # convert numpy to PIL format, compatible to augmentation operations
@@ -158,20 +159,10 @@ class RawVideoDataset(torch.utils.data.Dataset):
         # get pre-extracted video frames from tsv files
         frames = []
         _C, _H, _W = 3, 224, 224
-        if self.decoder_num_frames > len(binary_frms):
-            print(f"Corrupt videos, requested {self.decoder_num_frames} frames, "
-                  f"but got only {len(binary_frms)} frames, will return all zeros instead")
-            return np.zeros((self.decoder_num_frames, _C, _H, _W), dtype=np.int64)
 
-        def sampling(start, end, n):
-            if n == 1:
-                return [int(round((start + end) / 2.))]
-            if n < 1:
-                raise Exception("behaviour not defined for n<2")
-            step = (end - start) / float(n - 1)
-            return [int(round(start + x * step)) for x in range(n)]
+        frame_len = len(binary_frms)
 
-        for i in sampling(0, len(binary_frms) - 1, self.decoder_num_frames):
+        for i in range(0, frame_len):
             try:
                 image = self.get_image(binary_frms[i])
             except Exception as e:
@@ -210,6 +201,8 @@ class RawVideoDataset(torch.utils.data.Dataset):
         assert os.path.exists(visual_dir)
         visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
         row = self.get_row_from_tsv(visual_tsv, idx)
+        if idx < 10:
+            print(len(row))
         raw_frames = self.get_frames_from_tsv(row[2:])
 
         # raw_frames, is_video = self.get_visual_data(idx)
