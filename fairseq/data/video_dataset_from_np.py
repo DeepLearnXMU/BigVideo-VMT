@@ -7,7 +7,8 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-def temporal_sampling(frames,paddings, start_idx, end_idx, num_samples):
+
+def temporal_sampling(frames, start_idx, end_idx, num_samples):
     """
     Given the start and end frame index, sample num_samples frames between
     the start and end with equal interval.
@@ -22,17 +23,24 @@ def temporal_sampling(frames,paddings, start_idx, end_idx, num_samples):
     """
     index = torch.linspace(start_idx, end_idx, num_samples)
     index = torch.clamp(index, 0, len(frames) - 1).long().tolist()
-    # frames = torch.index_select(frames, 0, index)
-    frames = [frames[idx] for idx in index]
-    return frames
+    return frames[index]
 
-def rand_sampling(frames,paddings, start_idx, end_idx, num_samples):
-    if end_idx - start_idx + 1 < num_samples :
-        return frames[start_idx:end_idx+1],paddings[start_idx:end_idx+1]
+
+def rand_sampling(frames, start_idx, end_idx, num_samples):
+    if end_idx - start_idx + 1 < num_samples:
+        return frames[start_idx:end_idx + 1]
     else:
-        inds = sorted(random.sample(range(start_idx,end_idx+1), num_samples))
-        return frames[inds],paddings[inds]
+        inds = sorted(random.sample(range(start_idx, end_idx + 1), num_samples))
+        return frames[inds]
 
+
+def continuous_sampling(frames, start_idx, end_idx, num_samples):
+    if end_idx - start_idx + 1 < num_samples:
+        return frames[start_idx:end_idx + 1]
+    else:
+        choose_index = random.randint(start_idx, end_idx - num_samples + 1)
+        index = range(choose_index, choose_index + num_samples)
+        return frames[index]
 
 
 class VideoDatasetFromNp(torch.utils.data.Dataset):
@@ -56,9 +64,10 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         self.video_feat_dim = args.video_feat_dim
 
         self.size = len(self.video_id_list)
+
         self.sampling_strategy = args.sampling_strategy
+        self.sampling_frames = args.sampling_frames
         if self.sampling_strategy == "rand" or "uniform":
-            self.sampling_frames = args.sampling_frames
             assert self.sampling_frames > 0
 
         # for no video , pad one
@@ -77,34 +86,48 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
             if len(features.shape) == 3:
                 features = features[0]
 
-        padding = np.zeros(self.max_vid_len)
+        start_idx, end_idx = 0, features.shape[0] - 1
 
-        start_idx , end_idx = 0,features.shape[0]-1
-        if features.shape[0] < self.max_vid_len:
-            dis = self.max_vid_len - features.shape[0]
-            padding[features.shape[0]:] = 1
-            features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
-        elif features.shape[0] > self.max_vid_len:
-            inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
-            features = features[inds]
+        if self.sampling_strategy == "None" or self.split != "train":
+            padding = np.zeros(self.max_vid_len)
+            if features.shape[0] < self.max_vid_len:
+                dis = self.max_vid_len - features.shape[0]
+                padding[features.shape[0]:] = 1
+                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+            elif features.shape[0] > self.max_vid_len:
+                inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
+                features = features[inds]
+            if empty_flag:
+                features[0] = self.video_pad
+                padding[0] = 0
+                padding[1:] = 1
+            assert features.shape[0] == self.max_vid_len
 
-        if not empty_flag and self.sampling_strategy !="None" and self.split!="test":
-            if sampling_strategy == "rand":
-                features,padding=rand_sampling(features,padding,start_idx,end_idx,self.sampling_frames)
-            elif sampling_strategy =="uniform":
-                features, padding=temporal_sampling(features,padding,start_idx,end_idx,self.sampling_frames)
+            return features, padding
+        else:
+            if empty_flag:
+                dis = self.sampling_frames - features.shape[0]
+                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+                padding = np.zeros(self.sampling_frames)
+                features[0] = self.video_pad
+                padding[0] = 0
+                padding[1:] = 1
+            elif features.shape[0] < self.sampling_frames:
+                dis = self.sampling_frames - features.shape[0]
+                padding = np.zeros(self.sampling_frames)
+                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+                padding[features.shape[0]:] = 1
+            else:
+                padding = np.zeros(self.sampling_frames)
+                if self.sampling_strategy == "rand":
+                    features = rand_sampling(features, start_idx, end_idx, self.sampling_frames)
+                elif self.sampling_strategy == "uniform":
+                    features = temporal_sampling(features, start_idx, end_idx, self.sampling_frames)
+                elif self.sampling_strategy == "continuous":
+                    features = continuous_sampling(features, start_idx, end_idx, self.sampling_frames)
 
-        if empty_flag:
-            if self.sampling_strategy !="None" and self.split!="test":
-                features = features[:self.sampling_frames]
-                padding = padding[:self.sampling_frames]
-            features[0] = self.video_pad
-            padding[0] = 0
-            padding[1:] = 1
-
-        assert features.shape[0] == self.max_vid_len
-
-        return features, padding
+            assert features.shape[0] == self.sampling_frames
+            return features, padding
 
     def __len__(self):
         return self.size

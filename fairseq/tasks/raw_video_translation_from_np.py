@@ -257,7 +257,7 @@ class RawVideoTranslationFromNpTask(LegacyFairseqTask):
         parser.add_argument('--video-dropout', type=float, default=0.0,
                             help='whether use cls for ctr')
         parser.add_argument('--sampling-strategy', type=str, default="None")
-        parser.add_argument('--sampling-frames', type=float, default=0.0)
+        parser.add_argument('--sampling-frames', type=int, default=0)
 
 
 
