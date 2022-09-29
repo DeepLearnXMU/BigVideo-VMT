@@ -34,8 +34,8 @@ warmup=${7}
 max_tokens=${8}
 dropout=${9}
 video_dropout=${10}
-sampling_strategy=${12}
-sampling_frames=${13}
+sampling_strategy=${11}
+sampling_frames=${12}
 
 
 
