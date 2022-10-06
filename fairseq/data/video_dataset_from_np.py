@@ -67,7 +67,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
         self.sampling_strategy = args.sampling_strategy
         self.sampling_frames = args.sampling_frames
-        if self.sampling_strategy == "rand" or "uniform":
+        if self.sampling_strategy == ("rand" or "uniform"):
             assert self.sampling_frames > 0
 
         # for no video , pad one
