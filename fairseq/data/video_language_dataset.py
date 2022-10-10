@@ -125,7 +125,7 @@ def collate(
             "src_tokens": src_tokens,
             "src_lengths": src_lengths,
             "videos": videos,  #
-            "video_padding":video_paddings
+            "video_paddings":video_paddings
         },
         "target": target,
     }
