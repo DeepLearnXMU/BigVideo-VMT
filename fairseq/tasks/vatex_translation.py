@@ -253,6 +253,12 @@ class VatexTranslationTask(LegacyFairseqTask):
                            help='video features len')
         parser.add_argument('--video-feat-type', type=str,
                             help='video features type')
+        parser.add_argument('--enable-cls', type=int,default=0,
+                            help='whether use cls for ctr')
+        parser.add_argument('--video-dropout', type=float, default=0.0,
+                            help='whether use cls for ctr')
+        parser.add_argument('--sampling-strategy', type=str, default="None")
+        parser.add_argument('--sampling-frames', type=int, default=0)
 
 
     def __init__(self, args, src_dict, tgt_dict):
