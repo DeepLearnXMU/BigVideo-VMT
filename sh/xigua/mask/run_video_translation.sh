@@ -58,22 +58,18 @@ video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
-        max_vid_len=32
   elif  [ $video_feat_type == "VIT_128" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/image-128frames-tsv/VIT_cls_max128frames/
-        max_vid_len=${11}
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
-        max_vid_len=197
   elif [ $video_feat_type == "slowfast" ]; then
         video_feat_dim=2304
         video_feat_path=/mnt/bd/xigua-slowfast-videoswin/slowfast/features/slowfast/
   elif [ $video_feat_type == "videoswin" ]; then
         video_feat_dim=1024
         video_feat_path=/mnt/bd/xigua-slowfast-videoswin/videoswin/
-        max_vid_len=16
 fi
 
 
