@@ -1114,6 +1114,26 @@ def video_double_cross_att_base_pewln(args):
     args.residual_policy = getattr(args, 'residual_policy', None)
     base_architecture(args)
 
+@register_model_architecture('video_double_cross_att', 'video_double_cross_att_small_pewln')
+def video_double_cross_att_base_pewln(args):
+
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 4)
+    args.decoder_layers = getattr(args, 'decoder_layers', 6)
+
+    # video
+    args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+    args.video_att_before = getattr(args, 'video_att_before', False)
+    args.video_learned_pos = getattr(args, 'video_learned_pos', False)
+    args.residual_policy = getattr(args, 'residual_policy', None)
+    base_architecture(args)
+
 
 
 
