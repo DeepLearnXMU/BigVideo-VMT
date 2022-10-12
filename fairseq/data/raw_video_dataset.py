@@ -202,17 +202,28 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
         visual_dir = getattr(self.args, 'visual_dir', None)
         assert os.path.exists(visual_dir)
-
-
-
-
-
-
-
-
-
-
+        visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
         row = self.get_row_from_tsv(visual_tsv, idx)
+        raw_frames = self.get_frames_from_tsv(row[2:])
+
+        # raw_frames, is_video = self.get_visual_data(idx)
+
+        # apply augmentation. frozen-in-time if the input is an image
+        # preproc_frames: (T, C, H, W), C = 3, H = W = self.img_res, channel is RGB
+        preproc_frames = self.apply_augmentations(raw_frames)
+
+        return preproc_frames
+
+
+
+
+
+
+
+
+
+
+        row = self.get_row_from_tsv(self.visual_tsv, idx)
         raw_frames = self.get_frames_from_tsv(row[2:])
 
         # raw_frames, is_video = self.get_visual_data(idx)
