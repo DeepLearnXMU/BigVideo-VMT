@@ -11,9 +11,11 @@ export https_proxy=http://bj-rd-proxy.byted.org:3128
 mkdir ~/data
 mkdir -p ~/data/vatex/
 mkdir ~/codes
+mkdir ~/data/fairseq_bin/
 
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.gz /opt/tiger/common.tar.gz
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/codes/timm.tar.gz ~/codes
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.asr ~/data/fairseq_bin/
 
 cd /opt/tiger
 tar -zxvf common.tar.gz
