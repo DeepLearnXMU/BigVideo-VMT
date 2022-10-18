@@ -55,9 +55,17 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         self.video_ids_path = args.video_ids_path
         self.max_vid_len = args.max_vid_len
         self.video_path = os.path.join(self.video_feat_path, self.split)
+        self.id_type = args.id_type
 
         self.video_id_list = []
-        with open(self.video_ids_path + "/" + split + ".id", encoding='utf-8') as file:
+
+        if self.id_type == "original":
+            id_file=f"{self.video_ids_path}/{split}.id"
+        else:
+            id_file = f"{self.video_ids_path}/{split}.{self.id_type}.id"
+            assert os.path.exists(id_file)
+
+        with open(id_file, encoding='utf-8') as file:
             self.video_id_list = [x.rstrip() for x in file.readlines()]
 
         self.video_feat_type = args.video_feat_type
