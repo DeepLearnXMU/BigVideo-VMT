@@ -427,7 +427,6 @@ class TransformerEncoder(FairseqEncoder):
         )
 
 
-
         self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=embed_dim,
                                                         vdim=embed_dim, attn_dim=embed_dim,
                                                         intermediate_dim=embed_dim, output_dim=embed_dim,
