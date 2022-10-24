@@ -59,8 +59,8 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
         self.video_id_list = []
 
-        if self.id_type == "original":
-            id_file=f"{self.video_ids_path}/{split}.id"
+        if self.id_type in ["original", "absent"]:
+            id_file = f"{self.video_ids_path}/{split}.id"
         else:
             id_file = f"{self.video_ids_path}/{split}.{self.id_type}.id"
             assert os.path.exists(id_file)
@@ -96,7 +96,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
         start_idx, end_idx = 0, features.shape[0] - 1
 
-        if self.sampling_strategy == "None" or self.split != "train":
+        if self.sampling_strategy == "None":
             padding = np.zeros(self.max_vid_len)
             if features.shape[0] < self.max_vid_len:
                 dis = self.max_vid_len - features.shape[0]
@@ -109,6 +109,9 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                 features[0] = self.video_pad
                 padding[0] = 0
                 padding[1:] = 1
+            if self.id_type == "absent":
+                features[0] = 0
+
             assert features.shape[0] == self.max_vid_len
 
             return features, padding
@@ -133,6 +136,9 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                     features = temporal_sampling(features, start_idx, end_idx, self.sampling_frames)
                 elif self.sampling_strategy == "continuous":
                     features = continuous_sampling(features, start_idx, end_idx, self.sampling_frames)
+
+            if self.id_type == "absent":
+                features[0] = 0
 
             assert features.shape[0] == self.sampling_frames
             return features, padding

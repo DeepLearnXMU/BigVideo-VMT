@@ -464,7 +464,7 @@ class TransformerFushionEncoder(FairseqEncoder):
             self.video_layernorm_embedding = None
 
         if getattr(args, "enable_cls", False):
-            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, self.args.video_feat_dim))
+            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
         else:
             self.video_cls_token = None
         if self.video_cls_token is not None:
@@ -627,12 +627,16 @@ class TransformerFushionEncoder(FairseqEncoder):
 
         video_padding_mask = video_paddings.bool()
 
+
+
+        video_h = self.video_forward_embedding(videos, video_padding_mask)
+
         if self.video_cls_token is not None:
-            videos = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), videos), dim=1)
+            video_h = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), video_h), dim=1)
             cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
             video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
 
-        video_h = self.video_forward_embedding(videos, video_padding_mask)
+
         if self.video_dropout>0:
             video_h, video_padding_mask = self.video_dropout_mask(video_h, video_padding_mask)
 

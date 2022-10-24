@@ -34,11 +34,16 @@ warmup=${7}
 max_tokens=${8}
 dropout=${9}
 video_dropout=${10}
+max_vid_len=${11}
+text_data=${12}
+id_type=${13}
 
 
-
-local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
-
+if [ $text_data == "original" ]; then
+    local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
+    elif [ $text_data == "asr" ]; then
+      local_data_dir=~/data/fairseq_bin/xigua.en-zh.asr
+fi
 
 
 fp16=1 #0
@@ -57,19 +62,18 @@ video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
-        max_vid_len=32
+  elif  [ $video_feat_type == "VIT_128" ]; then
+        video_feat_dim=768
+        video_feat_path=/mnt/bd/image-128frames-tsv/VIT_cls_max128frames/
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
-        max_vid_len=197
   elif [ $video_feat_type == "slowfast" ]; then
         video_feat_dim=2304
         video_feat_path=/mnt/bd/xigua-slowfast-videoswin/slowfast/features/slowfast/
-        max_vid_len=16
   elif [ $video_feat_type == "videoswin" ]; then
         video_feat_dim=1024
         video_feat_path=/mnt/bd/xigua-slowfast-videoswin/videoswin/
-        max_vid_len=16
 fi
 
 
@@ -77,7 +81,7 @@ fi
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 
-name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mt${max_tokens}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_dp${dropout}_cls1_vtype${video_feat_type}_mvlen${max_vid_len}_vdp${video_dropout}_patience${patience}
+name=${mask}ed20_${text_data}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mt${max_tokens}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_dp${dropout}_vtype${video_feat_type}_mvlen${max_vid_len}_vdp${video_dropout}_idtype${id_type}_cls1_patience${patience}
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua/${mask}/
@@ -119,7 +123,8 @@ fairseq-train $local_data_dir \
   --video-feat-type $video_feat_type \
   --max-vid-len $max_vid_len   \
   --video-dropout $video_dropout  \
-  --enable-cls 1  \
+  --id-type $id_type  \
+  --enable-cls 1 \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
