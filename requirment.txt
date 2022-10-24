@@ -1,4 +1,4 @@
-opencv-contrib-python==4.6.0.66
+opencv-python==4.6.0.66
 tensorboardX==2.5.1
 easydict==1.9
 progressbar==2.5
@@ -12,7 +12,6 @@ scikit-image==0.19.3
 jinja2==2.11.3
 markupsafe==2.0.1
 vizseq
-timm==0.4.5
 einops==0.4.1
 addict==2.4.0
 yapf==0.32.0
