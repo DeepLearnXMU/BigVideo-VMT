@@ -732,7 +732,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         self.video_dropout = self.args.video_dropout
 
         if getattr(args, "enable_cls", False):
-            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, self.embed_dim))
+            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         else:
             self.video_cls_token = None
         if self.video_cls_token is not None:
