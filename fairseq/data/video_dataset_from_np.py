@@ -110,7 +110,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                 padding[0] = 0
                 padding[1:] = 1
             if self.id_type == "absent":
-                features[0] = 0
+                features[:] = 0
 
             assert features.shape[0] == self.max_vid_len
 
@@ -138,7 +138,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                     features = continuous_sampling(features, start_idx, end_idx, self.sampling_frames)
 
             if self.id_type == "absent":
-                features[0] = 0
+                features[:] = 0
 
             assert features.shape[0] == self.sampling_frames
             return features, padding
