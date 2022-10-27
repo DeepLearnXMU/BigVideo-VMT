@@ -132,7 +132,6 @@ fairseq-train $local_data_dir \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
   --max-vid-len $max_vid_len   \
-  --enable-cls 1 \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
