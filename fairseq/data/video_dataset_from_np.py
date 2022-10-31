@@ -84,7 +84,9 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
     def __getitem__(self, idx):
 
         video_name = self.video_id_list[idx]
+
         fpath = os.path.join(self.video_path, video_name + ".npz")
+
         empty_flag = False
         if not os.path.exists(fpath):
             features = np.zeros((1, self.video_feat_dim))
@@ -99,12 +101,16 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         if self.sampling_strategy == "None":
             padding = np.zeros(self.max_vid_len)
             if features.shape[0] < self.max_vid_len:
+
                 dis = self.max_vid_len - features.shape[0]
                 padding[features.shape[0]:] = 1
                 features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+
+
             elif features.shape[0] > self.max_vid_len:
-                inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
-                features = features[inds]
+                features = temporal_sampling(features, start_idx, end_idx, self.max_vid_len)
+                # inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
+                # features = features[inds]
             if empty_flag:
                 features[0] = self.video_pad
                 padding[0] = 0
@@ -124,15 +130,19 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                 padding[0] = 0
                 padding[1:] = 1
             elif features.shape[0] < self.sampling_frames:
+
                 dis = self.sampling_frames - features.shape[0]
                 padding = np.zeros(self.sampling_frames)
-                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
                 padding[features.shape[0]:] = 1
+                features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
+
+
             else:
                 padding = np.zeros(self.sampling_frames)
                 if self.sampling_strategy == "rand":
                     features = rand_sampling(features, start_idx, end_idx, self.sampling_frames)
                 elif self.sampling_strategy == "uniform":
+
                     features = temporal_sampling(features, start_idx, end_idx, self.sampling_frames)
                 elif self.sampling_strategy == "continuous":
                     features = continuous_sampling(features, start_idx, end_idx, self.sampling_frames)
