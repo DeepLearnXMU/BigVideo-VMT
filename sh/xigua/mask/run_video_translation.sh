@@ -39,10 +39,15 @@ text_data=${12}
 id_type=${13}
 
 
-if [ $text_data == "original" ]; then
+if [ ${text_data} == "original" ]; then
     local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
-    elif [ $text_data == "asr" ]; then
+    elif [ ${text_data} == "asr" ]; then
       local_data_dir=~/data/fairseq_bin/xigua.en-zh.asr
+    elif [ ${text_data} == "action_label_top5" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top5
+    elif [ ${text_data} == "action_label_0.2" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_0.2
+
 fi
 
 
