@@ -24,7 +24,7 @@ text_data=${9}
 
 
 if [ ${text_data} == "original" ]; then
-    local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
+    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016
     elif [ ${text_data} == "action_label_top1_zh" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1_zh
     elif [ ${text_data} == "action_label_upto0.5_zh" ]; then
