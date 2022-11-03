@@ -39,18 +39,12 @@ text_data=${12}
 id_type=${13}
 
 
-if [ ${text_data} == "original" ]; then
-    local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
-    elif [ ${text_data} == "asr" ]; then
-      local_data_dir=~/data/fairseq_bin/xigua.en-zh.asr
-    elif [ ${text_data} == "action_label_top5" ]; then
-      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top5
-    elif [ ${text_data} == "action_label_0.2" ]; then
-      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_0.2
-    elif [ ${text_data} == "action_label_top1" ]; then
-      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1
-    elif [ ${text_data} == "action_label_upto0.5" ]; then
-      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_upto0.5
+if [ ${text_data} == "original_share" ]; then
+    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin//xigua.en-zh.annotations1016_share/
+    elif [ ${text_data} == "action_label_top1_zh" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1_zh
+    elif [ ${text_data} == "action_label_upto0.5_zh" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_upto0.5_zh
 
 fi
 
@@ -83,6 +77,7 @@ if [ $video_feat_type == "VIT_cls"  ]; then
   elif [ $video_feat_type == "videoswin" ]; then
         video_feat_dim=1024
         video_feat_path=/mnt/bd/xigua-slowfast-videoswin/videoswin/
+
 fi
 
 
@@ -108,7 +103,7 @@ hdfs dfs -put -f ${BASH_SOURCE[0]} $output_dir/train.sh
 fairseq-train $local_data_dir \
   --save-dir $output_dir \
   --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang \
-  --arch $arch \
+  --arch $arch --share-all-embeddings \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --clip-norm ${clip_norm}   \

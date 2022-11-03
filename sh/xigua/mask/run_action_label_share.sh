@@ -23,7 +23,7 @@ dropout=$8
 text_data=${9}
 
 
-if [ ${text_data} == "original" ]; then
+if [ ${text_data} == "original_share" ]; then
     local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin//xigua.en-zh.annotations1016_share/
     elif [ ${text_data} == "action_label_top1_zh" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1_zh
