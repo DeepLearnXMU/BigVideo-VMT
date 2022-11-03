@@ -66,14 +66,14 @@ clip_norm=0.0
 
 
 
-video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
+video_ids_path=/mnt/bn/luyang/kangliyan/data/xigua/text/preprocessd_v1
 
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
   elif  [ $video_feat_type == "VIT_128" ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bd/image-128frames-tsv/VIT_cls_max128frames/
+        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls_max128frames/
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/
