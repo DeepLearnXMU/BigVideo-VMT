@@ -130,13 +130,10 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
                 padding[0] = 0
                 padding[1:] = 1
             elif features.shape[0] < self.sampling_frames:
-
                 dis = self.sampling_frames - features.shape[0]
                 padding = np.zeros(self.sampling_frames)
                 padding[features.shape[0]:] = 1
                 features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
-
-
             else:
                 padding = np.zeros(self.sampling_frames)
                 if self.sampling_strategy == "rand":
