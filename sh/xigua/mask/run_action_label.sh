@@ -35,6 +35,10 @@ if [ ${text_data} == "original" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1
     elif [ ${text_data} == "action_label_upto0.5" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_upto0.5
+    elif [ ${text_data} == "object_label+action_label_top1" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.object_label+action_label_top1
+        elif [ ${text_data} == "object_label+action_label_upto0.5" ]; then
+      local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.object_label+action_label_upto0.5
 
 fi
 
