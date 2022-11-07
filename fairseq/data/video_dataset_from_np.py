@@ -108,9 +108,11 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
 
             elif features.shape[0] > self.max_vid_len:
-                features = temporal_sampling(features, start_idx, end_idx, self.max_vid_len)
-                # inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
-                # features = features[inds]
+                if self.split=="train":
+                    inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
+                    features = features[inds]
+                else:
+                    features = temporal_sampling(features, start_idx, end_idx, self.max_vid_len)
             if empty_flag:
                 features[0] = self.video_pad
                 padding[0] = 0
