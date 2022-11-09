@@ -26,7 +26,7 @@ text_data=${9}
 if [ ${text_data} == "original" ]; then
     local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
     elif [ ${text_data} == "asr" ]; then
-      local_data_dir=~/data/fairseq_bin/xigua.en-zh.asr
+      local_data_dir=~/data/fairseq_bin/annotations_1016_asr_1109
     elif [ ${text_data} == "action_label_top5" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top5
     elif [ ${text_data} == "action_label_0.2" ]; then

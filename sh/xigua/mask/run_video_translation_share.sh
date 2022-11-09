@@ -41,6 +41,8 @@ id_type=${13}
 
 if [ ${text_data} == "original_share" ]; then
     local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016_share/
+    elif [ ${text_data} == "asr_share" ]; then
+      local_data_dir=~/data/fairseq_bin/annotations_1016_asr_1109_share
     elif [ ${text_data} == "action_label_top1_zh" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top1_zh
     elif [ ${text_data} == "action_label_upto0.5_zh" ]; then
@@ -60,14 +62,16 @@ clip_norm=0.0
 
 
 
-video_ids_path=/mnt/bn/luyang/kangliyan/data/xigua/text/preprocessd_v1
+video_ids_path=/mnt/bd/xigua-data/text/preprocessd_v1
 
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
   elif  [ $video_feat_type == "VIT_128" ]; then
         video_feat_dim=768
-        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls_max128frames/
+#        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls_max128frames/
+        video_feat_path=/mnt/bd/image-128frames-tsv/VIT_cls_max128frames/
+
   elif [ $video_feat_type == "VIT_patch_avg" ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_patch/

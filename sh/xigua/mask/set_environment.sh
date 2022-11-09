@@ -17,6 +17,9 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/common.tar.
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/codes/timm.tar.gz ~/codes
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.asr ~/data/fairseq_bin/
 
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109 ~/data/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109_share ~/data/fairseq_bin/
+
 cd /opt/tiger
 tar -zxvf common.tar.gz
 
