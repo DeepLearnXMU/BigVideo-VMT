@@ -42,7 +42,7 @@ id_type=${13}
 if [ ${text_data} == "original" ]; then
     local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016
     elif [ ${text_data} == "asr_1109" ]; then
-      local_data_dir=~/data/fairseq_bin/annotations_1016_asr_1109
+      local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109
     elif [ ${text_data} == "action_label_top5" ]; then
       local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016.action_label_top5
     elif [ ${text_data} == "action_label_0.2" ]; then
