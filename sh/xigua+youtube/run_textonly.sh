@@ -26,6 +26,7 @@ if [ $text_data == "original" ]; then
     local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.xigua+youtube
 fi
 
+
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 

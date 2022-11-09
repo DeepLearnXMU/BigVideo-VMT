@@ -63,7 +63,7 @@ fairseq-train $local_data_dir \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --criterion $criterion --label-smoothing 0.1 \
-  --task translation \
+  --task translation --share-all-embeddings \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --clip-norm ${clip_norm}   \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
