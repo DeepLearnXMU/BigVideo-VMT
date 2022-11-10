@@ -32,7 +32,7 @@ fp16=1 #0
 
 warmup=4000
 update_freq=1
-patience=10
+patience=5
 max_epoches=100
 
 
