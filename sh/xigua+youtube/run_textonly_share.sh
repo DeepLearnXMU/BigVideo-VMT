@@ -23,7 +23,7 @@ dropout=$8
 text_data=${9}
 
 if [ $text_data == "original_share" ]; then
-    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.xigua+youtube_share
+    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua+youtube.en-zh.share
 fi
 
 criterion=label_smoothed_cross_entropy
