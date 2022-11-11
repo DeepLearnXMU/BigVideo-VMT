@@ -58,6 +58,7 @@ parser.add_argument('--choice', type=str)
 parser.add_argument("--local_rank", default=os.getenv('LOCAL_RANK', -1), type=int)
 parser.add_argument('--shard_num', type=int)
 parser.add_argument('--shard_id', type=int)
+parser.add_argument('--tsv_index', type=int)
 
 args = parser.parse_args()
 
