@@ -21,6 +21,7 @@ warmup=$6
 max_tokens=$7
 dropout=$8
 text_data=${9}
+patience=${10}
 
 if [ $text_data == "original" ]; then
     local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua+youtube.en-zh.original
@@ -32,7 +33,6 @@ fp16=1 #0
 
 warmup=4000
 update_freq=1
-patience=5
 max_epoches=100
 
 
