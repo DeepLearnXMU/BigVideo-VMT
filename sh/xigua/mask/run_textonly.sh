@@ -23,7 +23,7 @@ dropout=$8
 text_data=${9}
 
 if [ $text_data == "original" ]; then
-    local_data_dir=/mnt/bd/xigua-data/fairseq_bin/xigua.en-zh.$mask.withtest.ed2.0
+    local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1114
     elif [ ${text_data} == "asr_1109" ]; then
       local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109
 fi

@@ -40,7 +40,7 @@ id_type=${13}
 
 
 if [ ${text_data} == "original_share" ]; then
-    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin/xigua.en-zh.annotations1016_share/
+    local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1114
     elif [ ${text_data} == "asr_share" ]; then
       local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109_share
     elif [ ${text_data} == "action_label_top1_zh" ]; then
