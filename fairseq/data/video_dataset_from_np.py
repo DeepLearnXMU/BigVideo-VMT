@@ -154,6 +154,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
             if self.id_type == "absent":
                 features[:] = 0
+                padding[:]=1
 
             assert features.shape[0] == self.sampling_frames
             return features, padding
