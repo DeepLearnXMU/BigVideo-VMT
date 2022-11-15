@@ -73,6 +73,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
         self.size = len(self.video_id_list)
 
+        self.train_sampling_strategy = args.train_sampling_strategy
         self.sampling_strategy = args.sampling_strategy
         self.sampling_frames = args.sampling_frames
         if self.sampling_strategy == ("rand" or "uniform"):
@@ -101,7 +102,6 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         if self.sampling_strategy == "None":
             padding = np.zeros(self.max_vid_len)
             if features.shape[0] < self.max_vid_len:
-
                 dis = self.max_vid_len - features.shape[0]
                 padding[features.shape[0]:] = 1
                 features = np.lib.pad(features, ((0, dis), (0, 0)), 'constant', constant_values=0)
@@ -109,8 +109,14 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
 
             elif features.shape[0] > self.max_vid_len:
                 if self.split=="train":
-                    inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
-                    features = features[inds]
+                    if self.train_sampling_strategy == "rand":
+                        inds = sorted(random.sample(range(features.shape[0]), self.max_vid_len))
+                        features = features[inds]
+                    elif self.train_sampling_strategy == "uniform":
+                        features = temporal_sampling(features, start_idx, end_idx, self.max_vid_len)
+                    else:
+                        assert self.train_sampling_strategy == "None"
+
                 else:
                     features = temporal_sampling(features, start_idx, end_idx, self.max_vid_len)
             if empty_flag:

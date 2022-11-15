@@ -37,6 +37,7 @@ video_dropout=${10}
 max_vid_len=${11}
 text_data=${12}
 id_type=${13}
+train_sampling_strategy=${14}
 
 
 if [ ${text_data} == "original" ]; then
@@ -131,7 +132,7 @@ fairseq-train $local_data_dir \
   --video-ids-path $video_ids_path \
   --video-feat-dim $video_feat_dim \
   --video-feat-type $video_feat_type \
-  --max-vid-len $max_vid_len   \
+  --max-vid-len $max_vid_len --train-sampling-strategy ${train_sampling_strategy}  \
   --video-dropout $video_dropout  \
   --id-type $id_type  \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
