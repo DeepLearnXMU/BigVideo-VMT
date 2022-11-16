@@ -20,6 +20,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairse
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109 ~/data/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109_share ~/data/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1114 ~/data/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1114_share ~/data/fairseq_bin/
 
 cd /opt/tiger
 tar -zxvf common.tar.gz
