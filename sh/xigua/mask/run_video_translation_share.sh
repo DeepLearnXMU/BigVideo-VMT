@@ -37,6 +37,8 @@ video_dropout=${10}
 max_vid_len=${11}
 text_data=${12}
 id_type=${13}
+patience=${14}
+
 
 
 if [ ${text_data} == "original_share" ]; then
@@ -54,7 +56,7 @@ fi
 fp16=1 #0
 update_freq=1
 max_epoches=100
-patience=10
+
 
 
 clip_norm=0.0

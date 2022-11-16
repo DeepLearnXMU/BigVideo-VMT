@@ -21,6 +21,8 @@ warmup=$6
 max_tokens=$7
 dropout=$8
 text_data=${9}
+patience=${10}
+
 
 if [ $text_data == "original_share" ]; then
     local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1114_share
@@ -32,7 +34,6 @@ fp16=1 #0
 
 warmup=4000
 update_freq=1
-patience=10
 max_epoches=100
 
 
