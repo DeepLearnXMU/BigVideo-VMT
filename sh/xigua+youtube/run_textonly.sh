@@ -73,7 +73,7 @@ fairseq-train $local_data_dir \
   --patience $patience \
   --no-progress-bar  \
   --eval-bleu \
-  --eval-bleu-args '{"beam": 5,"lenpen":0.8}' \
+  --eval-bleu-args '{"beam": 4,"lenpen":1.0}' \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
