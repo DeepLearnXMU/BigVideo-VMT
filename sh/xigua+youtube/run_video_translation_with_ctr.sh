@@ -32,17 +32,18 @@ weight_decay=${5}
 lr=${6}
 warmup=${7}
 max_tokens=${8}
-dropout=${9}
-video_dropout=${10}
-max_vid_len=${11}
-text_data=${12}
-id_type=${13}
-train_sampling_strategy=${14}
-patience=${15}
-contrastive_strategy=${16}
-contrastive_align=${17}
-contrastive_weight=${18}
-contrastive_temperature=${19}
+update_freq=${9}
+dropout=${10}
+video_dropout=${11}
+max_vid_len=${12}
+text_data=${13}
+id_type=${14}
+train_sampling_strategy=${15}
+patience=${16}
+contrastive_strategy=${17}
+contrastive_align=${18}
+contrastive_weight=${19}
+contrastive_temperature=${20}
 
 
 enable_cls=0
@@ -126,6 +127,7 @@ fairseq-train $local_data_dir \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq  \
+  --skip-invalid-size-inputs-valid-test \
   --seed $seed \
   --no-progress-bar  \
   --eval-bleu \
