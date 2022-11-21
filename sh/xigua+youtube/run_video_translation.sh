@@ -87,9 +87,9 @@ gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=${mask}ed20_${text_data}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mt${max_tokens}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_dp${dropout}_vtype${video_feat_type}_mvlen${max_vid_len}_ts${train_sampling_strategy}_vdp${video_dropout}_idtype${id_type}_patience${patience}_b4l1.0
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube_1117/${mask}/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube_1117/${mask}/
-local_logs_dir=~/fairseq_logs/xigua+youtube_1117/${mask}/
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube_1121/${mask}/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube_1121/${mask}/
+local_logs_dir=~/fairseq_logs/xigua+youtube_1121/${mask}/
 
 
 hdfs dfs -mkdir -p $LOGS_DIR
