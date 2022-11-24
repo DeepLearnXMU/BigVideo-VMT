@@ -60,7 +60,7 @@ hdfs dfs -put -f ${BASH_SOURCE[0]} $output_dir/train.sh
 fairseq-train $local_data_dir \
   --save-dir $output_dir \
   --distributed-world-size $gpu_num  -s $src_lang -t $tgt_lang \
-  --arch $arch  --max-source-positions 512 --max-target-positions 512 \
+  --arch $arch  --max-source-positions 256 --max-target-positions 256 \
   --dropout $dropout \
   --weight-decay $weight_decay  \
   --criterion $criterion --label-smoothing 0.1 \
