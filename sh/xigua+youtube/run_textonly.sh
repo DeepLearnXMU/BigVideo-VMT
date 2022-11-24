@@ -72,6 +72,7 @@ fairseq-train $local_data_dir \
   --seed $seed \
   --patience $patience \
   --no-progress-bar  \
+  --skip-invalid-size-inputs-valid-test  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 4,"lenpen":1.0}' \
   --eval-bleu-detok moses \

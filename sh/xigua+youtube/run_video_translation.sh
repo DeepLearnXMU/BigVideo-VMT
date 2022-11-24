@@ -113,6 +113,7 @@ fairseq-train $local_data_dir \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq  \
   --seed $seed \
+  --skip-invalid-size-inputs-valid-test  \
   --no-progress-bar  \
   --eval-bleu \
   --eval-bleu-args '{"beam": 4,"lenpen":1.0}' \
