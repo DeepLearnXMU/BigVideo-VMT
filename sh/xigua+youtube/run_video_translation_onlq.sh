@@ -109,6 +109,7 @@ fairseq-train $local_data_dir \
   --clip-norm ${clip_norm}   \
   --criterion $criterion --label-smoothing 0.1    \
   --task raw_video_translation_from_np \
+  --skip-invalid-size-inputs-valid-test \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
   --max-tokens $max_tokens --update-freq $update_freq  \
