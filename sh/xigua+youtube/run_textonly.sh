@@ -24,7 +24,7 @@ text_data=${9}
 patience=${10}
 
 if [ $text_data == "original" ]; then
-    local_data_dir=/mnt/bn/luyang/kangliyan/data/fairseq_bin//xigua+youtube.en-zh.annotations_1114
+    local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
 fi
 
 
