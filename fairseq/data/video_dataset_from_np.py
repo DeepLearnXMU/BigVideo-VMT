@@ -85,6 +85,8 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
     def __getitem__(self, idx):
 
         video_name = self.video_id_list[idx]
+        if self.video_feat_type=="slowfast":
+            video_name=video_name.replace("-","")
 
         fpath = os.path.join(self.video_path, video_name + ".npz")
 
