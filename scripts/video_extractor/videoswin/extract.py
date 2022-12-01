@@ -155,6 +155,7 @@ with th.no_grad():
         # print(vid_feats.shape)
         # pint(dsads)
         # vid_feats = vid_feats.permute(0,2,1,3,4)
+        # from mmaction
         avg_pool = torch.nn.AdaptiveAvgPool3d((1, 1, latent_feat_size))
         vid_feats = avg_pool(vid_feats)
         # squeeze dimensions
