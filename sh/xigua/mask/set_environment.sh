@@ -39,6 +39,8 @@ pip install --editable ./
 
 cd /opt/tiger/fairseq_mmt
 
+pip install protobuf~=3.19.0
+
 pip install -r requirment.txt
 
 sudo pip install --editable ./
