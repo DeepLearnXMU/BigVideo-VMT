@@ -24,7 +24,7 @@ text_data=${9}
 patience=${10}
 
 if [ $text_data == "original" ]; then
-    local_data_dir=~/data/fairseq_bin/vatex.en-pt.bpe15k
+    local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
 fi
 
 
