@@ -1030,7 +1030,7 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('transformer', 'transformer_vatex')
+@register_model_architecture('transformer', 'transformer_small')
 def transformer_vatex(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
