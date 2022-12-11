@@ -39,7 +39,7 @@ pip install --editable ./
 
 cd /opt/tiger/fairseq_mmt
 
-pip install protobuf~=3.19.0
+
 
 pip install -r requirment.txt
 
@@ -55,3 +55,5 @@ pip install numpy==1.22.0
 cd ~/codes
 tar -zxvf timm.tar.gz
 cp -r timm /home/tiger/.local/lib/python3.7/site-packages
+
+pip install protobuf~=3.19.0
