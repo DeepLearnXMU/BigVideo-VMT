@@ -1317,6 +1317,11 @@ def video_fushion_encoder_one_merge_before_pewln(args):
 @register_model_architecture('video_fushion_encoder', 'small_video_fushion_encoder_one_merge_before_pewln')
 def video_fushion_encoder_one_merge_before_pewln(args):
     args.encoder_layers = getattr(args, 'encoder_layers', 0)
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
 
     args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 256)
     args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 512)
