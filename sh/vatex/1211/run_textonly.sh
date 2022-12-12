@@ -25,6 +25,8 @@ patience=${10}
 
 if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
+    elif [ ${text_data} == "char" ]; then
+      local_data_dir=~/data/fairseq_bin/vatex.en-zh.char
 fi
 
 
