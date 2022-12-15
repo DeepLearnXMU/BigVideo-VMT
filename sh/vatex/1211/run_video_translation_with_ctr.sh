@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 device=0
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
