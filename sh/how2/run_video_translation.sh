@@ -1,6 +1,6 @@
 #!/bin/bash
 
-device=0
+device=0,1
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
@@ -59,7 +59,7 @@ clip_norm=0.0
 
 
 
-video_ids_path=/mnt/bd/xigua-youtube/how2/data/raw_texts/filters/
+video_ids_path=/mnt/bd/xigua-youtube/how2/data/raw_texts/
 
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768

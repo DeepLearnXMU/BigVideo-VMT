@@ -1,6 +1,6 @@
 #!/bin/bash
 
-device=0
+device=0,1
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
@@ -10,7 +10,7 @@ bash sh/xigua/mask/set_environment.sh
 
 
 src_lang=en
-tgt_lang=zh
+tgt_lang=pt
 
 
 
@@ -54,10 +54,8 @@ if [ $contrastive_strategy == "cls" ]; then
 fi
 
 
-if [ $text_data == "original" ]; then
-    local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
-    elif [ ${text_data} == "char" ]; then
-      local_data_dir=~/data/fairseq_bin/vatex.en-zh.char
+if [ ${text_data} == "original" ]; then
+    local_data_dir=~/data/fairseq_bin/how2.en-pt.bpe15k
 fi
 
 
@@ -73,7 +71,7 @@ clip_norm=0.0
 
 
 
-video_ids_path=/mnt/bd/xigua-youtube/vatex/data/raw_texts/filters/
+video_ids_path=/mnt/bd/xigua-youtube/how2/data/raw_texts/
 
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
@@ -81,10 +79,10 @@ if [ $video_feat_type == "VIT_cls"  ]; then
   elif  [ $video_feat_type == "VIT_128" ]; then
         video_feat_dim=768
 #        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls_max128frames/
-        video_feat_path=/mnt/bd/xigua-youtube/vatex/data/video_features/VIT_cls_max128frames/
+        video_feat_path=/mnt/bd/xigua-youtube/how2/data/video_features/VIT_cls_max128frames/
   elif [ $video_feat_type == "slowfast" ]; then
         video_feat_dim=2304
-        video_feat_path=/mnt/bd/xigua-youtube/vatex/data/video_features//slowfast/
+        video_feat_path=/mnt/bd/xigua-youtube/how2/data/video_features//slowfast/
 fi
 
 
@@ -94,9 +92,9 @@ gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=${mask}ed20_${text_data}_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mat${max_tokens}_acc${update_freq}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_dp${dropout}_vtype${video_feat_type}_mvlen${max_vid_len}_ts${train_sampling_strategy}_ctrs${contrastive_strategy}_ctra${contrastive_align}_ctrw${contrastive_weight}_ctrt${contrastive_temperature}_patience${patience}_length256
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_1211/${mask}/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_1211/${mask}/
-local_logs_dir=~/fairseq_logs/vatex_1211/${mask}/
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/how2/${mask}/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/how2/${mask}/
+local_logs_dir=~/fairseq_logs/how2/${mask}/
 
 
 hdfs dfs -mkdir -p $LOGS_DIR
