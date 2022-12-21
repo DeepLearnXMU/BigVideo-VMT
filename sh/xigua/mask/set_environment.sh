@@ -22,9 +22,10 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairse
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1114 ~/data/fairseq_bin/
 #hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua.en-zh.annotations_1114_share ~/data/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114 ~/data/fairseq_bin/
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.bpe15k ~/data/fairseq_bin
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.char ~/data/fairseq_bin
-hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/how2.en-pt.bpe15k ~/data/fairseq_bin
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.bpe15k ~/data/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.char ~/data/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/how2.en-pt.bpe15k ~/data/fairseq_bin/
+hdfs dfs -get /home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.fromvis ~/data/fairseq_bin/
 
 
 
