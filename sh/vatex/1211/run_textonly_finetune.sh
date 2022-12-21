@@ -45,7 +45,7 @@ clip_norm=0.0
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-name=${mask}ed20_${text_data}_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_dp${dropout}_Realpatience${patience}_length256
+name=${mask}ed20_${text_data}_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_dp${dropout}_Realpatience${patience}_length256_fintune
 
 output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/vatex_1211/${mask}/${name}
 LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/vatex_1211/${mask}
@@ -68,7 +68,7 @@ fairseq-train $local_data_dir \
   --weight-decay $weight_decay  \
   --criterion $criterion --label-smoothing 0.1 \
   --task translation \
-  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube_1117/mask0/mask0ed20_original_archtransformer_tgtzh_lr7e-4_wu4000_seed1_gpu8_mt4096_acc1_wd0.1_cn0.0_dp0.3_Realpatience10_length256/checkpoint_best.pt \
+  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube_1117/mask0/mask0ed20_original_archtransformer_tgtzh_lr7e-4_wu4000_seed3_gpu8_mt4096_acc1_wd0.1_cn0.0_dp0.3_Realpatience10_length256/checkpoint_best.pt \
   --optimizer adam --adam-betas '(0.9, 0.98)' \
   --clip-norm ${clip_norm}   \
   --lr $lr --min-lr 1e-09 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates $warmup \
