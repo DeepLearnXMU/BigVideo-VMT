@@ -23,6 +23,8 @@ dropout=$8
 text_data=${9}
 patience=${10}
 
+
+
 if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
     elif [ ${text_data} == "wmt19" ]; then
@@ -33,7 +35,7 @@ fi
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 
-warmup=4000
+
 update_freq=1
 max_epoches=100
 

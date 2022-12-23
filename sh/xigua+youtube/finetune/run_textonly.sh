@@ -33,7 +33,7 @@ fi
 criterion=label_smoothed_cross_entropy
 fp16=1 #0
 
-warmup=4000
+
 update_freq=1
 max_epoches=100
 
