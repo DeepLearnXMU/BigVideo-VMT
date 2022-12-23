@@ -82,7 +82,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-  --max-epoch ${max_epoches} --keep-last-epochs 10 --max-update 300000 --keep-best-checkpoints 10  \
+  --max-epoch ${max_epoches} --keep-last-updates 10 --max-update 300000 --save-interval-updates 5000 --keep-best-checkpoints 10  \
   --no-epoch-checkpoints  \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
