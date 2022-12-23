@@ -84,6 +84,7 @@ fairseq-train $local_data_dir \
   --no-epoch-checkpoints  \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
+
 echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
