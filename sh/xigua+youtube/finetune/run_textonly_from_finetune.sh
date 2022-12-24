@@ -82,6 +82,7 @@ fairseq-train $local_data_dir \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
   --max-epoch ${max_epoches} --keep-last-epochs 10 --keep-best-checkpoints 10  \
   --no-epoch-checkpoints  \
+  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archtransformer_tgtzh_lr7e-4_wu4000_seed1207_gpu8_mt4096_acc1_wd0.0_cn0.0_dp0.1_Realpatience-1_length256/checkpoint_best.pt \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 
