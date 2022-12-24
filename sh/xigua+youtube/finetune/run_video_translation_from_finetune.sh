@@ -43,6 +43,8 @@ patience=${15}
 
 
 
+
+
 if [ ${text_data} == "original" ]; then
     local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
     elif [ ${text_data} == "asr_1109" ]; then
