@@ -47,9 +47,9 @@ gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=${mask}ed20_${text_data}_arch${arch}_tgt${tgt_lang}_lr${lr}_wu${warmup}_seed${seed}_gpu${gpu_num}_mt${max_tokens}_acc${update_freq}_wd${weight_decay}_cn${clip_norm}_dp${dropout}_Realpatience${patience}_length256
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/${mask}/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube+wmt19/${mask}
-local_logs_dir=~/fairseq_logs/xigua+youtube+wmt19${mask}
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/finetune/${mask}/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube+wmt19/finetune/${mask}
+local_logs_dir=~/fairseq_logs/xigua+youtube+wmt19/finetune/${mask}
 
 hdfs dfs -mkdir -p $LOGS_DIR
 hdfs dfs -mkdir -p $output_dir
