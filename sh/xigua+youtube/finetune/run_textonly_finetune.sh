@@ -23,6 +23,7 @@ dropout=$8
 text_data=${9}
 patience=${10}
 
+
 if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
     elif [ ${text_data} == "fromxigua+youtube+wmt19" ]; then
