@@ -283,10 +283,11 @@ class Trainer(object):
                 self.get_model().load_state_dict(
                     state["model"], strict=True, args=self.args
                 )
-                if utils.has_parameters(self.get_criterion()):
-                    self.get_criterion().load_state_dict(
-                        state["criterion"], strict=True
-                    )
+                if not self.args.only_load_model:
+                    if utils.has_parameters(self.get_criterion()):
+                        self.get_criterion().load_state_dict(
+                            state["criterion"], strict=True
+                        )
             except Exception:
                 raise Exception(
                     "Cannot load model parameters from checkpoint {}; "

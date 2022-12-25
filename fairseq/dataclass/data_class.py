@@ -445,6 +445,12 @@ class CheckpointParams(FairseqDataclass):
             "help": "if set, does not reload dataloader state from the checkpoint"
         },
     )
+    only_load_model:  bool = field(
+        default=False,
+        metadata={
+            "help": "if set, "
+        },
+    )
     reset_lr_scheduler: bool = field(
         default=False,
         metadata={
