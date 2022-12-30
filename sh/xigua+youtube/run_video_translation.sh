@@ -41,7 +41,6 @@ train_sampling_strategy=${14}
 patience=${15}
 
 
-video_ids_path=/mnt/bd/xigua-youtube/data/raw_tests_1117/
 
 if [ ${text_data} == "original" ]; then
     local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
@@ -65,7 +64,7 @@ clip_norm=0.0
 
 
 
-
+video_ids_path=/mnt/bd/xigua-youtube/data/raw_tests_1117/
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
