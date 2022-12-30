@@ -81,7 +81,7 @@ if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_path=/mnt/bd/xigua-youtube-2/data/video_features/slowfast/
   elif [ $video_feat_type == "videoswin" ]; then
         video_feat_dim=1024
-        video_feat_path=/mnt/bd/xigua-slowfast-videoswin/videoswin/
+        video_feat_path=/mnt/bd/xigua-youtube-2/data/video_features/videoswin/
 fi
 
 
