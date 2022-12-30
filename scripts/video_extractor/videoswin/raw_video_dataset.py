@@ -20,7 +20,7 @@ import time
 logger = logging.getLogger(__name__)
 
 tsv_file = "{}.video.tsv"
-imgs_tsv_file = "{}_32frames_img_size384.img.tsv"
+imgs_tsv_file = "{}_128frames_img_size384.img.tsv"
 
 
 class RawVideoDataset(torch.utils.data.Dataset):
@@ -38,8 +38,6 @@ class RawVideoDataset(torch.utils.data.Dataset):
         visual_tsv.__del__()
 
         self.args = args
-        
-        
 
         self.is_train = (split == "train")
         self.img_res = getattr(args, 'img_res', 224)
@@ -58,22 +56,20 @@ class RawVideoDataset(torch.utils.data.Dataset):
                     f'FPS: {self.decoder_target_fps}, '
                     f'Sampling: {self.decoder_sampling_strategy}')
 
-
-        if args.video_feat_type=="2d":
+        if args.video_feat_type == "2d":
             self.raw_video_crop_list = [
-                    Resize(self.img_res),
-                    ClipToTensor(channel_nb=3),
-                    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                ]
+                Resize(self.img_res),
+                ClipToTensor(channel_nb=3),
+                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ]
 
-        elif args.video_feat_type=="3d":
+        elif args.video_feat_type == "3d":
             self.raw_video_crop_list = [
                 Resize(self.img_res),
                 # RandomCrop((self.img_res, self.img_res)),
                 ClipToTensor(channel_nb=3),
                 Normalize(mean=[0.45, 0.45, 0.45], std=[0.225, 0.225, 0.225])
             ]
-
 
         self.raw_video_process = Compose(self.raw_video_crop_list)
 
@@ -138,15 +134,13 @@ class RawVideoDataset(torch.utils.data.Dataset):
                                                                start, end)
         return frames
 
-
     def get_image(self, bytestring):
         # output numpy array (T, C, H, W), channel is RGB, T = 1
         cv2_im = img_from_base64(bytestring)
-        cv2_im = cv2_im[:,:,::-1] # COLOR_BGR2RGB
+        cv2_im = cv2_im[:, :, ::-1]  # COLOR_BGR2RGB
         # cv2_im = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
         output = np.transpose(cv2_im[np.newaxis, ...], (0, 3, 1, 2))
         return output
-
 
     def get_row_from_tsv(self, tsv, img_idx):
         row = tsv[img_idx]
@@ -157,16 +151,22 @@ class RawVideoDataset(torch.utils.data.Dataset):
         frames = []
         _C, _H, _W = 3, 224, 224
         if self.decoder_num_frames > len(binary_frms):
-            print(f"Corrupt videos, requested {self.decoder_num_frames} frames, "
-                  f"but got only {len(binary_frms)} frames, will return all zeros instead")
-            return np.zeros((self.decoder_num_frames, _C, _H, _W), dtype=np.int64)
+            # from swin bart , last image to extend to self.decoder_num_frames
+            add_array = np.array([binary_frms[-1]] * (self.decoder_num_frames - len(binary_frms)))
+            binary_frms = np.append(binary_frms, add_array)
+
+        #     print(f"Corrupt videos, requested {self.decoder_num_frames} frames, "
+        #           f"but got only {len(binary_frms)} frames, will return all zeros instead")
+        #     return np.zeros((self.decoder_num_frames, _C, _H, _W), dtype=np.int64)
 
         def sampling(start, end, n):
+
             if n == 1:
                 return [int(round((start + end) / 2.))]
             if n < 1:
                 raise Exception("behaviour not defined for n<2")
             step = (end - start) / float(n - 1)
+
             return [int(round(start + x * step)) for x in range(n)]
 
         for i in sampling(0, len(binary_frms) - 1, self.decoder_num_frames):
@@ -210,13 +210,11 @@ class RawVideoDataset(torch.utils.data.Dataset):
         row = self.get_row_from_tsv(visual_tsv, idx)
         raw_frames = self.get_frames_from_tsv(row[2:])
 
-
         # raw_frames, is_video = self.get_visual_data(idx)
 
         # apply augmentation. frozen-in-time if the input is an image
         # preproc_frames: (T, C, H, W), C = 3, H = W = self.img_res, channel is RGB
         preproc_frames = self.apply_augmentations(raw_frames)
-  
 
         return {'video': preproc_frames, 'name': row[0]}
 

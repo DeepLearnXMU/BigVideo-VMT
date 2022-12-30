@@ -14,7 +14,7 @@ from .translation import TranslationTask, load_langpair_dataset
 @register_task("translation_from_pretrained_bart")
 class TranslationFromPretrainedBARTTask(TranslationTask):
     """
-    Translate from source language to target language with a model initialized with a multilingual pretrain.
+    Translate from source language to target language with a model initialized with a multilingual finetune.
 
     Args:
         src_dict (~fairseq.data.Dictionary): dictionary for the source language
