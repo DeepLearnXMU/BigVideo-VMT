@@ -43,7 +43,8 @@ patience=${15}
 
 if [ ${text_data} == "original" ]; then
     local_data_dir=~/data/fairseq_bin/how2.en-pt.bpe15k
-
+  elif [ ${text_data} == "bpe32k" ]; then
+      local_data_dir=~/data/fairseq_bin/how2.en-pt.bpe32k
 
 fi
 

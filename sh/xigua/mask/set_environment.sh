@@ -25,6 +25,7 @@ hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairse
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.bpe15k ~/data/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.char ~/data/fairseq_bin/
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/how2.en-pt.bpe15k ~/data/fairseq_bin/
+hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/how2.en-pt.bpe32k ~/data/fairseq_bin/
 hdfs dfs -get /home/byte_arnold_hl_mlnlc/user/kangliyan/data/fairseq_bin/vatex.en-zh.fromvis ~/data/fairseq_bin/
 
 hdfs dfs -get hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/data/xigua+youtube+wmt19/wmt19_vids ~/

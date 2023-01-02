@@ -12,10 +12,10 @@ def get_swin_model(args):
         model_path = args.videoswin_path
     else:
         # in the case that args.img_res == '224'
-        config_path = '/root/fairseq_mmt/fairseq/models/video/video_swin/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
+        config_path = '/opt/tiger/fairseq_mmt/fairseq/models/video/video_swin/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
         model_path = args.videoswin_path
     if args.pretrained_2d:
-        config_path = '/root/fairseq_mmt/fairseq/models/video/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
+        config_path = '/opt/tiger/fairseq_mmt/fairseq/models/video/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
         model_path = args.videoswin_path
 
     logger.info(f'video swin (config path): {config_path}')

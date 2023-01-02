@@ -20,7 +20,8 @@ import time
 logger = logging.getLogger(__name__)
 
 tsv_file = "{}.video.tsv"
-imgs_tsv_file = "{}_128frames_img_size384.img.tsv"
+# imgs_tsv_file = "{}_128frames_img_size384.img.tsv"
+imgs_tsv_file = "{}_128frames_img_size384.img.{}.tsv"
 
 
 class RawVideoDataset(torch.utils.data.Dataset):
@@ -31,11 +32,16 @@ class RawVideoDataset(torch.utils.data.Dataset):
     def __init__(self, args, split):
 
         self.split = split
+        self.tsv_index = args.tsv_index
         visual_dir = getattr(args, 'visual_dir', None)
         assert os.path.exists(visual_dir)
-        visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
-        self.size = visual_tsv.num_rows()
-        visual_tsv.__del__()
+
+        if self.tsv_index is not None:
+            self.visual_tsv = self.get_tsv_file(os.path.join(visual_dir,imgs_tsv_file.format(self.split,self.tsv_index)))
+        else:
+            self.visual_tsv = self.get_tsv_file(os.path.join(visual_dir,imgs_tsv_file.format(self.split)))
+        self.size = self.visual_tsv.num_rows()
+        # visual_tsv.__del__()
 
         self.args = args
 
@@ -206,7 +212,9 @@ class RawVideoDataset(torch.utils.data.Dataset):
 
         visual_dir = getattr(self.args, 'visual_dir', None)
         assert os.path.exists(visual_dir)
-        visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
+        visual_tsv = self.get_tsv_file(os.path.join(visual_dir,imgs_tsv_file.format(self.split,self.tsv_index)))
+
+        # visual_tsv = self.get_tsv_file(os.path.join(visual_dir + imgs_tsv_file.format(self.split)))
         row = self.get_row_from_tsv(visual_tsv, idx)
         raw_frames = self.get_frames_from_tsv(row[2:])
 
