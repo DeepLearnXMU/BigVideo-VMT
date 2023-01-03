@@ -134,6 +134,7 @@ fairseq-train $local_data_dir \
 echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 
+
 put_result=$?
 if [ $put_result == 1  ]; then
         hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
