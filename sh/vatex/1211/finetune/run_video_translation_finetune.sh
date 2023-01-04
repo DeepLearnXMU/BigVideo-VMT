@@ -1,6 +1,6 @@
 #!/bin/bash
 
-device=0,1,2,3,4,5,6,7
+device=0
 export CUDA_VISIBLE_DEVICES=$device
 export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
