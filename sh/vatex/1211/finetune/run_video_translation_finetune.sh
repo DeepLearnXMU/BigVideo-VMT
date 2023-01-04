@@ -46,7 +46,7 @@ patience=${15}
 if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
     elif [ ${text_data} == "fromxigua+youtube+vatex" ]; then
-      local_data_dir=/mnt/bd/xigua-youtube-2/data/fairseq_bin/vatex.en-zh.fromxigua+youtube+vatex
+      local_data_dir=~/data/fairseq_bin/vatex.en-zh.fromxigua+youtube+vatex
 fi
 
 
