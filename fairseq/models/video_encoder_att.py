@@ -1162,7 +1162,7 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_vatex_top_pe')
+@register_model_architecture('video_encoder_att', 'video_encoder_att_vatex_top_pewln')
 def video_encoder_att_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 2048)
@@ -1175,6 +1175,7 @@ def video_encoder_att_vatex_top_pe(args):
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
     args.pe_for_video = getattr(args, 'pe_for_video', True)
+    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
     args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
