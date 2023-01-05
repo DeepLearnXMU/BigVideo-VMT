@@ -36,7 +36,7 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 32
 
 
-@register_model("video_encoder_att")
+@register_model("video_encoder_gate")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -568,15 +568,6 @@ class TransformerEncoder(FairseqEncoder):
 
         encoder_states = [] if return_all_hiddens else None
 
-        if not self.is_fusion_top:
-            video_padding_mask = video_paddings.bool()
-            video_h = self.video_forward_embedding(videos, video_padding_mask)
-            if self.video_cls_token is not None:
-                video_h = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), video_h), dim=1)
-                cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
-                video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
-            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask)
@@ -589,14 +580,27 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
+            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
+            b, t, c = text_h.shape
+
+
             video_padding_mask = video_paddings.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
-            if self.video_cls_token is not None:
-                video_h = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), video_h), dim=1)
-                cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
-                video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
-            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
+            video_h = torch.mean(video_h, dim=1)
+            bsz, video_dim = video_h.size()[0], video_h.size()[1]
+            video_h = video_h.view(bsz, 1, video_dim)  # B, 1, video_dim
+            video_h = video_h.expand(b, t, c)
+
+
+            assert video_h.shape[1] == text_h.shape[1]
+            merge = torch.cat([text_h, video_h], dim=-1)
+            gate = self.sigmoid(self.gate_dense(merge))
+            output = (1 - gate) * text_repr + gate * v_repr
+            # print(gate.shape)
+            # print(dadsa)
+            x = output.transpose(0, 1)  # reback to T x B x C
+
+
 
         return EncoderOut(
             encoder_out=x,  # T x B x C
@@ -1087,7 +1091,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_base')
+@register_model_architecture('video_encoder_gate', 'video_encoder_gate_base')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1131,8 +1135,8 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_base_top_pewln')
-def video_encoder_att_base_top_pewln(args):
+@register_model_architecture('video_encoder_gate', 'video_encoder_gate_base_top_pewln')
+def video_encoder_gate_base_top_pewln(args):
 
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
@@ -1149,7 +1153,7 @@ def video_encoder_att_base_top_pewln(args):
 
 
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_tiny')
+@register_model_architecture('video_encoder_gate', 'video_encoder_gate_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1162,8 +1166,8 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('video_encoder_att', 'video_encoder_att_vatex_top_pe')
-def video_encoder_att_vatex_top_pe(args):
+@register_model_architecture('video_encoder_gate', 'video_encoder_gate_vatex_top_pe')
+def video_encoder_gate_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 2048)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 8)
