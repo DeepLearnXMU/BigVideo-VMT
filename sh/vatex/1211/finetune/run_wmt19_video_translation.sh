@@ -47,8 +47,7 @@ if [ ${text_data} == "original" ]; then
     local_data_dir=~/data/fairseq_bin/xigua+youtube.en-zh.annotations_1114
     elif [ ${text_data} == "asr_1109" ]; then
       local_data_dir=~/data/fairseq_bin/xigua.en-zh.annotations_1016_asr_1109
-    elif [ ${text_data} == "wmt19_fromvatex+wmt19" ]; then
-      local_data_dir=/mnt/bd/xigua-youtube-lq/data/fairseq_bin/wmt19.en-zh.fromxigua+youtube+wmt19.up_1
+
     elif [ ${text_data} == "wmt19_fromvatex+wmt19" ]; then
       local_data_dir=/mnt/bd/xigua-youtube-2/data/fairseq_bin/wmt19.en-zh.fromvatex+wmt19.up_1
 
