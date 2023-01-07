@@ -27,6 +27,8 @@ if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
     elif [ ${text_data} == "fromxigua+youtube+vatex" ]; then
       local_data_dir=~/data/fairseq_bin/vatex.en-zh.fromxigua+youtube+vatex
+      elif [ ${text_data} == "fromvatex+wmt19" ]; then
+      local_data_dir=~/data/fairseq_bin/vatex.en-zh.fromvatex+wmt19.up_1
 fi
 
 

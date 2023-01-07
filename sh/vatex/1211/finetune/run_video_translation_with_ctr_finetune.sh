@@ -58,6 +58,8 @@ if [ $text_data == "original" ]; then
     local_data_dir=~/data/fairseq_bin/vatex.en-zh.bpe15k
     elif [ ${text_data} == "fromxigua+youtube+vatex" ]; then
       local_data_dir=~/data/fairseq_bin/vatex.en-zh.fromxigua+youtube+vatex
+    elif [ ${text_data} == "fromvatex+wmt19" ]; then
+      local_data_dir=~/data/fairseq_bin/vatex.en-zh.fromvatex+wmt19.up_1
 fi
 
 
@@ -137,6 +139,7 @@ fairseq-train $local_data_dir \
   --video-dropout $video_dropout  \
   --id-type $id_type  \
   --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_archvideo_fushion_encoder_one_merge_before_pewln_criCMCCTR_tgtzh_lr7e-4_wu4000_mat4096_acc1_me100_seed1_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen32_tsuniform_ctrsmean+mlp_ctrabottom_ctrw1.0_ctrt0.002_patience10_length256/checkpoint_best.pt \
+  --only-load-model \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
 echo "---put log to $LOGS_DIR/log.${name}---"
