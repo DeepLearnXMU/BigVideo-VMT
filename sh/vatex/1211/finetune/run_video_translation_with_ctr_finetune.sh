@@ -138,7 +138,7 @@ fairseq-train $local_data_dir \
   --max-vid-len $max_vid_len  --train-sampling-strategy ${train_sampling_strategy}   \
   --video-dropout $video_dropout  \
   --id-type $id_type  \
-  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_archvideo_fushion_encoder_one_merge_before_pewln_criCMCCTR_tgtzh_lr7e-4_wu4000_mat4096_acc1_me100_seed1_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen32_tsuniform_ctrsmean+mlp_ctrabottom_ctrw1.0_ctrt0.002_patience10_length256/checkpoint_best.pt \
+  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_fromvatex+wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed1207_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience-1_length256_b4l1.0/checkpoint_best.pt \
   --only-load-model \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
 
