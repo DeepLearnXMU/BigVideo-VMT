@@ -55,6 +55,7 @@ class VideoDatasetFromNp(torch.utils.data.Dataset):
         self.video_ids_path = args.video_ids_path
         self.max_vid_len = args.max_vid_len
         self.video_path = os.path.join(self.video_feat_path, self.split)
+        assert(os.path.exists(self.video_path))
         self.id_type = args.id_type
 
         self.video_id_list = []

@@ -85,6 +85,10 @@ if [ $video_feat_type == "VIT_cls"  ]; then
   elif [ $video_feat_type == "slowfast" ]; then
         video_feat_dim=2304
         video_feat_path=/mnt/bd/xigua-youtube/how2/data/video_features//slowfast/
+  elif  [ $video_feat_type == "VIT_patch" ]; then
+        video_feat_dim=768
+#        video_feat_path=/mnt/bn/luyang/kangliyan/data/xigua/VIT_cls_max128frames/
+        video_feat_path=/mnt/bd/xigua-youtube-3/how2/video_features/VIT_patch_max32frames/
 fi
 
 
