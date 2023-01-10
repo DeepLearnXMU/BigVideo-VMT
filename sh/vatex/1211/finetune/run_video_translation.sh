@@ -66,7 +66,7 @@ clip_norm=0.0
 
 
 
-video_ids_path=/mnt/bd/xigua-youtube/data/raw_tests_1117/
+video_ids_path=/mnt/bd/xigua-youtube/vatex/data/raw_texts/filters/
 if [ $video_feat_type == "VIT_cls"  ]; then
         video_feat_dim=768
         video_feat_path=/mnt/bd/xigua-data/features/VIT_cls/
