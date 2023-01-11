@@ -591,10 +591,10 @@ class TransformerEncoder(FairseqEncoder):
             # x [ L x B x C]   videos [ B x l x C]
             video_padding_mask = video_paddings.bool()
             video_h = self.video_forward_embedding(videos, video_padding_mask)
-            if self.video_cls_token is not None:
-                video_h = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), video_h), dim=1)
-                cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
-                video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
+            # if self.video_cls_token is not None:
+            #     video_h = torch.cat((self.video_cls_token.expand(videos.shape[0], -1, -1), video_h), dim=1)
+            #     cls_mask = torch.tensor(0).expand(video_padding_mask.shape[0], 1).bool().to("cuda")
+            #     video_padding_mask = torch.cat([cls_mask, video_padding_mask], dim=-1)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=video_h, text=text_h,video_padding_mask=video_padding_mask)
 
