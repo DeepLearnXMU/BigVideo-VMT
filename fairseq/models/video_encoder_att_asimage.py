@@ -531,7 +531,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if not self.is_fusion_top:
             video_padding_mask = video_paddings.bool()
-            # video_h = self.video_forward_embedding(videos, video_padding_mask)
+            videos = self.video_dense(videos)
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             x, gate = self.fuse_video_feat(video=videos, text=text_h,video_padding_mask=video_padding_mask)
         # encoder layers
@@ -1090,8 +1090,7 @@ def video_encoder_att_asimage_base_top_pewln(args):
 
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
-    args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+
     args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
@@ -1128,8 +1127,7 @@ def video_encoder_att_asimage_vatex_top_pe(args):
     args.decoder_layers = getattr(args, 'decoder_layers', 6)
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
-    args.pe_for_video = getattr(args, 'pe_for_video', True)
-    args.video_layernorm_embedding = getattr(args, 'video_layernorm_embedding', True)
+
     args.SA_video_dropout = getattr(args, 'SA_video_dropout', 0.1)
     args.SA_text_dropout = getattr(args, 'SA_text_dropout', 0)
     args.SA_attention_dropout = getattr(args, 'SA_attention_dropout', 0.1)
