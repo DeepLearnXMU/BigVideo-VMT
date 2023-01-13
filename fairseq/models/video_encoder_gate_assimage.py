@@ -526,7 +526,7 @@ class TransformerEncoder(FairseqEncoder):
             # x [ L x B x C]   videos [ B x l x C]
             video_padding_mask = video_paddings.bool()
             videos = self.video_dense(videos)
-            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
+            video_h = x.transpose(0, 1)  # T x B x C -> B x T x C
             b, t, c = text_h.shape
 
             video_h = torch.mean(video_h, dim=1)
