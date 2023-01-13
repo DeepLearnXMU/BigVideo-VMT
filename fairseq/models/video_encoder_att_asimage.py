@@ -415,16 +415,7 @@ class TransformerEncoder(FairseqEncoder):
         self.is_fusion_top = args.is_fusion_top
 
 
-        self.video_embed_positions = (
-            PositionalEmbedding(
-                args.max_vid_len,
-                embed_dim,
-                self.padding_idx,
-                learned=args.video_learned_pos,
-            )
-            if args.pe_for_video
-            else None
-        )
+
 
 
         self.video_atts=SelectiveAttention(qdim=embed_dim, kdim=embed_dim,
@@ -432,17 +423,9 @@ class TransformerEncoder(FairseqEncoder):
                                                         intermediate_dim=embed_dim, output_dim=embed_dim,
                                                         num_heads=1, attn_drop=args.SA_attention_dropout)
 
-        if getattr(args, "video_layernorm_embedding", False):
-            self.video_layernorm_embedding = LayerNorm(embed_dim)
-        else:
-            self.video_layernorm_embedding = None
 
-        if getattr(args, "enable_cls", False):
-            self.video_cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        else:
-            self.video_cls_token = None
-        if self.video_cls_token is not None:
-            nn.init.normal_(self.video_cls_token, std=1e-6)
+
+
 
         # self.recoder = utils.Recorder(args)
 
@@ -499,27 +482,7 @@ class TransformerEncoder(FairseqEncoder):
             x = self.quant_noise(x)
         return x, embed
 
-    def video_forward_embedding(self, videos, video_padding_mask=None):
 
-        # videos = videos.transpose(0, 1)
-        bsz, video_length = videos.size()[0], videos.size()[1]
-        video_shapes = len(videos.size())
-
-        videos = self.video_dense(videos)  # B T_v  C
-
-        if self.args.pe_for_video:
-            video_position_ids = torch.arange(video_length, dtype=torch.long,
-                                              device=videos.device)
-            video_position_ids = video_position_ids.expand(bsz, video_length)
-            video_position_ids = video_position_ids + self.padding_idx + 1
-            if video_padding_mask is not None:
-                video_position_ids.masked_fill_(video_padding_mask, self.padding_idx)
-            videos = videos + self.video_embed_positions(video_position_ids)
-        if self.video_layernorm_embedding:
-            videos = self.video_layernorm_embedding(videos)
-        videos = self.dropout_module(videos)
-
-        return videos
 
     def forward(
             self,
