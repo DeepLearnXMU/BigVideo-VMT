@@ -529,11 +529,6 @@ class TransformerEncoder(FairseqEncoder):
 
         encoder_states = [] if return_all_hiddens else None
 
-        if not self.is_fusion_top:
-            video_padding_mask = video_paddings.bool()
-            videos = self.video_dense(videos)
-            text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
-            x, gate = self.fuse_video_feat(video=videos, text=text_h,video_padding_mask=video_padding_mask)
         # encoder layers
         for layer in self.layers:
             x = layer(x, encoder_padding_mask)
@@ -547,6 +542,7 @@ class TransformerEncoder(FairseqEncoder):
         if self.is_fusion_top:
             # x [ L x B x C]   videos [ B x l x C]
             video_padding_mask = video_paddings.bool()
+            videos = self.video_dense(videos)
             # video_h = self.video_forward_embedding(videos, video_padding_mask)
             # video_h=videos
             text_h = x.transpose(0, 1)  # T x B x C -> B x T x C
