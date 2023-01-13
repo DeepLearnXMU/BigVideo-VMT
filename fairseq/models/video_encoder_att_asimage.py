@@ -185,12 +185,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
                             help='scalar quantization noise and scalar quantization at training time')
         # fmt: on
         # args for video MMT
-        parser.add_argument('--video-layernorm-embedding', action='store_true',
-                            help='add layernorm to video - embedding')
+
         parser.add_argument('--is-fusion-top', type=bool,
                             help='fuse img feat after text encoding')
-        parser.add_argument('--pe-for-video', type=bool,
-                           help='video for position ')
+
         parser.add_argument('--SA-video-dropout', type=float,
                             help='video feat dropout before SA')
         parser.add_argument('--SA-text-dropout', type=float,
