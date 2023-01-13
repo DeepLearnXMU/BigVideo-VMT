@@ -1089,6 +1089,7 @@ def video_encoder_gate_as_image_base_top_pewln(args):
 
 
 
+
 @register_model_architecture('video_encoder_gate_as_image', 'video_encoder_gate_as_image_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
