@@ -36,7 +36,7 @@ DEFAULT_MAX_TARGET_POSITIONS = 1024
 DEFAULT_VIDEO_LENGTH = 32
 
 
-@register_model("video_encoder_gate_as_image")
+@register_model("video_encoder_gate_asimage")
 class TransformerModel(FairseqEncoderDecoderModel):
     """
     Transformer model from `"Attention Is All You Need" (Vaswani, et al, 2017)
@@ -1031,7 +1031,7 @@ def Linear(in_features, out_features, bias=True):
     return m
 
 
-@register_model_architecture('video_encoder_gate_as_image', 'video_encoder_gate_as_image_base')
+@register_model_architecture('video_encoder_gate_asimage', 'video_encoder_gate_asimage_base')
 def base_architecture(args):
     args.encoder_embed_path = getattr(args, 'encoder_embed_path', None)
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 512)
@@ -1075,8 +1075,8 @@ def base_architecture(args):
     args.video_learned_pos = getattr(args, 'video_learned_pos', False)
     args.residual_policy = getattr(args, 'residual_policy', None)
 
-@register_model_architecture('video_encoder_gate_as_image', 'video_encoder_gate_as_image_base_top_pewln')
-def video_encoder_gate_as_image_base_top_pewln(args):
+@register_model_architecture('video_encoder_gate_asimage', 'video_encoder_gate_asimage_base_top_pewln')
+def video_encoder_gate_asimage_base_top_pewln(args):
 
     # args for video MMT
     args.is_fusion_top = getattr(args, 'is_fusion_top', True)
@@ -1090,7 +1090,7 @@ def video_encoder_gate_as_image_base_top_pewln(args):
 
 
 
-@register_model_architecture('video_encoder_gate_as_image', 'video_encoder_gate_as_image_tiny')
+@register_model_architecture('video_encoder_gate_asimage', 'video_encoder_gate_asimage_tiny')
 def transformer_tiny(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 128)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 256)
@@ -1103,8 +1103,8 @@ def transformer_tiny(args):
     base_architecture(args)
 
 
-@register_model_architecture('video_encoder_gate_as_image', 'video_encoder_gate_as_image_vatex_top_pewln')
-def video_encoder_gate_as_image_vatex_top_pe(args):
+@register_model_architecture('video_encoder_gate_asimage', 'video_encoder_gate_asimage_vatex_top_pewln')
+def video_encoder_gate_asimage_vatex_top_pe(args):
     args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 256)
     args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 512)
     args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 4)
