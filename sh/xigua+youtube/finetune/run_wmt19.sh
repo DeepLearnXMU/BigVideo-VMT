@@ -126,7 +126,7 @@ fairseq-train $local_data_dir \
   --eval-bleu-detok moses \
   --eval-bleu-remove-bpe \
   --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
-  --max-epoch ${max_epoches} --max-interval-updates 300000 --keep-last-epochs 10  --keep-best-checkpoints 10   \
+  --max-epoch ${max_epoches} --max-update 300000 --keep-last-epochs 10  --keep-best-checkpoints 10   \
   --patience $patience \
   --video-feat-path $video_feat_path \
   --video-ids-path $video_ids_path \
