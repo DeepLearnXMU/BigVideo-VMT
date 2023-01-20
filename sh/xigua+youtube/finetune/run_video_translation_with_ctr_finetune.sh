@@ -104,8 +104,8 @@ gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
 name=${mask}ed20_arch${arch}_cri${cri}_tgt${tgt_lang}_lr${lr}_wu${warmup}_mat${max_tokens}_acc${update_freq}_me${max_epoches}_seed${seed}_gpu${gpu_num}_wd${weight_decay}_dp${dropout}_vtype${video_feat_type}_mvlen${max_vid_len}_ts${train_sampling_strategy}_ctrs${contrastive_strategy}_ctra${contrastive_align}_ctrw${contrastive_weight}_ctrt${contrastive_temperature}_patience${patience}_length256
 
-output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/finetune/${mask}/${name}
-LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube+wmt19/finetune/${mask}/
+output_dir=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/finetune_from2/${mask}/${name}
+LOGS_DIR=hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_logs/xigua+youtube+wmt19/finetune_from2/${mask}/
 local_logs_dir=~/fairseq_logs/xigua+youtube+wmt19/finetune/${mask}/
 
 
@@ -147,10 +147,9 @@ fairseq-train $local_data_dir \
   --max-vid-len $max_vid_len  --train-sampling-strategy ${train_sampling_strategy}   \
   --video-dropout $video_dropout  \
   --id-type $id_type  \
-  --finetune-from-model hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed1207_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience10_length256_b4l1.0/checkpoint_best.pt \
+  --finetune-from-model  hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed7_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience-1_length256_b4l1.0/checkpoint_best.pt \
   --only-load-model \
   --fp16  2>&1 | tee -a $local_logs_dir/log.${name}
-
 
 echo "---put log to $LOGS_DIR/log.${name}---"
 hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
@@ -158,4 +157,6 @@ hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 put_result=$?
 if [ $put_result == 1  ]; then
         hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
-fi
+
+#       ori hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed1207_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience10_length256_b4l1.0
+#        hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed7_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience-1_length256_b4l1.0
