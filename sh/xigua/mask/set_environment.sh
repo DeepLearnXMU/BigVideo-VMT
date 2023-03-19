@@ -55,11 +55,11 @@ pip install -r requirment.txt
 
 sudo pip install --editable ./
 pip install sacremoses
-pip install sacrebleu==1.5.1
+#pip install sacrebleu==1.5.1
 #pip install timm==0.4.12
 pip install vizseq==0.1.15
 pip install nltk==3.6.4
-pip install sacrebleu==1.5.1
+pip install sacrebleu==2.0.0
 pip install numpy==1.22.0
 
 cd ~/codes
