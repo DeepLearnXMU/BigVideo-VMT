@@ -6,7 +6,7 @@ export http_proxy=http://bj-rd-proxy.byted.org:3128
 export https_proxy=http://bj-rd-proxy.byted.org:3128
 
 cd /opt/tiger/fairseq_mmt
-# bash sh/xigua/mask/set_environment.sh
+bash sh/xigua/mask/set_environment.sh
 
 
 src_lang=en
