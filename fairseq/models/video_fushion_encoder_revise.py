@@ -1120,8 +1120,8 @@ class TransformerDecoder(FairseqIncrementalDecoder):
             text_hidden = text_hidden.half()
             video_hidden = video_hidden.half()
 
-            text_hidden = self.text_projection(text_hidden).float()
-            video_hidden = self.video_projection(video_hidden).float()
+            bottom_text_proj_out = self.text_projection(text_hidden).float()
+            bottom_video_proj_out = self.video_projection(video_hidden).float()
 
             return x, {"attn": [attn], "inner_states": inner_states, "bottom_text_h": encoder_out.bottom_text_out,
                        "bottom_video_h": encoder_out.bottom_video_out,
