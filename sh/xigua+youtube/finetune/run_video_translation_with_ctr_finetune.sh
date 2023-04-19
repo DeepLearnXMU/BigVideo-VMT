@@ -21,6 +21,8 @@ if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=CMC
     elif [ $criterion == "cross_modal_criterion_with_ctr" ]; then
         cri=CMCCTR
+    elif [ $criterion == "cross_modal_criterion_with_ctr_revise" ]; then
+        cri=CMCCTRRE
 fi
 
 
@@ -157,6 +159,16 @@ hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
 put_result=$?
 if [ $put_result == 1  ]; then
         hdfs dfs -put -f $local_logs_dir/log.${name} $LOGS_DIR/log.${name}
+fi
+
+
+echo "---put log to $output_dir---"
+hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/train.log
+
+put_result=$?
+if [ $put_result == 1  ]; then
+  hdfs dfs -put -f $local_logs_dir/log.${name} $output_dir/train.log
+fi
 
 #       ori hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed1207_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience10_length256_b4l1.0
 #        hdfs://haruna/home/byte_arnold_hl_mlnlc/user/kangliyan/fairseq_mmt/fairseq_output/xigua+youtube+wmt19/mask0/mask0ed20_wmt19_archvideo_fushion_encoder_one_merge_before_pewln_criCMC_tgtzh_lr7e-4_wu4000_mt4096_me100_seed7_gpu8_wd0.1_dp0.1_vtypeVIT_128_mvlen1_tsuniform_vdp0.0_idtypeoriginal_patience-1_length256_b4l1.0
