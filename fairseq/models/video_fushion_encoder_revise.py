@@ -1105,7 +1105,7 @@ class TransformerDecoder(FairseqIncrementalDecoder):
         if self.project_out_dim is not None:
             x = self.project_out_dim(x)
 
-        if self.video_projection:
+        if self.video_projection and self.training:
             text_padding_mask = (~encoder_out.text_padding_mask).float()
             video_padding_mask = (~encoder_out.video_padding_mask).float()
 
