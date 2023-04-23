@@ -30,6 +30,7 @@ def save_checkpoint(args, trainer, epoch_itr, val_loss):
     prev_best = getattr(save_checkpoint, "best", val_loss)
     if val_loss is not None:
         best_function = max if args.maximize_best_checkpoint_metric else min
+        best_function = max if args.maximize_best_checkpoint_metric else min
         save_checkpoint.best = best_function(val_loss, prev_best)
 
     if args.no_save:
