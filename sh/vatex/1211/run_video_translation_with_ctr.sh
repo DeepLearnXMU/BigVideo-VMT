@@ -15,13 +15,15 @@ tgt_lang=zh
 
 
 
-criterion=cross_modal_criterion_with_ctr
+criterion=cross_modal_criterion_with_ctr_revise
 if [ $criterion == "label_smoothed_cross_entropy" ]; then
         cri=LSCE
     elif [ $criterion == "cross_modal_criterion" ]; then
         cri=CMC
     elif [ $criterion == "cross_modal_criterion_with_ctr" ]; then
         cri=CMCCTR
+    elif [ $criterion == "cross_modal_criterion_with_ctr_revise" ]; then
+        cri=CMCCTRRE
 fi
 
 
