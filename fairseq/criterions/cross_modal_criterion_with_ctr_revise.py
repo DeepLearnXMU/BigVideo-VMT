@@ -74,18 +74,18 @@ class CrossModalCriterionWithCTRRevise(FairseqCriterion):
         self.ctr_strategy = task.args.contrastive_strategy
         self.ctr_align = task.args.contrastive_align
 
-        if self.ctr_strategy == "mean+mlp" or "cls+mlp":
-            self.proj_dim = 128
-            self.feature_dim = task.args.encoder_embed_dim
-
-            self.video_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                  nn.BatchNorm1d(self.feature_dim),
-                                                  nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                  BatchNorm1dNoBias(self.proj_dim))
-            self.text_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
-                                                 nn.BatchNorm1d(self.feature_dim),
-                                                 nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
-                                                 BatchNorm1dNoBias(self.proj_dim))
+        # if self.ctr_strategy == "mean+mlp" or "cls+mlp":
+        #     self.proj_dim = 128
+        #     self.feature_dim = task.args.encoder_embed_dim
+        #
+        #     self.video_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
+        #                                           nn.BatchNorm1d(self.feature_dim),
+        #                                           nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+        #                                           BatchNorm1dNoBias(self.proj_dim))
+        #     self.text_projection = nn.Sequential(nn.Linear(self.feature_dim, self.feature_dim, bias=False),
+        #                                          nn.BatchNorm1d(self.feature_dim),
+        #                                          nn.ReLU(), nn.Linear(self.feature_dim, self.proj_dim, bias=False),
+        #                                          BatchNorm1dNoBias(self.proj_dim))
 
     @staticmethod
     def add_args(parser):
