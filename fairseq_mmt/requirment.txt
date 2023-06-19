@@ -1,0 +1,16 @@
+opencv-python==4.6.0.66
+easydict==1.9
+progressbar==2.5
+matplotlib==3.5.3
+future==0.18.2
+ete3==3.1.2
+deprecated==1.2.13
+scipy==1.7.3
+av==9.2.0
+scikit-image==0.19.3
+jinja2==2.11.3
+markupsafe==2.0.1
+vizseq
+einops==0.4.1
+addict==2.4.0
+yapf==0.32.0
