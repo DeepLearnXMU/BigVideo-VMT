@@ -15,8 +15,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import typing
-
-from common.utils.common import command, popen_command
+import sys
+# from common.utils.common import command, popen_command
 import glob as _glob
 import portalocker
 
@@ -24,6 +24,56 @@ logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def command(cmd, *args, raise_exception=True, print_error=True,
+            use_system=True, timeout=None):
+    if len(args) != 0:
+        cmd = cmd.format(*args)
+    # cmd = cmd.replace("hadoop", "doas hadoop")
+    logger.info(cmd)
+    if not use_system:
+        popen = subprocess.Popen(
+            cmd,
+            shell=True,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+        )
+        _, err = popen.communicate(timeout=timeout)
+        if popen.returncode != 0:
+            if print_error:
+                sys.stderr.write(err)
+            if raise_exception:
+                raise RuntimeError(f"The cmd '{cmd}' run failed")
+        else:
+            popen.stderr.close()
+        return_code = popen.returncode
+    else:
+        return_code = os.system(cmd)
+        if return_code != 0 and raise_exception:
+            if "hadoop fs -get" in cmd and return_code == 256:
+                pass
+            else:
+                raise RuntimeError(f"The cmd '{cmd}' run failed")
+
+    return return_code
+
+
+def popen_command(cmd: typing.Union[typing.List[str], str], shell: bool=False,
+                  stdin=None):
+    logger.info(cmd)
+    pipe = subprocess.Popen(cmd,
+                            stdin=stdin,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            encoding="utf-8",
+                            shell=shell)
+    std, err = pipe.communicate(stdin)
+    if pipe.returncode != 0:
+        sys.stderr.write(err)
+        raise RuntimeError(f"The cmd {cmd} run failed")
+    else:
+        res = std.strip().split("\n")
+        return res
 
 def file_lock(path: str):  # type: ignore
     """
