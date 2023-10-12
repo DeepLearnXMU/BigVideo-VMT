@@ -20,8 +20,10 @@ pip install --editable ./
 # BigVideo Dataset
 
 Dataset are available at [here](https://huggingface.co/datasets/fringek/BigVideo/tree/main). 
+
 Please email us (kangliyan@stu.xmu.edu.cn) to explain your identity and purpose before requesting access.
-*Directly requesting will not be approved.*
+
+*！Directly requesting will not be approved.！*
 *Please make sure that all data are used for research only.*
 
 ```bash
